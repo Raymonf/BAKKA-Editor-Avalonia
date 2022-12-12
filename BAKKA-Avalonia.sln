@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BAKKA_Editor", "BAKKA_Editor\BAKKA_Editor.csproj", "{A4F129FF-A459-47C3-B6F5-A826967D9DBD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BAKKA_Editor.iOS", "BAKKA_Editor.iOS\BAKKA_Editor.iOS.csproj", "{E28D880B-B315-4679-8387-82982D418D50}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BAKKA_Editor.Android", "BAKKA_Editor.Android\BAKKA_Editor.Android.csproj", "{060508FB-B0D1-4C2C-ABD2-EA2B213EAA3A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BAKKA_Editor.Desktop", "BAKKA_Editor.Desktop\BAKKA_Editor.Desktop.csproj", "{583ACE91-306D-48D5-90A6-D625F428710D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BAKKA_Editor.Web", "BAKKA_Editor.Web\BAKKA_Editor.Web.csproj", "{FF3CA796-6111-4C31-931F-36CE086EA13F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A4F129FF-A459-47C3-B6F5-A826967D9DBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4F129FF-A459-47C3-B6F5-A826967D9DBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4F129FF-A459-47C3-B6F5-A826967D9DBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4F129FF-A459-47C3-B6F5-A826967D9DBD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E28D880B-B315-4679-8387-82982D418D50}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E28D880B-B315-4679-8387-82982D418D50}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E28D880B-B315-4679-8387-82982D418D50}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E28D880B-B315-4679-8387-82982D418D50}.Release|Any CPU.Build.0 = Release|Any CPU
+		{060508FB-B0D1-4C2C-ABD2-EA2B213EAA3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{060508FB-B0D1-4C2C-ABD2-EA2B213EAA3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{060508FB-B0D1-4C2C-ABD2-EA2B213EAA3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{060508FB-B0D1-4C2C-ABD2-EA2B213EAA3A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{583ACE91-306D-48D5-90A6-D625F428710D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{583ACE91-306D-48D5-90A6-D625F428710D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{583ACE91-306D-48D5-90A6-D625F428710D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{583ACE91-306D-48D5-90A6-D625F428710D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF3CA796-6111-4C31-931F-36CE086EA13F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF3CA796-6111-4C31-931F-36CE086EA13F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF3CA796-6111-4C31-931F-36CE086EA13F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF3CA796-6111-4C31-931F-36CE086EA13F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

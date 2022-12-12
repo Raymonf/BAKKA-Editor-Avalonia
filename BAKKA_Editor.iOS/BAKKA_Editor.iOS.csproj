@@ -1,0 +1,74 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0-ios</TargetFramework>
+    <SupportedOSPlatformVersion>10.0</SupportedOSPlatformVersion>
+    <ProvisioningType>manual</ProvisioningType>
+    <Nullable>enable</Nullable>
+    <!--<RuntimeIdentifier>iossimulator-x64</RuntimeIdentifier>-->
+    
+    <!-- These properties need to be set in order to run on a real iDevice -->
+    <RuntimeIdentifier>ios-arm64</RuntimeIdentifier>
+    <UseInterpreter>true</UseInterpreter>
+    <!--<CodesignKey></CodesignKey>-->
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+      <CreatePackage>false</CreatePackage>
+      <CodesignKey>Apple Development: raydongf@gmail.com (QVVAVAAAPW)</CodesignKey>
+      <MtouchExtraArgs>-gcc_flags "-L${ProjectDir} -lstdc++ -lbass -lbass_fx -framework CFNetwork -framework AudioToolbox -framework SystemConfiguration -framework Accelerate -force_load ${ProjectDir}/libbass.dylib -force_load ${ProjectDir}/libbass_fx.dylib"</MtouchExtraArgs>
+      <MtouchNoSymbolStrip>true</MtouchNoSymbolStrip>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+      <CreatePackage>false</CreatePackage>
+      <CodesignKey>Apple Development: raydongf@gmail.com (QVVAVAAAPW)</CodesignKey>
+      <MtouchExtraArgs>-gcc_flags "-L${ProjectDir} -lstdc++ -lbass -lbass_fx -framework CFNetwork -framework AudioToolbox -framework SystemConfiguration -framework Accelerate -force_load ${ProjectDir}/libbass.dylib -force_load ${ProjectDir}/libbass_fx.dylib"</MtouchExtraArgs>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.iOS" Version="$(AvaloniaVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BAKKA_Editor\BAKKA_Editor.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <NativeReference Include="libbass.dylib">
+        <Kind>Dynamic</Kind>
+        <SmartLink>False</SmartLink>
+    </NativeReference>
+    <NativeReference Include="libbass_fx.dylib">
+        <Kind>Dynamic</Kind>
+        <SmartLink>False</SmartLink>
+    </NativeReference>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Remove="libbass.dylib" />
+    <Content Include="libbass.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="libbass_fx.dylib" />
+    <Content Include="libbass_fx.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Frameworks\bass.framework\bass" />
+    <Content Include="Frameworks\bass.framework\bass">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Frameworks\bass.framework\Info.plist" />
+    <Content Include="Frameworks\bass.framework\Info.plist">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Frameworks\bass_fx.framework\bass_fx" />
+    <Content Include="Frameworks\bass_fx.framework\bass_fx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Frameworks\bass_fx.framework\Info.plist" />
+    <Content Include="Frameworks\bass_fx.framework\Info.plist">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project>

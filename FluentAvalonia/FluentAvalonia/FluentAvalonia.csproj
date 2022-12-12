@@ -1,0 +1,61 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net6.0</TargetFrameworks>
+    <Nullable>disable</Nullable>
+	<RepositoryUrl>https://github.com/amwx/FluentAvalonia</RepositoryUrl>
+	<PackageId>FluentAvaloniaUI</PackageId>
+    <Description>Control library focused on fluent design and bringing more WinUI controls into Avalonia </Description>
+    <PackageTags>c-sharp;xaml;cross-platform;dotnet;dotnetcore;avalonia;avaloniaui;fluent;fluent-design</PackageTags>
+    
+    <MicroComGeneratorRuntimeNamespace>MicroCom.Runtime</MicroComGeneratorRuntimeNamespace>
+</PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<LangVersion>latest</LangVersion>
+	</PropertyGroup>
+
+    <PropertyGroup>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <Version>2.0.0-preview4</Version>
+        <AssemblyVersion>2.0.0.0</AssemblyVersion>        
+    </PropertyGroup>
+
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+    <ItemGroup>
+        <AvaloniaResource Include="Assets\*.*" />
+	    <AvaloniaResource Include="Fonts\*.*" />
+    </ItemGroup>
+    <ItemGroup>
+      <None Remove="Assets\ControlStrings.json" />
+    </ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Avalonia" Version="11.0.0-preview4" />
+		<PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.0.0-preview4" />
+		<PackageReference Include="Avalonia.Skia" Version="11.0.0-preview4" />
+		<PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.0-preview4" />
+        <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.0.0-preview4" />
+		<PackageReference Include="MicroCom.CodeGenerator.MSBuild" Version="0.11.0" />
+		<PackageReference Include="MicroCom.Runtime" Version="0.11.0" />
+        <MicroComIdl Include="$(MSBuildThisFileDirectory)\Interop\WinRT\WinRT.idl" CSharpInteropPath="$(MSBuildThisFileDirectory)\Interop\WinRT\WinRT.Generated.cs" />
+        <PackageReference Include="System.Text.Json" Version="6.0.5" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
+        <PackageReference Include="System.Text.Json" Version="6.0.5" Condition="'$(TargetFramework)' == 'netstandard2.1'" />
+	</ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="FluentAvalonia.UI.Windowing" />
+  </ItemGroup>
+</Project>

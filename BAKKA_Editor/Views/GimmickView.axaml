@@ -1,0 +1,100 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewModels="clr-namespace:BAKKA_Editor.ViewModels"
+        xmlns:controls="clr-namespace:BAKKA_Editor.Controls"
+        mc:Ignorable="d" d:DesignWidth="380" d:DesignHeight="375"
+        MaxWidth="380" MaxHeight="375"
+        x:Class="BAKKA_Editor.Views.GimmickView">
+    <Design.DataContext>
+        <viewModels:GimmicksViewModel />
+    </Design.DataContext>
+        
+    <UserControl.Styles>
+        <Style Selector="TextBlock.label">
+            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+        </Style>
+        <Style Selector="NumericUpDown.measure">
+            <Setter Property="Margin" Value="0,0,4,0" />
+            <Setter Property="Minimum" Value="0" />
+            <Setter Property="Maximum" Value="9999" />
+            <Setter Property="Increment" Value="1" />
+        </Style>
+        <Style Selector="NumericUpDown.beat1">
+            <Setter Property="Minimum" Value="-1" />
+            <Setter Property="Maximum" Value="1920" />
+            <Setter Property="Increment" Value="1" />
+        </Style>
+        <Style Selector="TextBlock.separator">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="Margin" Value="2,0" />
+        </Style>
+        <Style Selector="NumericUpDown.beat2">
+            <Setter Property="Minimum" Value="1" />
+            <Setter Property="Maximum" Value="1920" />
+            <Setter Property="Increment" Value="1" />
+        </Style>
+    </UserControl.Styles>
+
+    <Panel>
+        <StackPanel Margin="20" Spacing="1,0">
+            <Grid ColumnDefinitions="77*,239*">
+                <TextBlock Classes="label">Start:</TextBlock>
+                <Grid Grid.Column="1" ColumnDefinitions="4*,2*,16,2*">
+                    <NumericUpDown Grid.Column="0" Classes="measure" Value="{Binding StartMeasureInfo.Measure}" ValueChanged="startMeasureNumeric_ValueChanged" />
+                    <NumericUpDown Grid.Column="1" Classes="beat1" Value="{Binding StartMeasureInfo.Beat1}" ValueChanged="startBeat1Numeric_ValueChanged" />
+                    <TextBlock Grid.Column="2" Classes="separator">/</TextBlock>
+                    <NumericUpDown Grid.Column="3" Classes="beat2" Value="{Binding Path=StartMeasureInfo.Beat2}" />
+                </Grid>
+            </Grid>
+            <Grid ColumnDefinitions="77*,239*">
+                <TextBlock Classes="label">BPM:</TextBlock>
+                <NumericUpDown Grid.Column="1" Name="gimmickBpmNumeric" Value="{Binding Bpm}" IsEnabled="{Binding BpmEnabled}" Increment="1" />
+            </Grid>
+            <Grid ColumnDefinitions="77*,239*">
+                <TextBlock Classes="label">Time Sig:</TextBlock>
+                <Grid Grid.Column="1" ColumnDefinitions="*,16,*">
+                    <NumericUpDown Name="timeSig1Numeric" Value="{Binding TimeSig1}" IsEnabled="{Binding TimeSig1Enabled}" Increment="1" />
+                    <TextBlock Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="2,0">/</TextBlock>
+                    <NumericUpDown Grid.Column="2" Name="timeSig2Numeric" Value="{Binding TimeSig2}" IsEnabled="{Binding TimeSig2Enabled}" Increment="1" />
+                </Grid>
+            </Grid>
+            <Grid ColumnDefinitions="77*,239*">
+                <TextBlock Classes="label">Hi-Speed:</TextBlock>
+                <NumericUpDown Grid.Column="1" Name="hiSpeedNumeric" Value="{Binding HiSpeed}" IsEnabled="{Binding HiSpeedEnabled}" Increment="1" />
+            </Grid>
+            <Grid ColumnDefinitions="77*,239*">
+                <TextBlock Classes="label">Stop End:</TextBlock>
+                <Grid Grid.Column="1" ColumnDefinitions="4*,2*,16,2*">
+                    <NumericUpDown Grid.Column="0" Name="stopEndMeasureNumeric" Classes="measure" Value="{Binding StopEndMeasureInfo.Measure}" IsEnabled="{Binding StopEndMeasureEnabled}" ValueChanged="stopEndMeasureNumeric_ValueChanged" />
+                    <NumericUpDown Grid.Column="1" Name="stopEndBeat1Numeric" Classes="beat1" Value="{Binding StopEndMeasureInfo.Beat1}" IsEnabled="{Binding StopEndBeat1Enabled}" ValueChanged="stopEndBeat1Numeric_ValueChanged" />
+                    <TextBlock Grid.Column="2" Classes="separator">/</TextBlock>
+                    <NumericUpDown Grid.Column="3" Name="stopEndBeat2Numeric" Classes="beat2" Value="{Binding Path=StopEndMeasureInfo.Beat2}" IsEnabled="{Binding StopEndBeat2Enabled}" />
+                </Grid>
+            </Grid>
+            <Grid ColumnDefinitions="77*,239*">
+                <TextBlock Classes="label">Rev End 1:</TextBlock>
+                <Grid Grid.Column="1" ColumnDefinitions="4*,2*,16,2*">
+                    <NumericUpDown Grid.Column="0" Name="revEnd1MeasureNumeric" Classes="measure" Value="{Binding RevEnd1MeasureInfo.Measure}" IsEnabled="{Binding RevEnd1MeasureEnabled}" ValueChanged="revEnd1MeasureNumeric_ValueChanged" />
+                    <NumericUpDown Grid.Column="1" Name="revEnd1Beat1Numeric" Classes="beat1" Value="{Binding RevEnd1MeasureInfo.Beat1}" IsEnabled="{Binding RevEnd1Beat1Enabled}" ValueChanged="revEnd1Beat1Numeric_ValueChanged" />
+                    <TextBlock Grid.Column="2" Classes="separator">/</TextBlock>
+                    <NumericUpDown Grid.Column="3" Name="revEnd1Beat2Numeric" Classes="beat2" Value="{Binding Path=RevEnd1MeasureInfo.Beat2}" IsEnabled="{Binding RevEnd1Beat2Enabled}" />
+                </Grid>
+            </Grid>
+            <Grid ColumnDefinitions="77*,239*">
+                <TextBlock Classes="label">Rev End 2:</TextBlock>
+                <Grid Grid.Column="1" ColumnDefinitions="4*,2*,16,2*">
+                    <NumericUpDown Grid.Column="0" Name="revEnd2MeasureNumeric" Classes="measure" Value="{Binding RevEnd2MeasureInfo.Measure}" IsEnabled="{Binding RevEnd2MeasureEnabled}" ValueChanged="revEnd2MeasureNumeric_ValueChanged" />
+                    <NumericUpDown Grid.Column="1" Name="revEnd2Beat1Numeric" Classes="beat1" Value="{Binding RevEnd2MeasureInfo.Beat1}" IsEnabled="{Binding RevEnd2Beat1Enabled}" ValueChanged="revEnd2Beat1Numeric_ValueChanged" />
+                    <TextBlock Grid.Column="2" Classes="separator">/</TextBlock>
+                    <NumericUpDown Grid.Column="3" Name="revEnd2Beat2Numeric" Classes="beat2" Value="{Binding Path=RevEnd2MeasureInfo.Beat2}" IsEnabled="{Binding RevEnd2Beat2Enabled}" />
+                </Grid>
+            </Grid>
+        </StackPanel>
+    </Panel>
+</UserControl>

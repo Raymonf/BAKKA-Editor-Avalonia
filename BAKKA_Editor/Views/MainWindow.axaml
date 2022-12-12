@@ -1,0 +1,29 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:views="clr-namespace:BAKKA_Editor.Views"
+        mc:Ignorable="d" d:DesignWidth="1154" d:DesignHeight="800"
+        x:Class="BAKKA_Editor.Views.MainWindow"
+        MinWidth="1060" MinHeight="500"
+        Width="1154" Height="800"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="BAKKA Avalonia"
+        WindowStartupLocation="CenterScreen"
+        Closing="Window_OnClosing">
+    <Design.DataContext>
+        <views:MainWindow />
+    </Design.DataContext>
+
+    <Window.KeyBindings>
+        <KeyBinding Gesture="Ctrl+O" Command="{Binding OpenCommand}" />
+        <KeyBinding Gesture="Ctrl+Z" Command="{Binding UndoCommand}" />
+        <KeyBinding Gesture="Ctrl+Y" Command="{Binding RedoCommand}" />
+        <KeyBinding Gesture="Ctrl+N" Command="{Binding NewCommand}" />
+        <KeyBinding Gesture="Ctrl+Shift+S" Command="{Binding SaveAsCommand}" />
+        <KeyBinding Gesture="Ctrl+S" Command="{Binding SaveCommand}" />
+    </Window.KeyBindings>
+    <Grid RowDefinitions="*" ColumnDefinitions="*">
+        <views:MainView Name="View" />
+    </Grid>
+</Window>
