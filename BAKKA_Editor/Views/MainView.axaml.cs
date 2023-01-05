@@ -5,6 +5,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -27,15 +28,16 @@ namespace BAKKA_Editor.Views;
 
 public partial class MainView : UserControl, IPassSetting
 {
+    private static bool IsDesktop => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
     private static readonly SKColor BackColor = SKColors.LightGray;
 
     // File selector state
-    // private string openFilename = "";
+    private string openFilename = "";
     private Stream? openChartFileReadStream;
     private Stream? openChartFileWriteStream;
 
-    private Stream? saveFileStream;
-    // private string saveFilename = "";
+    private Stream? saveFileStream; // for iOS, or something?
+    private string saveFilename = ""; // for desktop
 
     // View State
     public bool CanShutdown = false;
@@ -374,7 +376,9 @@ public partial class MainView : UserControl, IPassSetting
         ResetChartTime();
         UpdateNoteLabels(chart.Notes.Count > 0 ? 0 : -1);
         UpdateGimmickLabels(chart.Gimmicks.Count > 0 ? 0 : -1);
-        // saveFileStream = openChartFileWriteStream;
+        if (!IsDesktop)
+            saveFileStream = openChartFileWriteStream;
+        saveFilename = openFilename;
         chart.IsSaved = true;
         isNewFile = false;
         SetText();
@@ -1385,7 +1389,7 @@ public partial class MainView : UserControl, IPassSetting
     {
         var result = prompt;
         
-        if (prompt)
+        if (prompt || saveFilename.Length < 1)
         {
             var file = await GetStorageProvider().SaveFilePickerAsync(new FilePickerSaveOptions()
             {
@@ -1402,7 +1406,10 @@ public partial class MainView : UserControl, IPassSetting
             result = file is {CanOpenWrite: true};
             if (result)
             {
-                saveFileStream = await file.OpenWriteAsync();
+                if (!IsDesktop)
+                    saveFileStream = await file.OpenWriteAsync();
+                if (file.TryGetUri(out var uri))
+                    saveFilename = uri.LocalPath;
                 result = true;
             }
         }
@@ -1410,7 +1417,11 @@ public partial class MainView : UserControl, IPassSetting
         // if we had to prompt and didn't get a file, stop now
         if (prompt && !result) return false;
 
-        chart.WriteFile(saveFileStream);
+        // use file paths instead of streams on desktop
+        if (IsDesktop)
+            chart.WriteFile(saveFilename);
+        else
+            chart.WriteFile(saveFileStream);
         isNewFile = false;
         if (isRecoveredFile)
         {
@@ -1494,8 +1505,8 @@ public partial class MainView : UserControl, IPassSetting
         }
 
         openChartFileReadStream = await result[0].OpenReadAsync();
-        // openFilename = uri.LocalPath;
-        if (OpenFile())
+        openFilename = uri.LocalPath;
+        if (OpenFile() && !IsDesktop)
             openChartFileWriteStream = await result[0].OpenWriteAsync();
     }
 

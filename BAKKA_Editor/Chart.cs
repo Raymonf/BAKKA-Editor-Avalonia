@@ -155,6 +155,11 @@ namespace BAKKA_Editor
             return true;
         }
 
+        public bool WriteFile(string path, bool setSave = true)
+        {
+            return WriteFile(File.OpenWrite(path), setSave);
+        }
+
         public bool WriteFile(Stream stream, bool setSave = true)
         {
             stream.SetLength(0);
