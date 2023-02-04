@@ -66,6 +66,7 @@ public partial class MainView : UserControl, IPassSetting
     Note? lastNote;
     Note? nextSelectedNote; // so that we know the last newly inserted note
     Note? endOfChartNote;
+    bool isInsertingHold = false;
 
     // Music
     private IBakkaSoundEngine soundEngine;
@@ -856,6 +857,10 @@ public partial class MainView : UserControl, IPassSetting
 
     private void holdButtonClicked()
     {
+        // don't reset hold state if we're already inserting a hold
+        if (isInsertingHold)
+            return;
+        
         if (noBonusRadio.IsChecked.Value)
             SetSelectedObject(NoteType.HoldStartNoBonus);
         else if (bonusRadio.IsChecked.Value)
@@ -1175,6 +1180,8 @@ public partial class MainView : UserControl, IPassSetting
 
     private void SetNonHoldButtonState(bool state)
     {
+        isInsertingHold = !state;
+        
         tapButton.IsEnabled = state;
         orangeButton.IsEnabled = state;
         greenButton.IsEnabled = state;
