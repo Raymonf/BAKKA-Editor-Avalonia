@@ -144,6 +144,9 @@ namespace BAKKA_Editor
             {
                 if (refByLine.ContainsKey(i))
                 {
+                    if (!notesByLine.ContainsKey(refByLine[i]))
+                        throw new Exception($"Broken hold found: {refByLine[i]} was not found in notesByLine (max indices = {notesByLine.Count - 1})");
+                    
                     Notes[i].NextNote = notesByLine[refByLine[i]];
                     Notes[i].NextNote.PrevNote = Notes[i];
                 }
