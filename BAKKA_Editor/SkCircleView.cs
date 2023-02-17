@@ -28,10 +28,7 @@ namespace BAKKA_Editor
         public PointF CenterPoint { get; private set; }
         public float Radius { get; private set; }
         public float CurrentMeasure { get; set; }
-        /// <summary>
-        /// Number of measures in the future that are visible
-        /// </summary>
-        public float TotalMeasureShowNotes { get; set; } = 0.5f;
+        public float Hispeed { get; set; } = 1.5f;
 
         // Pens and Brushes
         public SKPaint? BeatPen { get; set; }
@@ -95,10 +92,27 @@ namespace BAKKA_Editor
             FlairPen = Utils.CreateStrokeBrush(SKColors.Yellow.WithAlpha((byte)FlairTransparency), PanelSize.Width * 8.0f / 600.0f);
         }
 
-        private SkArcInfo GetScaledRect(float objectTime)
+        private float GetTotalMeasureShowNotes(Chart chart)
+        {
+            //Convert hispeed to frames
+            float displayFrames = 73.0f - ((Hispeed - 1.5f) * 10.0f);
+            //Account for hispeed gimmick
+            var LatestHispeedChange = chart.Gimmicks.Where(x => x.GimmickType == GimmickType.HiSpeedChange && CurrentMeasure >= x.Measure).LastOrDefault();
+            if (LatestHispeedChange != null)
+            {
+                displayFrames = displayFrames / (float)LatestHispeedChange.HiSpeed;
+            }
+            //Add frame time to current time
+            float EndTimeDisplay = chart.GetTime(new BeatInfo(CurrentMeasure)) + ((displayFrames / 60.0f) * 1000.0f);
+            //convert time back to a measureDecimal
+            BeatInfo EndMeasure = chart.GetBeat(EndTimeDisplay);
+            return EndMeasure.MeasureDecimal - CurrentMeasure;
+        }
+
+        private SkArcInfo GetScaledRect(Chart chart, float objectTime)
         {
             SkArcInfo info = new();
-            float notescaleInit = 1 - ((objectTime - CurrentMeasure) * (1 / TotalMeasureShowNotes));  // Scale from 0-1
+            float notescaleInit = 1 - ((objectTime - CurrentMeasure) * (1 / GetTotalMeasureShowNotes(chart)));  // Scale from 0-1
             info.NoteScale = (float)Math.Pow(10.0f, notescaleInit) / 10.0f;
             float scaledRectSize = DrawRect.Width * info.NoteScale;
             float scaledRadius = scaledRectSize / 2.0f;
@@ -110,9 +124,9 @@ namespace BAKKA_Editor
             return info;
         }
 
-        private SkArcInfo GetSkArcInfo(Note note)
+        private SkArcInfo GetSkArcInfo(Chart chart, Note note)
         {
-            SkArcInfo info = GetScaledRect(note.Measure);
+            SkArcInfo info = GetScaledRect(chart,note.Measure);
             info.StartAngle = -note.Position * 6;
             info.ArcLength = -note.Size * 6;
             if (Math.Abs(info.ArcLength - (-360)) > 0.00001)
@@ -219,12 +233,12 @@ namespace BAKKA_Editor
             }
         }
 
-        public void DrawCircle()
+        public void DrawCircle(Chart chart)
         {
             // Draw measure circle
-            for (float meas = (float)Math.Ceiling(CurrentMeasure); (meas - CurrentMeasure) < TotalMeasureShowNotes; meas += 1.0f)
+            for (float meas = (float)Math.Ceiling(CurrentMeasure); (meas - CurrentMeasure) < GetTotalMeasureShowNotes(chart); meas += 1.0f)
             {
-                var info = GetScaledRect(meas);
+                var info = GetScaledRect(chart,meas);
                 if (info.Rect.Width >= 1)
                 {
                     canvas.DrawOval(info.Rect, BeatPen);
@@ -273,15 +287,15 @@ namespace BAKKA_Editor
             {
                 List<Gimmick> drawGimmicks = chart.Gimmicks.Where(
                     x => x.Measure >= CurrentMeasure
-                         && x.Measure <= (CurrentMeasure + TotalMeasureShowNotes)).ToList();
+                         && x.Measure <= (CurrentMeasure + GetTotalMeasureShowNotes(chart))).ToList();
 
                 foreach (var gimmick in drawGimmicks)
                 {
-                    var info = GetScaledRect(gimmick.Measure);
+                    var info = GetScaledRect(chart,gimmick.Measure);
 
                     if (info.Rect.Width >= 1)
                     {
-                        canvas.DrawOval(GetNotePaint(gimmick), info.Rect);
+                        canvas.DrawOval(info.Rect, GetNotePaint(gimmick));
                     }
                 }
             }
@@ -289,19 +303,19 @@ namespace BAKKA_Editor
         
         public void DrawHolds(Chart chart, bool highlightSelectedNote, int selectedNoteIndex)
         {
-            SkArcInfo currentInfo = GetScaledRect(CurrentMeasure);
-            SkArcInfo endInfo = GetScaledRect(CurrentMeasure + TotalMeasureShowNotes);
+            SkArcInfo currentInfo = GetScaledRect(chart, CurrentMeasure);
+            SkArcInfo endInfo = GetScaledRect(chart, CurrentMeasure + GetTotalMeasureShowNotes(chart));
 
             // First, draw holes that start before the viewpoint and have nodes that end after
             List<Note> holdNotes = chart.Notes.Where(
                 x => x.Measure < CurrentMeasure
                 && x.NextNote != null
-                && x.NextNote.Measure > (CurrentMeasure + TotalMeasureShowNotes)
+                && x.NextNote.Measure > (CurrentMeasure + GetTotalMeasureShowNotes(chart))
                 && x.IsHold).ToList();
             foreach (var note in holdNotes)
             {
-                SkArcInfo info = GetSkArcInfo(note);
-                SkArcInfo nextInfo = GetSkArcInfo((Note)note.NextNote);
+                SkArcInfo info = GetSkArcInfo(chart,note);
+                SkArcInfo nextInfo = GetSkArcInfo(chart, (Note)note.NextNote);
                 //GraphicsPath path = new GraphicsPath();
                 //path.AddArc(endInfo.Rect, info.StartAngle, info.ArcLength);
                 //path.AddArc(currentInfo.Rect, info.StartAngle + info.ArcLength, -info.ArcLength);
@@ -352,17 +366,17 @@ namespace BAKKA_Editor
 
             // Second, draw all the notes on-screen
             holdNotes = chart.Notes.Where(
-            x => x.Measure >= CurrentMeasure
-               && x.Measure <= (CurrentMeasure + TotalMeasureShowNotes)
-               && x.IsHold).ToList();
+            x => x.Measure >= CurrentMeasure 
+                 && x.Measure <= (CurrentMeasure + GetTotalMeasureShowNotes(chart))
+                 && x.IsHold).ToList();
             foreach (var note in holdNotes)
             {
-                SkArcInfo info = GetSkArcInfo(note);
+                SkArcInfo info = GetSkArcInfo(chart, note);
 
                 // If the previous note is off-screen, this case handles that
                 if (note.PrevNote != null && note.PrevNote.Measure < CurrentMeasure)
                 {
-                    SkArcInfo prevInfo = GetSkArcInfo((Note)note.PrevNote);
+                    SkArcInfo prevInfo = GetSkArcInfo(chart, (Note)note.PrevNote);
                     float ratio = (currentInfo.Rect.Width - info.Rect.Width) / (prevInfo.Rect.Width - info.Rect.Width);
                     float startNoteAngle = info.StartAngle;
                     float endNoteAngle = prevInfo.StartAngle;
@@ -386,9 +400,9 @@ namespace BAKKA_Editor
                 }
 
                 // If the next note is on-screen, this case handles that
-                if (note.NextNote != null && note.NextNote.Measure <= (CurrentMeasure + TotalMeasureShowNotes))
+                if (note.NextNote != null && note.NextNote.Measure <= (CurrentMeasure + GetTotalMeasureShowNotes(chart)))
                 {
-                    SkArcInfo nextInfo = GetSkArcInfo(note.NextNote);
+                    SkArcInfo nextInfo = GetSkArcInfo(chart, note.NextNote);
                     var p = new SKPath();
                     p.ArcTo(info.Rect, info.StartAngle, info.ArcLength, true);
                     p.ArcTo(nextInfo.Rect, nextInfo.StartAngle + nextInfo.ArcLength, -nextInfo.ArcLength, false);
@@ -396,9 +410,9 @@ namespace BAKKA_Editor
                 }
 
                 // If the next note is off-screen, this case handles that
-                if (note.NextNote != null && note.NextNote.Measure > (CurrentMeasure + TotalMeasureShowNotes))
+                if (note.NextNote != null && note.NextNote.Measure > (CurrentMeasure + GetTotalMeasureShowNotes(chart)))
                 {
-                    SkArcInfo nextInfo = GetSkArcInfo(note.NextNote);
+                    SkArcInfo nextInfo = GetSkArcInfo(chart, note.NextNote);
                     float ratio = (endInfo.Rect.Width - nextInfo.Rect.Width) / (info.Rect.Width - nextInfo.Rect.Width);
                     float startNoteAngle = nextInfo.StartAngle;
                     float endNoteAngle = info.StartAngle;
@@ -446,11 +460,11 @@ namespace BAKKA_Editor
         {
             List<Note> drawNotes = chart.Notes.Where(
             x => x.Measure >= CurrentMeasure
-            && x.Measure <= (CurrentMeasure + TotalMeasureShowNotes)
+            && x.Measure <= (CurrentMeasure + GetTotalMeasureShowNotes(chart))
             && !x.IsHold && !x.IsMask).ToList();
             foreach (var note in drawNotes)
             {
-                SkArcInfo info = GetSkArcInfo(note);
+                SkArcInfo info = GetSkArcInfo(chart,note);
 
                 if (info.Rect.Width >= 1)
                 {

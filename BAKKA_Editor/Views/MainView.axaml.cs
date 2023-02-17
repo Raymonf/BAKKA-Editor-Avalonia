@@ -140,13 +140,13 @@ public partial class MainView : UserControl, IPassSetting
         };
 
         // Program info
-        /*var asm = Assembly.GetExecutingAssembly();
-        var fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(asm.Location);
-        if (fvi.FileVersion != null)
-        {
-            fileVersion = fvi.FileVersion;
-            SetText();
-        }
+         /*var asm = Assembly.GetExecutingAssembly();
+          var fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(asm.Location);
+          if (fvi.FileVersion != null)
+          {
+              fileVersion = fvi.FileVersion;
+              SetText();
+          }*/
 
         // Look for user settings
         if (File.Exists("settings.toml"))
@@ -155,8 +155,7 @@ public partial class MainView : UserControl, IPassSetting
         {
             userSettings = new UserSettings();
             File.WriteAllText("settings.toml", Toml.FromModel(userSettings));
-        }*/
-        userSettings = new UserSettings();
+        }
 
         // Apply settings
         var vm = (MainViewModel?) DataContext;
@@ -168,6 +167,7 @@ public partial class MainView : UserControl, IPassSetting
             vm.SelectLastInsertedNote = userSettings.ViewSettings.SelectLastInsertedNote;
             vm.ShowGimmicksInCircleView = userSettings.ViewSettings.ShowGimmicks;
         }
+        visualHispeedNumeric.Value = (decimal)userSettings.ViewSettings.HispeedSetting;
 
         autoSaveTimer =
             new DispatcherTimer(TimeSpan.FromMilliseconds(userSettings.SaveSettings.AutoSaveInterval * 60000),
@@ -407,7 +407,7 @@ public partial class MainView : UserControl, IPassSetting
         skCircleView.DrawMasks(chart);
 
         // Draw base and measure circle.
-        skCircleView.DrawCircle();
+        skCircleView.DrawCircle(chart);
 
         // Draw degree lines
         skCircleView.DrawDegreeLines();
@@ -2260,6 +2260,8 @@ public partial class MainView : UserControl, IPassSetting
             songTrackBar.Value = 0;
             songTrackBar.Maximum = (int) currentSong.PlayLength;
             playButton.IsEnabled = true;
+            measureNumeric.Value = 0;
+            beat1Numeric.Value = 0;
         }
     }
 
@@ -2316,9 +2318,9 @@ public partial class MainView : UserControl, IPassSetting
     {
         var value = (float) visualHispeedNumeric.Value;
         if (value >= (float) visualHispeedNumeric.Minimum && value <= (float) visualHispeedNumeric.Maximum)
-            skCircleView.TotalMeasureShowNotes = value;
+            skCircleView.Hispeed = value;
         else
-            visualHispeedNumeric.Value = (decimal) skCircleView.TotalMeasureShowNotes;
+            visualHispeedNumeric.Value = (decimal) skCircleView.Hispeed;
     }
 
     protected override void OnKeyDown(KeyEventArgs e)
