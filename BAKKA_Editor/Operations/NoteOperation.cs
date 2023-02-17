@@ -16,6 +16,13 @@ namespace BAKKA_Editor.Operations
         {
             Chart = chart;
             Note = item;
+
+            // Force End of Chart note to be the correct position and size 
+            if (Note.NoteType == NoteType.EndOfChart)
+            {
+                Note.Position = 0;
+                Note.Size = 60;
+            }
         }
 
         public abstract void Redo();
@@ -138,16 +145,24 @@ namespace BAKKA_Editor.Operations
             {
                 case NoteType.HoldStartNoBonus:
                 case NoteType.HoldStartBonusFlair:
-                    nextNote.PrevNote = null;
-                    nextNote.NoteType = Note.NoteType;
+                    if (nextNote != null)
+                    {
+                        nextNote.PrevNote = null;
+                        if (nextNote.NoteType == NoteType.HoldJoint)
+                            nextNote.NoteType = Note.NoteType;
+                    }
                     break;
                 case NoteType.HoldJoint:
                     prevNote.NextNote = nextNote;
-                    nextNote.PrevNote = prevNote;
+                    if (nextNote != null)
+                        nextNote.PrevNote = prevNote;
                     break;
                 case NoteType.HoldEnd:
-                    prevNote.NextNote = null;
-                    prevNote.NoteType = NoteType.HoldEnd;
+                    if (prevNote != null)
+                    {
+                        prevNote.NextNote = null;
+                        prevNote.NoteType = NoteType.HoldEnd;
+                    }
                     break;
                 default:
                     break;
@@ -161,16 +176,23 @@ namespace BAKKA_Editor.Operations
             {
                 case NoteType.HoldStartNoBonus:
                 case NoteType.HoldStartBonusFlair:
-                    nextNote.PrevNote = Note;
-                    nextNote.NoteType = nextNoteType;
+                    if (nextNote != null)
+                    {
+                        nextNote.PrevNote = Note;
+                        nextNote.NoteType = nextNoteType;
+                    }
                     break;
                 case NoteType.HoldJoint:
                     prevNote.NextNote = Note;
-                    nextNote.PrevNote = Note;
+                    if (nextNote != null)
+                        nextNote.PrevNote = Note;
                     break;
                 case NoteType.HoldEnd:
-                    prevNote.NextNote = Note;
-                    prevNote.NoteType = prevNoteType;
+                    if (prevNote != null)
+                    {
+                        prevNote.NextNote = Note;
+                        prevNote.NoteType = prevNoteType;
+                    }
                     break;
                 default:
                     break;

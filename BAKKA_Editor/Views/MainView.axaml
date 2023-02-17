@@ -78,6 +78,14 @@
                                   IsHitTestVisible="False" />
                     </MenuItem.Icon>
                 </MenuItem>
+                <MenuItem Header="Show Gimmicks In Circle View" Command="{Binding ToggleGimmicksInCircleViewCommand}">
+                    <MenuItem.Icon>
+                        <CheckBox IsChecked="{Binding ShowGimmicksInCircleView}"
+                                  Name="ShowGimmicksInCircleViewMenuItem"
+                                  BorderThickness="0"
+                                  IsHitTestVisible="False" />
+                    </MenuItem.Icon>
+                </MenuItem>
             </MenuItem>
             <MenuItem Header="_Chart">
                 <MenuItem Header="Initial Chart Settings" Command="{Binding OpenInitialChartSettings}" />

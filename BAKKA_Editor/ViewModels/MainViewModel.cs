@@ -97,6 +97,13 @@ public partial class MainViewModel : ObservableObject
             var mainWindow = Target();
             mainWindow?.SetSelectLastInsertedNote(SelectLastInsertedNote);
         });
+        ToggleGimmicksInCircleViewCommand = ReactiveCommand.Create(() =>
+        {
+            ShowGimmicksInCircleView = !ShowGimmicksInCircleView;
+            
+            var mainWindow = Target();
+            mainWindow?.SetShowGimmicksInCircleView(ShowGimmicksInCircleView);
+        });
     }
 
     // View Model Settings State
@@ -104,6 +111,7 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool showCursorDuringPlayback = false;
     [ObservableProperty] private bool highlightViewedNote = true;
     [ObservableProperty] private bool selectLastInsertedNote = true;
+    [ObservableProperty] private bool showGimmicksInCircleView = true;
     
     // Button Text
     [ObservableProperty] private string insertButtonText = "Insert Object (I)";
@@ -120,5 +128,6 @@ public partial class MainViewModel : ObservableObject
     public ReactiveCommand<Unit, Unit> ToggleShowCursorDuringPlaybackCommand { get; set; }
     public ReactiveCommand<Unit, Unit> ToggleHighlightViewedNoteCommand { get; set; }
     public ReactiveCommand<Unit, Unit> ToggleSelectLastInsertedNoteCommand { get; set; }
+    public ReactiveCommand<Unit, Unit> ToggleGimmicksInCircleViewCommand { get; set; }
     public ReactiveCommand<Unit, Unit> OpenInitialChartSettings { get; }
 }

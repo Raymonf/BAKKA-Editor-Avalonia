@@ -267,6 +267,26 @@ namespace BAKKA_Editor
             }
         }
 
+        public void DrawGimmicks(Chart chart, bool showGimmicks, int selectedGimmickIndex)
+        {
+            if (showGimmicks)
+            {
+                List<Gimmick> drawGimmicks = chart.Gimmicks.Where(
+                    x => x.Measure >= CurrentMeasure
+                         && x.Measure <= (CurrentMeasure + TotalMeasureShowNotes)).ToList();
+
+                foreach (var gimmick in drawGimmicks)
+                {
+                    var info = GetScaledRect(gimmick.Measure);
+
+                    if (info.Rect.Width >= 1)
+                    {
+                        canvas.DrawOval(GetNotePaint(gimmick), info.Rect);
+                    }
+                }
+            }
+        }
+        
         public void DrawHolds(Chart chart, bool highlightSelectedNote, int selectedNoteIndex)
         {
             SkArcInfo currentInfo = GetScaledRect(CurrentMeasure);
@@ -466,6 +486,17 @@ namespace BAKKA_Editor
             {
                 IsAntialias = true,
                 Color = note.Color,
+                Style = SKPaintStyle.Stroke,
+                StrokeWidth = PanelSize.Width * 8.0f * noteScale / 600.0f
+            };
+        }
+
+        private SKPaint GetNotePaint(Gimmick gimmick, float noteScale = 1.0f)
+        {
+            return new SKPaint
+            {
+                IsAntialias = true,
+                Color = Utils.GimmickTypeToColor(gimmick.Color),
                 Style = SKPaintStyle.Stroke,
                 StrokeWidth = PanelSize.Width * 8.0f * noteScale / 600.0f
             };

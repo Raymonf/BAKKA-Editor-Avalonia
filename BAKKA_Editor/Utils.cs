@@ -24,6 +24,30 @@ namespace BAKKA_Editor
             return deg * Math.PI / 180.0f;
         }
 
+        internal static SKColor GimmickTypeToColor(GimmickType type)
+        {
+            switch (type)
+            {
+                case GimmickType.NoGimmick:
+                    return SKColors.Transparent;
+                case GimmickType.BpmChange:
+                    return new SKColor(200, 0, 255, 255);
+                case GimmickType.TimeSignatureChange:
+                    return new SKColor(200, 160, 255, 160);
+                case GimmickType.HiSpeedChange:
+                    return new SKColor(200, 0, 255, 0);
+                case GimmickType.ReverseStart:
+                case GimmickType.ReverseMiddle:
+                case GimmickType.ReverseEnd:
+                    return new SKColor(200, 255, 255, 0);
+                case GimmickType.StopStart:
+                case GimmickType.StopEnd:
+                    return new SKColor(200, 255, 0, 0);
+                default:
+                    return SKColors.Transparent;
+            }
+        }
+        
         internal static SKColor NoteTypeToColor(NoteType type)
         {
             switch (type)
