@@ -376,13 +376,9 @@
                                     Classes="center-text stretch" Click="NoteNextButton_OnClick">
                                 Next Note &gt;
                             </Button>
-                            <Button Grid.Row="1" Grid.Column="0" Name="notePrevMeasureButton" Margin="0,0,2,4"
-                                    Classes="center-text stretch" Click="NotePrevMeasureButton_OnClick">
-                                &lt;&lt; Prev Measure
-                            </Button>
-                            <Button Grid.Row="1" Grid.Column="1" Name="noteNextMeasureButton" Margin="0,0,0,4"
-                                    Classes="center-text stretch" Click="NoteNextMeasureButton_OnClick">
-                                Next Measure &gt;&gt;
+                            <Button Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Name="notePrevMeasureButton" Margin="0,0,2,4"
+                                    Classes="center-text stretch" Click="NoteJumpToCurrTimeButton_Click">
+                                Jump To Nearest Note @ Current Time
                             </Button>
                         </Grid>
                         <Grid RowDefinitions="*,*,*" ColumnDefinitions="*,*">
@@ -451,7 +447,7 @@
 
                 <HeaderedContentControl Header="Gimmick View" Background="Black">
                     <StackPanel Margin="8">
-                        <Grid RowDefinitions="*,*,*,*,*" ColumnDefinitions="*,*">
+                        <Grid RowDefinitions="*,*,*" ColumnDefinitions="*,*">
                             <Button Grid.Row="0" Grid.Column="0" Name="gimmickPrevButton" Margin="0,0,1,4"
                                     Classes="center-text stretch" Click="GimmickPrevButton_OnClick">
                                 Previous Gimmick
@@ -461,13 +457,18 @@
                                 Next Gimmick
                             </Button>
 
-                            <Grid Grid.Row="1" Grid.Column="0" RowDefinitions="*" ColumnDefinitions="*,*"
+                            <Button Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Name="gimmickJumpToCurrTimeButton" Margin="1,0,0,4"
+                                    Classes="center-text stretch" Click="GimmickJumpToCurrTimeButton_OnClick">
+                                Jump To Nearest Gimmick @ Current Time
+                            </Button>
+                            
+                            <Grid Grid.Row="2" Grid.Column="0" RowDefinitions="*" ColumnDefinitions="*,*"
                                   Margin="0,0,0,4">
                                 <TextBlock Text="Measure:" FontWeight="Bold"></TextBlock>
                                 <TextBlock Grid.Column="1" Name="gimmickMeasureLabel" Text="None"></TextBlock>
                             </Grid>
 
-                            <Grid Grid.Row="1" Grid.Column="1" RowDefinitions="*" ColumnDefinitions="*,*">
+                            <Grid Grid.Row="2" Grid.Column="1" RowDefinitions="*" ColumnDefinitions="*,*">
                                 <TextBlock Text="Beat:" FontWeight="Bold"></TextBlock>
                                 <TextBlock Grid.Column="1" Name="gimmickBeatLabel" Text="None"></TextBlock>
                             </Grid>

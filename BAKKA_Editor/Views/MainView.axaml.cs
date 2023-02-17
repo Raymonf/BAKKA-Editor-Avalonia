@@ -1783,43 +1783,20 @@ public partial class MainView : UserControl, IPassSetting
         UpdateNoteLabels();
     }
 
-    private void NotePrevMeasureButton_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (chart.Notes.Count == 0 || selectedNoteIndex < 0)
-            return;
-
-        int lastMeasure = chart.Notes[selectedNoteIndex].BeatInfo.Measure;
-        var note = chart.Notes.LastOrDefault(x => x.BeatInfo.Measure < lastMeasure);
-        if (note != null)
-        {
-            selectedNoteIndex = chart.Notes.IndexOf(note);
-        }
-        else
-        {
-            note = chart.Notes.LastOrDefault(x => x.BeatInfo.Measure > lastMeasure);
-            if (note != null)
-            {
-                selectedNoteIndex = chart.Notes.IndexOf(note);
-            }
-        }
-
-        UpdateNoteLabels();
-    }
-
-    private void NoteNextMeasureButton_OnClick(object? sender, RoutedEventArgs e)
+    private void NoteJumpToCurrTimeButton_Click(object? sender, RoutedEventArgs e)
     {
         if (chart.Notes.Count == 0 || selectedNoteIndex >= chart.Notes.Count)
             return;
 
-        int lastMeasure = chart.Notes[selectedNoteIndex].BeatInfo.Measure;
-        var note = chart.Notes.FirstOrDefault(x => x.BeatInfo.Measure > lastMeasure);
+        float currentMeasure = skCircleView.CurrentMeasure;
+        var note = chart.Notes.FirstOrDefault(x => x.BeatInfo.MeasureDecimal >= currentMeasure);
         if (note != null)
         {
             selectedNoteIndex = chart.Notes.IndexOf(note);
         }
         else
         {
-            note = chart.Notes.FirstOrDefault(x => x.BeatInfo.Measure < lastMeasure);
+            note = chart.Notes.FirstOrDefault(x => x.BeatInfo.MeasureDecimal <= currentMeasure);
             if (note != null)
             {
                 selectedNoteIndex = chart.Notes.IndexOf(note);
@@ -2569,5 +2546,27 @@ public partial class MainView : UserControl, IPassSetting
         // we need this condition because Shutdown() calls Close()
         Dispatcher.UIThread.Post(async () => await ExitMenuItem_OnClick(), DispatcherPriority.Background);
         e.Cancel = true;
+    }
+
+    private void GimmickJumpToCurrTimeButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (chart.Gimmicks.Count == 0)
+            return;
+
+        float currentMeasure = skCircleView.CurrentMeasure;
+        var gimmick = chart.Gimmicks.FirstOrDefault(x => x.BeatInfo.MeasureDecimal >= currentMeasure);
+        if (gimmick != null)
+        {
+            selectedGimmickIndex = chart.Gimmicks.IndexOf(gimmick);
+        }
+        else
+        {
+            gimmick = chart.Gimmicks.FirstOrDefault(x => x.BeatInfo.MeasureDecimal <= currentMeasure);
+            if (gimmick != null)
+            {
+                selectedGimmickIndex = chart.Gimmicks.IndexOf(gimmick);
+            }
+        }
+        UpdateGimmickLabels();
     }
 }
