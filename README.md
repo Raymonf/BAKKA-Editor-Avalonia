@@ -10,4 +10,4 @@ Android would work with some slight modifications, but since I don't have an And
 
 ### Notes
 
-* FluentAvalonia is used for the ContentDialog alone. It works, though it's ugly.
+* FluentAvalonia is used for the ContentDialog alone. It works, though it's ugly (the fault is mine).
