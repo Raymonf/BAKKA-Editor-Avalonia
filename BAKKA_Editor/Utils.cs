@@ -194,9 +194,13 @@ namespace BAKKA_Editor
 
         private static int GetGcd(int a, int b)
         {
-            if (b == 0)
-                return a;
-            return GetGcd(b, (int)a % (int)b);
+            while (true)
+            {
+                if (b == 0) return a;
+                var a1 = a;
+                a = b;
+                b = (int) a1 % (int) b;
+            }
         }
 
         internal static float GetDist(System.Drawing.Point a, System.Drawing.Point b)
