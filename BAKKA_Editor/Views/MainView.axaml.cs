@@ -1481,8 +1481,7 @@ public partial class MainView : UserControl, IPassSetting
             {
                 if (!IsDesktop)
                     saveFileStream = await file.OpenWriteAsync();
-                if (file.TryGetUri(out var uri))
-                    saveFilename = uri.LocalPath;
+                saveFilename = file.Path.LocalPath;
                 result = true;
             }
         }
@@ -1571,14 +1570,14 @@ public partial class MainView : UserControl, IPassSetting
                 }
             },
         });
-        if (result.Count < 1 || !result[0].TryGetUri(out var uri))
+        if (result.Count < 1)
         {
             // await ShowBlockingMessageBox("Error", "No file selected.");
             return;
         }
 
         openChartFileReadStream = await result[0].OpenReadAsync();
-        openFilename = uri.LocalPath;
+        openFilename = result[0].Path.LocalPath;
         if (OpenFile() && !IsDesktop)
             openChartFileWriteStream = await result[0].OpenWriteAsync();
     }
@@ -2307,10 +2306,10 @@ public partial class MainView : UserControl, IPassSetting
             },
         });
         
-        if (result.Count < 1 || !result[0].TryGetUri(out var uri))
+        if (result.Count < 1)
             return;
         
-        songFilePath = uri.LocalPath;
+        songFilePath = result[0].Path.LocalPath;
         songFileLabel.Text = Path.GetFileName(songFilePath);
 
         if (currentSong != null)
@@ -2320,7 +2319,7 @@ public partial class MainView : UserControl, IPassSetting
 
         try
         {
-            if (PlatformUtils.OsType == OperatingSystemType.iOS)
+            if (PlatformUtils.FormFactorType == FormFactorType.Mobile)
                 currentSong = soundEngine.Play2D(await result[0].OpenReadAsync(), true, true);
             else
                 currentSong = soundEngine.Play2D(songFilePath, true, true);

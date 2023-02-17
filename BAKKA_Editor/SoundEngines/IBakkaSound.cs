@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace BAKKA_Editor.SoundEngines;
+﻿namespace BAKKA_Editor.SoundEngines;
 
 public interface IBakkaSound
 {

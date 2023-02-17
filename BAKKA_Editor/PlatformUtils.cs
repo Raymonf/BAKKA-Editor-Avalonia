@@ -9,22 +9,22 @@ namespace BAKKA_Editor;
 
 class PlatformUtils
 {
-    private static OperatingSystemType? _osType;
-    public static OperatingSystemType OsType
+    private static FormFactorType? _formFactorType;
+    public static FormFactorType FormFactorType
     {
         get
         {
-            if (_osType == null)
-                _osType = AvaloniaLocator.Current.GetService<IRuntimePlatform>()?.GetRuntimeInfo().OperatingSystem;
-            if (_osType == null)
-                return OperatingSystemType.Unknown;
-            return _osType.Value;
+            if (_formFactorType == null)
+                _formFactorType = AvaloniaLocator.Current.GetService<IRuntimePlatform>()?.GetRuntimeInfo().FormFactor;
+            if (_formFactorType == null)
+                return FormFactorType.Unknown;
+            return _formFactorType.Value;
         }
     }
 
     public static string GetTempPath()
     {
-        if (OsType == OperatingSystemType.iOS)
+        if (FormFactorType == FormFactorType.Mobile)
         {
             var documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             return Path.Combine(documents, "..", "tmp");
@@ -37,7 +37,7 @@ class PlatformUtils
     {
         var file = Path.GetTempFileName();
         File.Delete(file);
-        return OsType == OperatingSystemType.iOS ? Path.Combine(GetTempPath(), Path.GetFileName(file)) : file;
+        return FormFactorType == FormFactorType.Mobile ? Path.Combine(GetTempPath(), Path.GetFileName(file)) : file;
     }
 
     public static List<string> ReadAllStreamLines(Stream stream)

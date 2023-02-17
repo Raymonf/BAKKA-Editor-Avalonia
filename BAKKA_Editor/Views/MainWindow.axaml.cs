@@ -1,4 +1,3 @@
-using System;
 using System.ComponentModel;
 using System.Diagnostics.Tracing;
 using System.IO;
@@ -46,7 +45,7 @@ public partial class MainWindow : Window, IPassSetting
     
     private MainView? GetMainView() => this.FindControl<MainView>("View");
     
-    private void Window_OnClosing(object? sender, CancelEventArgs e)
+    private void Window_OnClosing(object? sender, WindowClosingEventArgs e)
     {
         // we need this condition because Shutdown() calls Close()
         var view = GetMainView();
