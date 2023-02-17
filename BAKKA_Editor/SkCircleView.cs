@@ -585,7 +585,7 @@ namespace BAKKA_Editor
             return new SKPaint
             {
                 IsAntialias = true,
-                Color = Utils.GimmickTypeToColor(gimmick.Color),
+                Color = Utils.GimmickTypeToColor(gimmick.GimmickType),
                 Style = SKPaintStyle.Stroke,
                 StrokeWidth = PanelSize.Width * 8.0f * noteScale / 600.0f
             };
