@@ -168,6 +168,7 @@ public partial class MainView : UserControl, IPassSetting
             vm.ShowGimmicksInCircleView = userSettings.ViewSettings.ShowGimmicks;
         }
         visualHispeedNumeric.Value = (decimal)userSettings.ViewSettings.HispeedSetting;
+        trackBarVolume.Value = userSettings.ViewSettings.Volume;
 
         autoSaveTimer =
             new DispatcherTimer(TimeSpan.FromMilliseconds(userSettings.SaveSettings.AutoSaveInterval * 60000),
@@ -220,7 +221,8 @@ public partial class MainView : UserControl, IPassSetting
             {
                 if (valueTriggerEvent == EventSource.None)
                     valueTriggerEvent = EventSource.UpdateTick;
-                measureNumeric.Value = info.Measure;
+                if (info.Measure < 0) measureNumeric.Value = 0;
+                else measureNumeric.Value = info.Measure;
                 // TODO: weird rounding behavior for slow scrolling on longer songs...?
                 // investigate how to fix this. is it related to playback position precision from bass?
                 // +5 seems to work as a primitive "round up"
@@ -525,7 +527,11 @@ public partial class MainView : UserControl, IPassSetting
         updateTime();
         if (currentSong != null && !IsSongPlaying() && valueTriggerEvent != EventSource.TrackBar)
         {
-            songTrackBar.Value = chart.GetTime(new BeatInfo((int)measureNumeric.Value, (int)beat1Numeric.Value * 1920 / (int)beat2Numeric.Value));
+            int time = chart.GetTime(new BeatInfo((int)measureNumeric.Value, (int)beat1Numeric.Value * 1920 / (int)beat2Numeric.Value));
+            if (time < 0)
+                songTrackBar.Value = 0;
+            else
+                songTrackBar.Value = time;
         }
 
         valueTriggerEvent = EventSource.None;
@@ -593,95 +599,127 @@ public partial class MainView : UserControl, IPassSetting
     private void SetSelectedObject(NoteType type)
     {
         currentNoteType = type;
+        int minSize = 1;
         switch (type)
         {
             case NoteType.TouchNoBonus:
                 updateLabel("Touch");
+                minSize = 4;
                 break;
             case NoteType.TouchBonus:
                 updateLabel("Touch [Bonus]");
+                minSize = 5;
                 break;
             case NoteType.SnapRedNoBonus:
                 updateLabel("Snap (R)");
+                minSize = 6;
                 break;
             case NoteType.SnapBlueNoBonus:
                 updateLabel("Snap (B)");
+                minSize = 6;
                 break;
             case NoteType.SlideOrangeNoBonus:
                 updateLabel("Slide (O)");
+                minSize = 5;
                 break;
             case NoteType.SlideOrangeBonus:
                 updateLabel("Slide (O) [Bonus]");
+                minSize = 7;
                 break;
             case NoteType.SlideGreenNoBonus:
                 updateLabel("Slide (G)");
+                minSize = 5;
                 break;
             case NoteType.SlideGreenBonus:
                 updateLabel("Slide (G) [Bonus]");
+                minSize = 7;
                 break;
             case NoteType.HoldStartNoBonus:
                 updateLabel("Hold Start");
+                minSize = 2;
                 break;
             case NoteType.HoldJoint:
-                if (endHoldCheck.IsChecked.Value)
+                if (endHoldCheck.IsChecked!.Value)
                 {
                     updateLabel("Hold End");
                     currentNoteType = NoteType.HoldEnd;
+                    minSize = 1;
                 }
                 else
+                {
                     updateLabel("Hold Middle");
+                    minSize = 0;
+                }
 
                 break;
             case NoteType.HoldEnd:
                 updateLabel("Hold End");
+                minSize = 1;
                 break;
             case NoteType.MaskAdd:
-                if (clockwiseMaskRadio.IsChecked.Value)
+                if (clockwiseMaskRadio.IsChecked!.Value)
                     updateLabel("Mask Add (Clockwise)");
-                else if (cClockwiseMaskRadio.IsChecked.Value)
+                else if (cClockwiseMaskRadio.IsChecked!.Value)
                     updateLabel("Mask Add (Counter-Clockwise)");
                 else
                     updateLabel("Mask Add (From Center)");
+                minSize = 1;
                 break;
             case NoteType.MaskRemove:
-                if (clockwiseMaskRadio.IsChecked.Value)
+                if (clockwiseMaskRadio.IsChecked!.Value)
                     updateLabel("Mask Remove (Clockwise)");
-                else if (cClockwiseMaskRadio.IsChecked.Value)
+                else if (cClockwiseMaskRadio.IsChecked!.Value)
                     updateLabel("Mask Remove (Counter-Clockwise)");
                 else
                     updateLabel("Mask Remove (From Center)");
+                minSize = 1;
                 break;
             case NoteType.EndOfChart:
                 updateLabel("End of Chart");
+                minSize = 60;
                 break;
             case NoteType.Chain:
                 updateLabel("Chain");
+                minSize = 4;
                 break;
             case NoteType.TouchBonusFlair:
                 updateLabel("Touch [R Note]");
+                minSize = 6;
                 break;
             case NoteType.SnapRedBonusFlair:
                 updateLabel("Snap (R) [R Note]");
+                minSize = 8;
                 break;
             case NoteType.SnapBlueBonusFlair:
                 updateLabel("Snap (B) [R Note]");
+                minSize = 8;
                 break;
             case NoteType.SlideOrangeBonusFlair:
                 updateLabel("Slide (O) [R Note]");
+                minSize = 10;
                 break;
             case NoteType.SlideGreenBonusFlair:
                 updateLabel("Slide (G) [R Note]");
+                minSize = 10;
                 break;
             case NoteType.HoldStartBonusFlair:
                 updateLabel("Hold Start [R Note]");
+                minSize = 8;
                 break;
             case NoteType.ChainBonusFlair:
                 updateLabel("Chain [R Note]");
+                minSize = 10;
                 break;
             default:
                 updateLabel("None Selected");
+                minSize = 1;
                 break;
         }
+        
+        if (sizeNumeric.Value < minSize)    sizeNumeric.Value = minSize;
+        if (sizeTrackBar.Value < minSize)   sizeTrackBar.Value = minSize;
+        sizeNumeric.Minimum = minSize;
+        sizeTrackBar.Minimum = minSize;
     }
 
     void updateLabel(string text)
@@ -742,8 +780,8 @@ public partial class MainView : UserControl, IPassSetting
     private void ResetChartTime()
     {
         measureNumeric.Value = beat1Numeric.Value = 0;
-        positionNumeric.Value = 0;
-        sizeNumeric.Value = 1;
+        positionNumeric.Value = positionNumeric.Minimum;
+        sizeNumeric.Value = sizeNumeric.Minimum;
         updateTime();
     }
 
@@ -1285,6 +1323,8 @@ public partial class MainView : UserControl, IPassSetting
             return;
         }
 
+        int initialSize = (int)sizeNumeric.Value;
+        
         {
             // X and Y are relative to the upper left of the panel
             var xCen = point.Position.X - (CircleControl.DesiredSize.Width / 2);
@@ -1295,24 +1335,28 @@ public partial class MainView : UserControl, IPassSetting
             if (theta == skCircleView.mouseDownPos)
             {
                 positionNumeric.Value = skCircleView.mouseDownPos;
-                sizeNumeric.Value = 1;
+                initialSize = 1;
             }
             else if ((theta > skCircleView.mouseDownPos || skCircleView.rolloverPos) && !skCircleView.rolloverNeg)
             {
                 positionNumeric.Value = skCircleView.mouseDownPos;
                 if (skCircleView.rolloverPos)
-                    sizeNumeric.Value = Math.Min(theta + 60 - skCircleView.mouseDownPos + 1, 60);
+                    initialSize = (int)Math.Min(theta + 60 - skCircleView.mouseDownPos + 1, 60);
                 else
-                    sizeNumeric.Value = theta - skCircleView.mouseDownPos + 1;
+                    initialSize = theta - skCircleView.mouseDownPos + 1;
             }
             else if (theta < skCircleView.mouseDownPos || skCircleView.rolloverNeg)
             {
                 positionNumeric.Value = theta;
                 if (skCircleView.rolloverNeg)
-                    sizeNumeric.Value = Math.Min(skCircleView.mouseDownPos + 60 - theta + 1, 60);
+                    initialSize = (int)Math.Min(skCircleView.mouseDownPos + 60 - theta + 1, 60);
                 else
-                    sizeNumeric.Value = skCircleView.mouseDownPos - theta + 1;
+                    initialSize = skCircleView.mouseDownPos - theta + 1;
             }
+            
+            if (initialSize < sizeNumeric.Minimum) sizeNumeric.Value = sizeNumeric.Minimum;
+            else if (initialSize > 60) sizeNumeric.Value = 60;
+            else sizeNumeric.Value = initialSize;
         }
     }
 
@@ -1392,6 +1436,24 @@ public partial class MainView : UserControl, IPassSetting
     {
         if (!await PromptSave())
             return;
+        
+        if (tempStatusPath != "")
+            File.Delete(tempStatusPath);
+        if (tempFilePath != "")
+            File.Delete(tempFilePath);
+        
+        // Update user settings.toml
+        try
+        {
+            if (File.Exists("settings.toml"))
+                File.WriteAllText("settings.toml", Toml.FromModel(userSettings));
+        }
+        catch (Exception ex)
+        {
+            await ShowBlockingMessageBox("Warning",
+                $"Settings failed to save: {ex}", MessageBoxType.Ok);
+        }
+
         CanShutdown = true;
         (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.Shutdown();
     }
@@ -1797,16 +1859,22 @@ public partial class MainView : UserControl, IPassSetting
             : new RemoveNote(chart, chart.Notes[selectedNoteIndex]);            NoteOperation op2 = null;
         if (chart.Notes[selectedNoteIndex].NoteType == NoteType.HoldStartBonusFlair || chart.Notes[selectedNoteIndex].NoteType == NoteType.HoldStartNoBonus)
         {
-            if(chart.Notes[selectedNoteIndex].NextNote.NoteType == NoteType.HoldEnd)
+            if(chart.Notes[selectedNoteIndex].NextNote != null)
             {
-                op2 = new RemoveHoldNote(chart, chart.Notes[selectedNoteIndex].NextNote);
+                if (chart.Notes[selectedNoteIndex].NextNote.NoteType == NoteType.HoldEnd)
+                {
+                    op2 = new RemoveHoldNote(chart, chart.Notes[selectedNoteIndex].NextNote);
+                }
             }
         }
         if (chart.Notes[selectedNoteIndex].NoteType == NoteType.HoldEnd)
         {
-            if (chart.Notes[selectedNoteIndex].PrevNote.NoteType == NoteType.HoldStartBonusFlair || chart.Notes[selectedNoteIndex].PrevNote.NoteType == NoteType.HoldStartNoBonus)
+            if(chart.Notes[selectedNoteIndex].PrevNote != null)
             {
-                op2 = new RemoveHoldNote(chart, chart.Notes[selectedNoteIndex].PrevNote);
+                if (chart.Notes[selectedNoteIndex].PrevNote.NoteType == NoteType.HoldStartBonusFlair || chart.Notes[selectedNoteIndex].PrevNote.NoteType == NoteType.HoldStartNoBonus)
+                {
+                    op2 = new RemoveHoldNote(chart, chart.Notes[selectedNoteIndex].PrevNote);
+                }
             }
         }
         opManager.InvokeAndPush(op);
@@ -1829,13 +1897,26 @@ public partial class MainView : UserControl, IPassSetting
             if (op != null)
             {
                 UpdateControlsFromOperation(op, OperationDirection.Undo);
+                //check for if it's a segment hold, if so treat them as 1 object by doing everything twice
                 if (op.GetType() == typeof(RemoveHoldNote))
                 {
                     foreach (var note in chart.Notes)
                     {
                         if (note.IsHold && note.NextNote == null && note.PrevNote == null)
                         {
-                            UndoMenuItem_OnClick();
+                            if (opManager.CanUndo)
+                            {
+                                var op2 = opManager.Undo();
+                                if (op2 != null)
+                                {
+                                    UpdateControlsFromOperation(op2, OperationDirection.Undo);
+                                    //check for the edge case of someone placing a hold start then deleting it
+                                    if (op2.GetType() == typeof(InsertHoldNote))
+                                    {
+                                        RedoMenuItem_OnClick();
+                                    }
+                                }
+                            }
                             return;
                         }
                     }
@@ -1852,6 +1933,30 @@ public partial class MainView : UserControl, IPassSetting
             if (op != null)
             {
                 UpdateControlsFromOperation(op, OperationDirection.Redo);
+                //check for if it's a segment hold, if so treat them as 1 object by doing everything twice
+                if (op.GetType() == typeof(RemoveHoldNote))
+                {
+                    foreach (var note in chart.Notes)
+                    {
+                        if (note.IsHold && note.NextNote == null && note.PrevNote == null)
+                        {
+                            if (opManager.CanRedo)
+                            {
+                                var op2 = opManager.Redo();
+                                if (op2 != null)
+                                {
+                                    UpdateControlsFromOperation(op2, OperationDirection.Redo);
+                                    //check for the edge case of someone placing a hold start then deleting it
+                                    if (op2.GetType() == typeof(InsertHoldNote))
+                                    {
+                                        UndoMenuItem_OnClick();
+                                    }
+                                }
+                            }
+                            return;
+                        }
+                    }
+                }
             }
         }
     }
@@ -2286,7 +2391,8 @@ public partial class MainView : UserControl, IPassSetting
             if (!ignoreBeatSet)
             {
                 valueTriggerEvent = EventSource.TrackBar;
-                measureNumeric.Value = info.Measure;
+                if (info.Measure < 0) measureNumeric.Value = 0;
+                else measureNumeric.Value = info.Measure;
                 beat1Numeric.Value = (int) ((float) info.Beat / 1920.0f * (float) beat2Numeric.Value);
             }
 
@@ -2303,6 +2409,7 @@ public partial class MainView : UserControl, IPassSetting
             return;
         if (currentSong != null && e.Property.Name == "Value")
             currentSong.Volume = (float) trackBarVolume.Value / (float) trackBarVolume.Maximum;
+        userSettings.ViewSettings.Volume = (int)trackBarVolume.Value;
     }
 
     private void TrackBarSpeed_OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)

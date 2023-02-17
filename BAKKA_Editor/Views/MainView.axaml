@@ -255,7 +255,7 @@
                                                            ValueChanged="SizeNumeric_OnValueChanged" />
                                             <Slider Grid.Column="1" Name="sizeTrackBar"
                                                     VerticalAlignment="Center"
-                                                    Value="0" Minimum="0" Maximum="59"
+                                                    Value="4" Minimum="4" Maximum="59"
                                                     SmallChange="1" LargeChange="5"
                                                     PropertyChanged="SizeTrackBar_OnPropertyChanged" />
                                         </Grid>
