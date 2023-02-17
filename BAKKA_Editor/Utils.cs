@@ -183,21 +183,20 @@ namespace BAKKA_Editor
             numerator /= gcd;
             denominator /= gcd;
 
-            denominator = Math.Max(denominator, min);
+            while (denominator < min)
+            {
+                numerator *= 2;
+                denominator *= 2;
+            }
 
             return Tuple.Create(numerator, denominator);
         }
 
         private static int GetGcd(int a, int b)
         {
-            while (b != 0)
-            {
-                int temp = b;
-                b = a % b;
-                a = temp;
-            }
-
-            return a;
+            if (b == 0)
+                return a;
+            return GetGcd(b, (int)a % (int)b);
         }
 
         internal static float GetDist(System.Drawing.Point a, System.Drawing.Point b)
