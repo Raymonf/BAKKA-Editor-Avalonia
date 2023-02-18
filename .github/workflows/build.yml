@@ -12,7 +12,7 @@ jobs:
   build:
     strategy:
       matrix:
-        runtimeIdentifier: ["win-x64", "linux-x64", "osx-arm64", "osx-x64"]
+        runtimeIdentifier: ["win7-x64", "linux-x64", "osx-arm64", "osx-x64"]
 
     runs-on: ubuntu-latest
     env:
@@ -34,9 +34,15 @@ jobs:
       env:
         RuntimeIdentifier: ${{ matrix.runtimeIdentifier }}
 
-    - name: Copy bass libraries
+    - name: Copy bass libraries (Linux)
       run: cp ${{ env.ProjectName }}/lib/${{ env.RuntimeIdentifier }}/* ${{ env.ProjectName }}/bin/Release/net7.0/${{ env.RuntimeIdentifier }}/publish
-      if: ${{ !contains(env.RuntimeIdentifier, 'osx') }}
+      if: ${{ contains(env.RuntimeIdentifier, 'linux') }}
+      env:
+        RuntimeIdentifier: ${{ matrix.runtimeIdentifier }}
+        
+    - name: Copy bass libraries (Windows)
+      run: cp ${{ env.ProjectName }}/lib/win-x64/* ${{ env.ProjectName }}/bin/Release/net7.0/${{ env.RuntimeIdentifier }}/publish
+      if: ${{ !contains(env.RuntimeIdentifier, 'win') }}
       env:
         RuntimeIdentifier: ${{ matrix.runtimeIdentifier }}
 
