@@ -24,7 +24,7 @@ jobs:
         dotnet-version: 7.0.x
 
     - name: Publish the application
-      run: dotnet publish ${{ env.ProjectName }} --sc -r $env:RuntimeIdentifier -c Release
+      run: dotnet publish ${{ env.ProjectName }} --sc -r ${{ env.RuntimeIdentifier }} -c Release
       env:
         RuntimeIdentifier: ${{ matrix.runtimeIdentifier }}
 
