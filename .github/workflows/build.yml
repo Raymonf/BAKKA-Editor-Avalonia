@@ -46,6 +46,12 @@ jobs:
       env:
         RuntimeIdentifier: ${{ matrix.runtimeIdentifier }}
 
+    - name: Mark binary as executable
+      run: chmod +x ${{ env.ProjectName }}/bin/Release/net7.0/${{ env.RuntimeIdentifier }}/publish/${{ env.ProjectName }}
+      if: ${{ !contains(env.RuntimeIdentifier, 'win') }}
+      env:
+        RuntimeIdentifier: ${{ matrix.runtimeIdentifier }}
+
     - name: Upload build artifacts
       uses: actions/upload-artifact@v3
       with:
