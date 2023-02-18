@@ -1,6 +1,6 @@
 # BAKKA Editor Avalonia Port
 
-A Marvelously simple, scuffed, and terrible editor. But hey, it's cross-platform (tested on Windows, Linux, and macOS)!
+A Marvelously simple, scuffed, and terrible editor. But hey, it's cross-platform (tested on Windows, Linux, and macOS)! Currently mostly up-to-date with upstream v2.1.7.
 
 **You should use this only if you have no sense of sanity or hate yourself.** For the most part, this is a close-to-direct port of the Windows Forms code, with "MVVM" in place to connect the dots into the old Windows Forms parts. It's _horrible_. You have been warned.
 
