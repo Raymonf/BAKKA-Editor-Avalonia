@@ -1,0 +1,55 @@
+name: Build
+
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        runtimeIdentifier: ["win-x64", "linux-x64", "osx-arm64", "osx-x64"]
+
+    runs-on: ubuntu-latest
+    env:
+      ProjectName: BAKKA_Editor.Desktop
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Install .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 7.0.x
+
+    - name: Publish the application
+      run: dotnet publish ${{ env.ProjectName }} --sc -r ${{ env.RuntimeIdentifier }} -c Release
+      env:
+        RuntimeIdentifier: ${{ matrix.runtimeIdentifier }}
+
+    - name: Copy bass libraries
+      run: cp ${{ env.ProjectName }}/lib/${{ env.RuntimeIdentifier }}/* ${{ env.ProjectName }}/bin/Release/net7.0/${{ env.RuntimeIdentifier }}/publish
+      if: ${{ !contains(env.RuntimeIdentifier, 'osx') }}
+      env:
+        RuntimeIdentifier: ${{ matrix.runtimeIdentifier }}
+
+    - name: Copy bass libraries (macOS)
+      run: cp ${{ env.ProjectName }}/lib/darwin/* ${{ env.ProjectName }}/bin/Release/net7.0/${{ env.RuntimeIdentifier }}/publish
+      if: ${{ contains(env.RuntimeIdentifier, 'osx') }}
+      env:
+        RuntimeIdentifier: ${{ matrix.runtimeIdentifier }}
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ env.RuntimeIdentifier }}
+        path: ${{ env.ProjectName }}/bin/Release/net7.0/${{ env.RuntimeIdentifier }}/publish
+      env:
+        RuntimeIdentifier: ${{ matrix.runtimeIdentifier }}
