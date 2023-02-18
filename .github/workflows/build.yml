@@ -44,6 +44,6 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: ${{ env.RuntimeIdentifier }}
-        path: ${{ env.ProjectName }}\bin\Release\net7.0\${{ env.RuntimeIdentifier }}\publish
+        path: ${{ env.ProjectName }}/bin/Release/net7.0/${{ env.RuntimeIdentifier }}/publish
       env:
         RuntimeIdentifier: ${{ matrix.runtimeIdentifier }}
