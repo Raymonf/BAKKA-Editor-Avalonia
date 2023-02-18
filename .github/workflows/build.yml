@@ -30,13 +30,13 @@ jobs:
 
     - name: Copy bass libraries
       run: cp ${{ env.ProjectName }}/lib/${{ env.RuntimeIdentifier }}/* ${{ env.ProjectName }}/bin/Release/net7.0/${{ env.RuntimeIdentifier }}/publish
-      if: !contains(env.RuntimeIdentifier, 'osx')
+      if: ${{ !contains(env.RuntimeIdentifier, 'osx') }}
       env:
         RuntimeIdentifier: ${{ matrix.runtimeIdentifier }}
 
     - name: Copy bass libraries (macOS)
       run: cp ${{ env.ProjectName }}/lib/darwin/* ${{ env.ProjectName }}/bin/Release/net7.0/${{ env.RuntimeIdentifier }}/publish
-      if: contains(env.RuntimeIdentifier, 'osx')
+      if: ${{ contains(env.RuntimeIdentifier, 'osx') }}
       env:
         RuntimeIdentifier: ${{ matrix.runtimeIdentifier }}
 
