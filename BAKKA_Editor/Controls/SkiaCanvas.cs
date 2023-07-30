@@ -31,9 +31,9 @@ public partial class SkiaCanvas : UserControl
         public bool HitTest(Point p) => false;
         public bool Equals(ICustomDrawOperation? other) => false;
 
-        public void Render(IDrawingContextImpl context)
+        public void Render(ImmediateDrawingContext context)
         {
-            var leaseFeature = context.GetFeature<ISkiaSharpApiLeaseFeature>();
+            var leaseFeature = context.TryGetFeature<ISkiaSharpApiLeaseFeature>();
             if (leaseFeature == null)
                 return;
             using var lease = leaseFeature.Lease();

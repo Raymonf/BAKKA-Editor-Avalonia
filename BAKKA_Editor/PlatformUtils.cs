@@ -15,7 +15,13 @@ class PlatformUtils
         get
         {
             if (_formFactorType == null)
-                _formFactorType = AvaloniaLocator.Current.GetService<IRuntimePlatform>()?.GetRuntimeInfo().FormFactor;
+            {
+                // hack
+                if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() || OperatingSystem.IsWatchOS())
+                    _formFactorType = FormFactorType.Mobile;
+                else
+                    _formFactorType = FormFactorType.Desktop;
+            }
             if (_formFactorType == null)
                 return FormFactorType.Unknown;
             return _formFactorType.Value;

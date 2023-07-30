@@ -87,6 +87,10 @@ public partial class MainView : UserControl, IPassSetting
         UpdateTick
     };
 
+    // Threading pain hack
+    float positionNumericFloat = 0.0f;
+    float sizeNumericFloat = 0.0f;
+
     EventSource valueTriggerEvent = EventSource.None;
 
     // Program info
@@ -436,7 +440,7 @@ public partial class MainView : UserControl, IPassSetting
         // Draw cursor
         if (showCursor)
         {
-            skCircleView.DrawCursor(currentNoteType, (float) positionNumeric.Value, (float) sizeNumeric.Value);
+            skCircleView.DrawCursor(currentNoteType, positionNumericFloat, sizeNumericFloat);
         }
     }
 
@@ -1095,31 +1099,45 @@ public partial class MainView : UserControl, IPassSetting
 
     private void PositionNumeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
     {
-        if (positionNumeric != null && positionTrackBar != null &&
-            (int) positionTrackBar.Value != (int) positionNumeric.Value)
-            positionTrackBar.Value = (int) positionNumeric.Value;
+        if (positionNumeric != null && positionTrackBar != null)
+        {
+            positionNumericFloat = (float)positionNumeric.Value;
+            if ((int)positionTrackBar.Value != (int)positionNumeric.Value)
+                positionTrackBar.Value = (int)positionNumeric.Value;
+        }
     }
 
     private void PositionTrackBar_OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
     {
         // TODO: tighten property check
-        if (positionNumeric != null && positionTrackBar != null &&
-            (int) positionNumeric.Value != (int) positionTrackBar.Value)
-            positionNumeric.Value = (int) positionTrackBar.Value;
+        if (positionNumeric != null && positionTrackBar != null)
+        {
+            if ((int)positionNumeric.Value != (int)positionTrackBar.Value)
+                positionNumeric.Value = (int)positionTrackBar.Value;
+            positionNumericFloat = (float)positionNumeric.Value;
+        }
     }
 
     private void SizeNumeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
     {
         // TODO: tighten property check
-        if (sizeNumeric != null && sizeTrackBar != null && (int) sizeTrackBar.Value != (int) sizeNumeric.Value)
-            sizeTrackBar.Value = (int) sizeNumeric.Value;
+        if (sizeNumeric != null && sizeTrackBar != null)
+        {
+            sizeNumericFloat = (float)sizeNumeric.Value;
+            if ((int)sizeTrackBar.Value != (int)sizeNumeric.Value)
+                sizeTrackBar.Value = (int)sizeNumeric.Value;
+        }
     }
 
     private void SizeTrackBar_OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
     {
         // TODO: tighten property check
-        if (sizeNumeric != null && sizeTrackBar != null && (int) sizeNumeric.Value != (int) sizeTrackBar.Value)
-            sizeNumeric.Value = (int) sizeTrackBar.Value;
+        if (sizeNumeric != null && sizeTrackBar != null)
+        {
+            if ((int)sizeNumeric.Value != (int)sizeTrackBar.Value)
+                sizeNumeric.Value = (int)sizeTrackBar.Value;
+            sizeNumericFloat = (float)sizeNumeric.Value;
+        }
     }
 
     private void insertButton_Click(object? sender, RoutedEventArgs e)
@@ -1479,8 +1497,7 @@ public partial class MainView : UserControl, IPassSetting
                     }
                 }
             });
-            result = file is {CanOpenWrite: true};
-            if (result)
+            if (file != null)
             {
                 if (!IsDesktop)
                     saveFileStream = await file.OpenWriteAsync();
