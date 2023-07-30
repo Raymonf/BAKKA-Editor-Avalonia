@@ -166,6 +166,7 @@ public partial class MainView : UserControl, IPassSetting
             vm.HighlightViewedNote = userSettings.ViewSettings.HighlightViewedNote;
             vm.SelectLastInsertedNote = userSettings.ViewSettings.SelectLastInsertedNote;
             vm.ShowGimmicksInCircleView = userSettings.ViewSettings.ShowGimmicks;
+            vm.ShowGimmicksDuringPlaybackInCircleView = userSettings.ViewSettings.ShowGimmicksDuringPlayback;
         }
         visualHispeedNumeric.Value = (decimal)userSettings.ViewSettings.HispeedSetting;
         trackBarVolume.Value = userSettings.ViewSettings.Volume;
@@ -401,6 +402,8 @@ public partial class MainView : UserControl, IPassSetting
 
     private void RenderCanvas(SKCanvas canvas)
     {
+        skCircleView.showHispeed = userSettings.ViewSettings.ShowGimmicksDuringPlayback;
+
         skCircleView.SetCanvas(canvas);
 
         skCircleView.DrawBackground(BackColor);
@@ -2538,6 +2541,11 @@ public partial class MainView : UserControl, IPassSetting
     public void SetShowGimmicksInCircleView(bool value)
     {
         userSettings.ViewSettings.ShowGimmicks = value;
+    }
+
+    public void SetShowGimmicksDuringPlaybackInCircleView(bool value)
+    {
+        userSettings.ViewSettings.ShowGimmicksDuringPlayback = value;
     }
 
     private void Window_OnClosing(object? sender, CancelEventArgs e)

@@ -17,4 +17,5 @@ public interface IPassSetting
     public void SetHighlightViewedNote(bool value);
     public void SetSelectLastInsertedNote(bool value);
     public void SetShowGimmicksInCircleView(bool value);
+    public void SetShowGimmicksDuringPlaybackInCircleView(bool value);
 }

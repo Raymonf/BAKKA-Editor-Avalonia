@@ -158,4 +158,12 @@ public partial class MainWindow : Window, IPassSetting
             return;
         Dispatcher.UIThread.Post(() => view.SetShowGimmicksInCircleView(value), DispatcherPriority.Background);
     }
+
+    public void SetShowGimmicksDuringPlaybackInCircleView(bool value)
+    {
+        var view = GetMainView();
+        if (view == null)
+            return;
+        Dispatcher.UIThread.Post(() => view.SetShowGimmicksDuringPlaybackInCircleView(value), DispatcherPriority.Background);
+    }
 }

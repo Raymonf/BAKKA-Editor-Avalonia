@@ -52,8 +52,8 @@ namespace BAKKA_Editor
 
 	internal enum MaskType
     {
+	    CounterClockwise = 0,
 		Clockwise = 1,
-		CounterClockwise = 0,
 		Center = 2
     }
 
