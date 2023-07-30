@@ -119,14 +119,15 @@ namespace BAKKA_Editor
                 for (int i = 0; i < HispeedChanges.Count; i++)
                 {
                     float timeDiff;
-                    float itemTime;
+                    float itemTime = chart.GetTime(HispeedChanges[i].BeatInfo);
                     float modifiedTime;
-                    if (chart.GetTime(HispeedChanges[i].BeatInfo) <= (tempTotalTime + currentTime))
+                    if (itemTime  <= (tempTotalTime + currentTime))
                     {
                         if (i == 0)
                             itemTime = currentTime;
                         else
                             itemTime = chart.GetTime(HispeedChanges[i].BeatInfo);
+
                         if (i != HispeedChanges.Count - 1)
                         {
                             float tempTestITimeDiff = (currentTime + tempTotalTime) - itemTime;
