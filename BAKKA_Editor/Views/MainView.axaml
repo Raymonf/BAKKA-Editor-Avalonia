@@ -86,6 +86,14 @@
                                   IsHitTestVisible="False" />
                     </MenuItem.Icon>
                 </MenuItem>
+				<MenuItem Header="Show Gimmicks During Playback" Command="{Binding ToggleShowGimmicksDuringPlaybackInCircleViewCommand}">
+					<MenuItem.Icon>
+						<CheckBox IsChecked="{Binding ShowGimmicksDuringPlaybackInCircleView}"
+                                  Name="ShowGimmicksDuringPlaybackInCircleViewMenuItem"
+                                  BorderThickness="0"
+                                  IsHitTestVisible="False" />
+					</MenuItem.Icon>
+				</MenuItem>
             </MenuItem>
             <MenuItem Header="_Chart">
                 <MenuItem Header="Initial Chart Settings" Command="{Binding OpenInitialChartSettings}" />
