@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -35,13 +36,14 @@ namespace BAKKA_Editor
 
     internal class HotkeySettings
     {
-        public int TouchHotkey { get; set; } = Convert.ToInt32(Key.D1);
-        public int SlideLeftHotkey { get; set; } = Convert.ToInt32(Key.D2);
-        public int SlideRightHotkey { get; set; } = Convert.ToInt32(Key.D3);
-        public int SnapUpHotkey { get; set; } = Convert.ToInt32(Key.D4);
-        public int SnapDownHotkey { get; set; } = Convert.ToInt32(Key.D5);
-        public int ChainHotkey { get; set; } = Convert.ToInt32(Key.D6);
-        public int HoldHotkey { get; set; } = Convert.ToInt32(Key.D7);
-        public int PlayHotkey { get; set; } = Convert.ToInt32(Key.P);
+        private static readonly CultureInfo _defaultParsingCulture = CultureInfo.InvariantCulture;
+        public int TouchHotkey { get; set; } = Convert.ToInt32(Key.D1, _defaultParsingCulture);
+        public int SlideLeftHotkey { get; set; } = Convert.ToInt32(Key.D2, _defaultParsingCulture);
+        public int SlideRightHotkey { get; set; } = Convert.ToInt32(Key.D3, _defaultParsingCulture);
+        public int SnapUpHotkey { get; set; } = Convert.ToInt32(Key.D4, _defaultParsingCulture);
+        public int SnapDownHotkey { get; set; } = Convert.ToInt32(Key.D5, _defaultParsingCulture);
+        public int ChainHotkey { get; set; } = Convert.ToInt32(Key.D6, _defaultParsingCulture);
+        public int HoldHotkey { get; set; } = Convert.ToInt32(Key.D7, _defaultParsingCulture);
+        public int PlayHotkey { get; set; } = Convert.ToInt32(Key.P, _defaultParsingCulture);
     }
 }

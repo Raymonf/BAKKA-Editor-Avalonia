@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -9,6 +10,7 @@ namespace BAKKA_Editor
 {
     internal class Chart
     {
+        private static readonly CultureInfo _defaultParsingCulture = CultureInfo.InvariantCulture;
         public List<Note> Notes { get; set; }
         public List<Gimmick> Gimmicks { get; set; }
         /// <summary>
@@ -64,11 +66,11 @@ namespace BAKKA_Editor
 
                 var offset = Utils.GetTag(line, "#OFFSET");
                 if (offset != null)
-                    Offset = Convert.ToDouble(offset);
+                    Offset = Convert.ToDouble(offset, _defaultParsingCulture);
 
                 offset = Utils.GetTag(line, "#MOVIEOFFSET");
                 if (offset != null)
-                    MovieOffset = Convert.ToDouble(offset);
+                    MovieOffset = Convert.ToDouble(offset, _defaultParsingCulture);
 
                 if (line.Contains("#BODY"))
                 {
@@ -76,7 +78,7 @@ namespace BAKKA_Editor
                     break;
                 }
 
-            } while(++index < file.Count);
+            } while (++index < file.Count);
 
             int lineNum;
             Gimmick gimmickTemp;
@@ -88,46 +90,46 @@ namespace BAKKA_Editor
                 if (string.IsNullOrWhiteSpace(file[i]))
                     continue;
                 
-                var parsed = file[i].Split(new string[] {" "}, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                var parsed = file[i].Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                 NoteBase temp = new();
-                temp.BeatInfo = new BeatInfo(Convert.ToInt32(parsed[0]), Convert.ToInt32(parsed[1]));
-                temp.GimmickType = (GimmickType)Convert.ToInt32(parsed[2]);
+                temp.BeatInfo = new BeatInfo(Convert.ToInt32(parsed[0], _defaultParsingCulture), Convert.ToInt32(parsed[1], _defaultParsingCulture));
+                temp.GimmickType = (GimmickType)Convert.ToInt32(parsed[2], _defaultParsingCulture);
 
                 switch (temp.GimmickType)
                 {
                     case GimmickType.NoGimmick:
                         noteTemp = new Note(temp.BeatInfo);
-                        noteTemp.NoteType = (NoteType)Convert.ToInt32(parsed[3]);
-                        lineNum = Convert.ToInt32(parsed[4]);
-                        noteTemp.Position = Convert.ToInt32(parsed[5]);
-                        noteTemp.Size = Convert.ToInt32(parsed[6]);
-                        noteTemp.HoldChange = Convert.ToBoolean(Convert.ToInt32(parsed[7]));
+                        noteTemp.NoteType = (NoteType)Convert.ToInt32(parsed[3], _defaultParsingCulture);
+                        lineNum = Convert.ToInt32(parsed[4], _defaultParsingCulture);
+                        noteTemp.Position = Convert.ToInt32(parsed[5], _defaultParsingCulture);
+                        noteTemp.Size = Convert.ToInt32(parsed[6], _defaultParsingCulture);
+                        noteTemp.HoldChange = Convert.ToBoolean(Convert.ToInt32(parsed[7], _defaultParsingCulture));
                         if (noteTemp.NoteType == NoteType.MaskAdd || noteTemp.NoteType == NoteType.MaskRemove)
                         {
-                            noteTemp.MaskFill = (MaskType)Convert.ToInt32(parsed[8]);
+                            noteTemp.MaskFill = (MaskType)Convert.ToInt32(parsed[8], _defaultParsingCulture);
                         }
                         else if (noteTemp.NoteType == NoteType.HoldStartNoBonus ||
                             noteTemp.NoteType == NoteType.HoldJoint ||
                             noteTemp.NoteType == NoteType.HoldStartBonusFlair)
                         {
-                            refByLine[lineNum] = Convert.ToInt32(parsed[8]);
+                            refByLine[lineNum] = Convert.ToInt32(parsed[8], _defaultParsingCulture);
                         }
                         Notes.Add(noteTemp);
                         notesByLine[lineNum] = Notes.Last();
                         break;
                     case GimmickType.BpmChange:
                         gimmickTemp = new Gimmick(temp.BeatInfo, temp.GimmickType);
-                        gimmickTemp.BPM = Convert.ToDouble(parsed[3]);
+                        gimmickTemp.BPM = Convert.ToDouble(parsed[3], _defaultParsingCulture);
                         Gimmicks.Add(gimmickTemp);
                         break;
                     case GimmickType.TimeSignatureChange:
                         gimmickTemp = new Gimmick(temp.BeatInfo, temp.GimmickType);
-                        gimmickTemp.TimeSig = new TimeSignature() { Upper = Convert.ToInt32(parsed[3]), Lower = parsed.Length == 5 ? Convert.ToInt32(parsed[4]) : 4 };
+                        gimmickTemp.TimeSig = new TimeSignature() { Upper = Convert.ToInt32(parsed[3], _defaultParsingCulture), Lower = parsed.Length == 5 ? Convert.ToInt32(parsed[4], _defaultParsingCulture) : 4 };
                         Gimmicks.Add(gimmickTemp);
                         break;
                     case GimmickType.HiSpeedChange:
                         gimmickTemp = new Gimmick(temp.BeatInfo, temp.GimmickType);
-                        gimmickTemp.HiSpeed = Convert.ToDouble(parsed[3]);
+                        gimmickTemp.HiSpeed = Convert.ToDouble(parsed[3], _defaultParsingCulture);
                         Gimmicks.Add(gimmickTemp);
                         break;
                     case GimmickType.ReverseStart:
@@ -205,7 +207,7 @@ namespace BAKKA_Editor
                 foreach (var note in Notes)
                 {
                     sw.Write($"{note.BeatInfo.Measure,4:F0}{note.BeatInfo.Beat,5:F0}{((int)note.GimmickType),5:F0}{(int)note.NoteType,5:F0}");
-                    sw.Write($"{Notes.IndexOf(note),5:F0}{note.Position,5:F0}{note.Size,5:F0}{Convert.ToInt32(note.HoldChange),5:F0}");
+                    sw.Write($"{Notes.IndexOf(note),5:F0}{note.Position,5:F0}{note.Size,5:F0}{Convert.ToInt32(note.HoldChange, _defaultParsingCulture),5:F0}");
                     if (note.IsMask)
                         sw.Write($"{(int)note.MaskFill,5:F0}");
                     if (note.NextNote != null)
