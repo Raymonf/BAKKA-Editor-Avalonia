@@ -356,7 +356,7 @@
                             </Grid>
                             <StackPanel Orientation="Horizontal" Margin="10,4,0,0">
                                 <TextBlock FontWeight="Bold" Margin="0,0,8,0">Song File:</TextBlock>
-                                <TextBlock Name="songFileLabel">Select File (*.ogg, *.wav)</TextBlock>
+                                <TextBlock Name="songFileLabel">Select File (*.ogg, *.wav, *.flac)</TextBlock>
                             </StackPanel>
                         </StackPanel>
                     </HeaderedContentControl>

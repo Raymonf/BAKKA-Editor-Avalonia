@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using ManagedBass;
+using ManagedBass.Flac;
 using ManagedBass.Fx;
 
 namespace BAKKA_Editor.SoundEngines;
@@ -48,7 +49,12 @@ public class BassBakkaSoundEngine : IBakkaSoundEngine
     {
         // create decode channel
         int decodeChannel = Bass.CreateStream(soundFilename, 0, 0, BassFlags.Decode);
-
+        if (decodeChannel == 0 && Bass.LastError == Errors.FileFormat)
+        {
+            // try loading as flac if we get a file format error
+            decodeChannel = BassFlac.CreateStream(soundFilename, 0, 0, BassFlags.Decode);
+        }
+        
         if (decodeChannel == 0)
         {
             throw new Exception($"Couldn't load selected audio file: {Bass.LastError}");

@@ -2300,7 +2300,7 @@ public partial class MainView : UserControl, IPassSetting
             AllowMultiple = false,
             FileTypeFilter = new List<FilePickerFileType>
             {
-                new("Audio Files (*.ogg;*.wav)")
+                new("Audio Files (*.ogg;*.wav,*.flac)")
                 {
                     Patterns = new[] {"*.ogg", "*.wav", "*.flac"},
                     MimeTypes = new[] {"audio/ogg", "audio/wav", "audio/flac"},
