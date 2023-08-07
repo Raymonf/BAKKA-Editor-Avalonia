@@ -2302,8 +2302,8 @@ public partial class MainView : UserControl, IPassSetting
             {
                 new("Audio Files (*.ogg;*.wav)")
                 {
-                    Patterns = new[] {"*.ogg", "*.wav"},
-                    MimeTypes = new[] {"audio/ogg", "audio/wav"},
+                    Patterns = new[] {"*.ogg", "*.wav", "*.flac"},
+                    MimeTypes = new[] {"audio/ogg", "audio/wav", "audio/flac"},
                     AppleUniformTypeIdentifiers = new[] {"public.audio"}
                 },
                 new("WAV file")
@@ -2316,6 +2316,12 @@ public partial class MainView : UserControl, IPassSetting
                 {
                     Patterns = new[] {"*.ogg"},
                     MimeTypes = new[] {"audio/ogg"},
+                    AppleUniformTypeIdentifiers = new[] {"public.audio"}
+                },
+                new("FLAC file")
+                {
+                    Patterns = new[] {"*.flac"},
+                    MimeTypes = new[] {"audio/flac"},
                     AppleUniformTypeIdentifiers = new[] {"public.audio"}
                 },
                 new("All Files")
