@@ -15,6 +15,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform;
 using Avalonia.Platform.Storage;
+using Avalonia.Styling;
 using Avalonia.Threading;
 using BAKKA_Editor.Enums;
 using BAKKA_Editor.Operations;
@@ -102,6 +103,8 @@ public partial class MainView : UserControl, IPassSetting
 
     public MainView()
     {
+        Application.Current.RequestedThemeVariant = ThemeVariant.Light;
+        
         InitializeComponent();
         Background = new SolidColorBrush(new Avalonia.Media.Color(BackColor.Alpha, BackColor.Red, BackColor.Green, BackColor.Blue));
         Setup();

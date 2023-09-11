@@ -7,8 +7,21 @@
         x:Class="BAKKA_Editor.Views.MainView"
         PropertyChanged="AvaloniaObject_OnPropertyChanged">
     <UserControl.Styles>
+        <Style Selector="Menu">
+            <Setter Property="Foreground" Value="#0f0f0f" />
+        </Style>
+        <Style Selector="MenuItem">
+            <Setter Property="Foreground" Value="#0f0f0f" />
+        </Style>
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="#0f0f0f" />
+        </Style>
         <Style Selector="RadioButton">
+            <Setter Property="Foreground" Value="#0f0f0f" />
             <Setter Property="Margin" Value="0,4,0,4" />
+        </Style>
+        <Style Selector="CheckBox">
+            <Setter Property="Foreground" Value="#0f0f0f" />
         </Style>
         <Style Selector="Button.note">
             <Setter Property="HorizontalAlignment" Value="Stretch" />
