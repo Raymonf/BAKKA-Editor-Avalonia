@@ -13,6 +13,7 @@ namespace BAKKA_Editor
         public ViewSettings ViewSettings { get; set; } = new();
         public SaveSettings SaveSettings { get; set; } = new();
         public HotkeySettings HotkeySettings { get; set; } = new();
+        public SoundSettings SoundSettings { get; set; } = new();
     }
 
     internal class ViewSettings
@@ -46,5 +47,12 @@ namespace BAKKA_Editor
         public int ChainHotkey { get; set; } = Convert.ToInt32(Key.D6, _defaultParsingCulture);
         public int HoldHotkey { get; set; } = Convert.ToInt32(Key.D7, _defaultParsingCulture);
         public int PlayHotkey { get; set; } = Convert.ToInt32(Key.P, _defaultParsingCulture);
+    }
+
+    internal class SoundSettings
+    {
+        public bool HitsoundEnabled { get; set; } = false;
+        public string HitsoundPath { get; set; } = "";
+        public int HitsoundVolume { get; set; } = 50;
     }
 }

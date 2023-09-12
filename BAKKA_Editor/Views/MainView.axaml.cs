@@ -76,6 +76,7 @@ public partial class MainView : UserControl, IPassSetting
     // Timers
     private DispatcherTimer updateTimer;
     private DispatcherTimer autoSaveTimer;
+    private DispatcherTimer hitsoundTimer;
 
     // Control updates
     enum EventSource
@@ -100,6 +101,10 @@ public partial class MainView : UserControl, IPassSetting
     string tempFilePath = "";
     string tempStatusPath = "";
     string autosaveFile = "";
+
+    // Hitsounds
+    private IBakkaSample? hitsoundSample;
+    private IBakkaSampleChannel? hitsoundChannel;
 
     public MainView()
     {
@@ -177,6 +182,7 @@ public partial class MainView : UserControl, IPassSetting
         }
         visualHispeedNumeric.Value = (decimal)userSettings.ViewSettings.HispeedSetting;
         trackBarVolume.Value = userSettings.ViewSettings.Volume;
+        trackBarHitsoundVolume.Value = Math.Clamp(userSettings.SoundSettings.HitsoundVolume, 0, 100);
 
         autoSaveTimer =
             new DispatcherTimer(TimeSpan.FromMilliseconds(userSettings.SaveSettings.AutoSaveInterval * 60000),
@@ -196,6 +202,10 @@ public partial class MainView : UserControl, IPassSetting
         updateTimer =
             new DispatcherTimer(TimeSpan.FromMilliseconds(20), DispatcherPriority.Background, UpdateTimer_Tick);
         updateTimer.IsEnabled = false;
+
+        hitsoundTimer =
+            new DispatcherTimer(TimeSpan.FromMilliseconds(8), DispatcherPriority.Background, HitsoundTimer_Tick);
+        hitsoundTimer.IsEnabled = false;
         // updateTimer.Start();
 
         Dispatcher.UIThread.Post(async () => await CheckAutoSaves(), DispatcherPriority.Background);
@@ -203,6 +213,47 @@ public partial class MainView : UserControl, IPassSetting
         // HACK HACK HACK HACK HACK: run on the render thread since we know it'll only render after everything is initialized :/
         // TODO: how do we fix this?
         Dispatcher.UIThread.Post(OnResize, DispatcherPriority.Render);
+
+        HitsoundSetup();
+    }
+
+    private void HitsoundSetup()
+    {
+        if (!userSettings.SoundSettings.HitsoundEnabled)
+        {
+            Dispatcher.UIThread.Post(async () =>
+            {
+                HitsoundPanel.IsVisible = false;
+            });
+            return;
+        }
+
+        var hitsoundPath = userSettings.SoundSettings.HitsoundPath;
+        if (!File.Exists(hitsoundPath))
+        {
+            Dispatcher.UIThread.Post(
+                async () => await ShowBlockingMessageBox("Hitsound Error", "Hitsounds were enabled but the path to the hitsound file is not valid (not found)."));
+            return;
+        }
+
+        try
+        {
+            hitsoundSample = new BassBakkaSample(hitsoundPath);
+            if (hitsoundSample.Loaded)
+            {
+                hitsoundChannel = hitsoundSample.GetChannel();
+            }
+            else
+            {
+                Dispatcher.UIThread.Post(async () => await ShowBlockingMessageBox("Error",
+                        "Failed to load the hitsound. Ensure it is a valid flac, wav, or ogg (Vorbis) file."));
+            }
+        }
+        catch (Exception ex)
+        {
+            Dispatcher.UIThread.Post(
+                async () => await ShowBlockingMessageBox("Hitsound Error", "An error occurred trying to create the hitsound channel: " + ex.Message));
+        }
     }
 
     private IStorageProvider GetStorageProvider()
@@ -216,6 +267,9 @@ public partial class MainView : UserControl, IPassSetting
             throw new Exception(":(");
         }
     }
+
+    private float lastMeasure = 0.0f;
+    private int currentNoteIndex = 0;
 
     private void UpdateTimer_Tick(object? sender, EventArgs e)
     {
@@ -241,6 +295,7 @@ public partial class MainView : UserControl, IPassSetting
                 if (valueTriggerEvent == EventSource.UpdateTick)
                     valueTriggerEvent = EventSource.None;
 
+
                 // TODO Fix hi-speed (it needs to be able to display multiple hi-speeds in the circle view at once)
                 //// Change hi-speed, if applicable
                 //var hispeed = chart.Gimmicks.Where(x => x.Measure <= info.Measure && x.GimmickType == GimmickType.HiSpeedChange).LastOrDefault();
@@ -250,6 +305,31 @@ public partial class MainView : UserControl, IPassSetting
                 //}
             }
         });
+    }
+
+    private void HitsoundTimer_Tick(object? sender, EventArgs e)
+    {
+        if (hitsoundChannel == null || currentSong == null)
+            return;
+
+        // hitsounds
+        var latency = 0.025;
+        // we call bass_init with the latency flag, so we can get the latency from bass_info
+        var hasBassInfo = ManagedBass.Bass.GetInfo(out var bassInfo);
+        if (hasBassInfo)
+            latency = bassInfo.Latency / 1000.0; // ms to seconds
+        var info = chart.GetBeat(currentSong.PlayPosition);
+        var currentMeasure = info.MeasureDecimal + latency; // offset by latency
+        while (currentNoteIndex < chart.Notes.Count && chart.Notes[currentNoteIndex].BeatInfo.MeasureDecimal <= currentMeasure)
+        {
+            var note = chart.Notes[currentNoteIndex];
+            var isSoundedNote = (int) note.NoteType is >= (int) NoteType.TouchNoBonus and <= (int) NoteType.HoldStartNoBonus or >= (int) NoteType.Chain;
+            if (isSoundedNote && note.BeatInfo.MeasureDecimal > lastMeasure)
+            {
+                hitsoundChannel?.Play(true);
+            }
+            currentNoteIndex++;
+        }
     }
 
     private void AutoSaveTimer_Tick(object? sender, EventArgs e)
@@ -402,8 +482,11 @@ public partial class MainView : UserControl, IPassSetting
         var oldAutosave = Directory.GetFiles(PlatformUtils.GetTempPath(), "*.mer");
         foreach (var file in oldAutosave)
         {
-            if (file != keep)
-                File.Delete(file);
+            try
+            {
+                if (file != keep)
+                    File.Delete(file);
+            } catch { }
         }
     }
 
@@ -2262,6 +2345,8 @@ public partial class MainView : UserControl, IPassSetting
 
     private void PlayButton_OnClick(object? sender, RoutedEventArgs e)
     {
+        currentNoteIndex = 0;
+
         if (currentSong != null)
         {
             if (!chart.HasInitEvents)
@@ -2279,12 +2364,14 @@ public partial class MainView : UserControl, IPassSetting
                 playButton.Content = "Play";
                 updateTimer.IsEnabled = false;
                 updateTimer.Stop();
+                hitsoundTimer.Stop();
             }
             else
             {
                 playButton.Content = "Pause";
                 updateTimer.IsEnabled = true;
                 updateTimer.Start();
+                hitsoundTimer.Start();
             }
 
             // AV(fps): Round down so we can properly see newly added notes after pausing 
@@ -2366,6 +2453,7 @@ public partial class MainView : UserControl, IPassSetting
             playButton.IsEnabled = false;
             updateTimer.IsEnabled = false;
             updateTimer.Stop();
+            hitsoundTimer.Stop();
             return;
         }
 
@@ -2608,5 +2696,14 @@ public partial class MainView : UserControl, IPassSetting
             }
         }
         UpdateGimmickLabels();
+    }
+
+    private void TrackBarHitsounds_OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    {
+        if (trackBarHitsoundVolume == null || hitsoundChannel == null || e.Property.Name != "Value")
+            return;
+        userSettings.SoundSettings.HitsoundVolume = (int)trackBarHitsoundVolume.Value;
+        var volume = (float) trackBarHitsoundVolume.Value / (float) trackBarHitsoundVolume.Maximum;
+        hitsoundChannel?.SetVolume(Math.Clamp(volume, 0.0f, 1.0f));
     }
 }

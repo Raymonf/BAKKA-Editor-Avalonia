@@ -364,6 +364,13 @@
                                                         HorizontalAlignment="Center"
                                                         PropertyChanged="TrackBarVolume_OnPropertyChanged" />
                                             </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Name="HitsoundPanel">
+                                                <TextBlock HorizontalAlignment="Center" TextAlignment="Right" Margin="0,0,8,0" Width="60">Hitsounds</TextBlock>
+                                                <Slider Name="trackBarHitsoundVolume" Value="100" Minimum="0" Maximum="100"
+                                                        SmallChange="1" LargeChange="5" Width="50"
+                                                        HorizontalAlignment="Center"
+                                                        PropertyChanged="TrackBarHitsounds_OnPropertyChanged" />
+                                            </StackPanel>
                                         </StackPanel>
                                     </StackPanel>
                             </Grid>

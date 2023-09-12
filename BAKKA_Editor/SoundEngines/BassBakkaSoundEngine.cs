@@ -15,7 +15,7 @@ public class BassBakkaSoundEngine : IBakkaSoundEngine
     {
         if (!BassInitialized)
         {
-            if (!Bass.Init())
+            if (!Bass.Init(Flags: DeviceInitFlags.Latency))
             {
                 throw new Exception("Couldn't initialize BASS");
             }
@@ -74,5 +74,15 @@ public class BassBakkaSoundEngine : IBakkaSoundEngine
         if (!startPaused)
             sound.Paused = false;
         return sound;
+    }
+
+    public IBakkaSample? LoadSample(string soundFilename)
+    {
+        var sample = new BassBakkaSample(soundFilename);
+        if (Bass.LastError != Errors.OK)
+        {
+            throw new Exception($"Couldn't load sample file: {Bass.LastError}");
+        }
+        return !sample.Loaded ? null : sample;
     }
 }
