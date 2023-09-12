@@ -294,7 +294,7 @@ namespace BAKKA_Editor
         }*/
         private void FillPie(SKPaint paint, SKRect rect, float startAngle, float sweepAngle)
         {
-            canvas.DrawArc(rect, startAngle, -sweepAngle, true, paint);
+            canvas.DrawArc(rect, -startAngle, -sweepAngle, true, paint);
         }
 
         public void DrawMasks(Chart chart)
@@ -326,7 +326,7 @@ namespace BAKKA_Editor
                         }
 
                         if (shouldDraw)
-                            FillPie(MaskBrush, DrawRect, mask.Position * 6.0f, mask.Size * 6.0f);
+                            FillPie(MaskBrush, DrawRect, -mask.Position * 6.0f, -mask.Size * 6.0f);
                         break;
                     }
                     // Explicitly draw MaskRemove for edge cases
