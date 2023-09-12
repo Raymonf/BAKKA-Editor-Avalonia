@@ -104,6 +104,7 @@ public class BassBakkaSound : IBakkaSound
         }
         else
         {
+            Bass.ChannelSetAttribute(bassChannel, ChannelAttribute.Volume, volume);
             SetPosition(_playPosition);
             if (!Bass.ChannelPlay(bassChannel))
             {

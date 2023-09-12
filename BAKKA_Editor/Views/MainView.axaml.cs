@@ -282,7 +282,7 @@ public partial class MainView : UserControl, IPassSetting
         if (currentSong != null)
         {
             /* Volume is represented as a float from 0-1. */
-            currentSong.Volume = (float) trackBarVolume.Value / (float) trackBarVolume.Maximum;
+            UpdateSongVolume();
 
             songTrackBar.Value = 0;
             songTrackBar.Maximum = (int) currentSong.PlayLength;
@@ -2271,6 +2271,7 @@ public partial class MainView : UserControl, IPassSetting
                 return;
             }
 
+            UpdateSongVolume();
             currentSong.PlayPosition = (uint) songTrackBar.Value;
             currentSong.Paused = !currentSong.Paused;
             if (currentSong.Paused)
@@ -2294,6 +2295,12 @@ public partial class MainView : UserControl, IPassSetting
         }
 
         updateTime();
+    }
+
+    private void UpdateSongVolume()
+    {
+        if (currentSong != null)
+            currentSong.Volume = (float) trackBarVolume.Value / (float) trackBarVolume.Maximum;
     }
 
     private async Task ShowOpenSongDialog()
@@ -2365,7 +2372,7 @@ public partial class MainView : UserControl, IPassSetting
         if (currentSong != null)
         {
             /* Volume is represented as a float from 0-1. */
-            currentSong.Volume = (float) trackBarVolume.Value / (float) trackBarVolume.Maximum;
+            UpdateSongVolume();
 
             songTrackBar.Value = 0;
             songTrackBar.Maximum = (int) currentSong.PlayLength;
@@ -2412,9 +2419,9 @@ public partial class MainView : UserControl, IPassSetting
     {
         if (trackBarVolume == null)
             return;
-        if (currentSong != null && e.Property.Name == "Value")
-            currentSong.Volume = (float) trackBarVolume.Value / (float) trackBarVolume.Maximum;
         userSettings.ViewSettings.Volume = (int)trackBarVolume.Value;
+        if (currentSong != null && e.Property.Name == "Value")
+            UpdateSongVolume();
     }
 
     private void TrackBarSpeed_OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
