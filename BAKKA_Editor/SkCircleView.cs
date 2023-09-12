@@ -286,11 +286,15 @@ namespace BAKKA_Editor
             return theta;
         }
 
-        private void FillPie(SKPaint paint, SKRect rect, float startAngle, float sweepAngle)
+        /*private void FillPie(SKPaint paint, SKRect rect, float startAngle, float sweepAngle)
         {
             var path = new SKPath();
             path.AddArc(rect, startAngle, sweepAngle);
             canvas.DrawPath(path, paint);
+        }*/
+        private void FillPie(SKPaint paint, SKRect rect, float startAngle, float sweepAngle)
+        {
+            canvas.DrawArc(rect, startAngle, -sweepAngle, true, paint);
         }
 
         public void DrawMasks(Chart chart)
