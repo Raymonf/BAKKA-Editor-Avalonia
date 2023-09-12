@@ -236,11 +236,11 @@ namespace BAKKA_Editor
             };
         }
 
-        internal static SKPaint CreateFillBrush(SKColor color)
+        internal static SKPaint CreateFillBrush(SKColor color, bool antialiased = true)
         {
             return new SKPaint()
             {
-                IsAntialias = true,
+                IsAntialias = antialiased,
                 Color = color,
                 Style = SKPaintStyle.Fill
             };
