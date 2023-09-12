@@ -348,7 +348,7 @@
                                         <!-- Speed and Volume -->
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
                                             <StackPanel Orientation="Horizontal" Margin="0,0,16,0">
-                                                <TextBlock Name="LabelSpeed" HorizontalAlignment="Center" Margin="0,0,8,0"
+                                                <TextBlock Name="LabelSpeed" HorizontalAlignment="Center" TextAlignment="Right" Margin="0,0,8,0"
                                                            Width="100">
                                                     Speed
                                                 </TextBlock>
@@ -358,7 +358,7 @@
                                                         PropertyChanged="TrackBarSpeed_OnPropertyChanged" />
                                             </StackPanel>
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock HorizontalAlignment="Center" Margin="0,0,8,0" Width="60">Volume</TextBlock>
+                                                <TextBlock HorizontalAlignment="Center" TextAlignment="Right" Margin="0,0,8,0" Width="60">Volume</TextBlock>
                                                 <Slider Name="trackBarVolume" Value="100" Minimum="0" Maximum="100"
                                                         SmallChange="1" LargeChange="5" Width="100"
                                                         HorizontalAlignment="Center"
