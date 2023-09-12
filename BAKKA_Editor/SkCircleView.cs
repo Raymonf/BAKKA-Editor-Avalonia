@@ -42,7 +42,7 @@ namespace BAKKA_Editor
             Color = SKColors.Yellow.WithAlpha(170),
             Style = SKPaintStyle.Fill
         };
-        public SKPaint MaskBrush { get; set; } = Utils.CreateFillBrush(SKColors.Black.WithAlpha(90));
+        public SKPaint MaskBrush { get; set; } = Utils.CreateFillBrush(SKColors.Black.WithAlpha(90), false);
         public SKPaint? BackgroundBrush { get; set; }
         public SKPaint? HighlightPen { get; set; }
         public SKPaint? FlairPen { get; set; }
@@ -253,7 +253,7 @@ namespace BAKKA_Editor
         {
             if (BackgroundBrush == null)
                 // Remember background color for drawing later
-                BackgroundBrush = Utils.CreateFillBrush(color);
+                BackgroundBrush = Utils.CreateFillBrush(color, false);
             canvas.Clear(color);
         }
         
@@ -326,12 +326,12 @@ namespace BAKKA_Editor
                         }
 
                         if (shouldDraw)
-                            FillPie(MaskBrush, DrawRect, -mask.Position * 6.0f, -mask.Size * 6.0f);
+                            FillPie(MaskBrush, DrawRect, mask.Position * 6.0f, mask.Size * 6.0f);
                         break;
                     }
                     // Explicitly draw MaskRemove for edge cases
                     case NoteType.MaskRemove:
-                        FillPie(BackgroundBrush, DrawRect, -mask.Position * 6.0f, -mask.Size * 6.0f);
+                        FillPie(BackgroundBrush, DrawRect, mask.Position * 6.0f, mask.Size * 6.0f);
                         break;
                 }
             }
