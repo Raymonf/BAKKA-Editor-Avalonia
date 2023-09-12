@@ -104,7 +104,7 @@ namespace BAKKA_Editor
             {
                 //Account for hispeed gimmick
                 List<Gimmick> HispeedChanges = new List<Gimmick>();
-                Gimmick InitialSpeed = chart.Gimmicks.Where(x => x.GimmickType == GimmickType.HiSpeedChange && CurrentMeasure > x.Measure).LastOrDefault();
+                Gimmick? InitialSpeed = chart.Gimmicks.LastOrDefault(x => x.GimmickType == GimmickType.HiSpeedChange && CurrentMeasure > x.Measure);
                 //Add initial hispeed to list
                 if (InitialSpeed == null)
                 {
@@ -299,22 +299,40 @@ namespace BAKKA_Editor
 
         public void DrawMasks(Chart chart)
         {
-            var masks = chart.Notes.Where(
-            x => x.Measure <= CurrentMeasure
-            && x.IsMask).ToList();
-            foreach (var mask in masks)
+            // var masks = chart.Notes.Where(x => x.Measure <= CurrentMeasure && x.IsMask).ToList();
+            var notes = chart.Notes;
+            for (var i = 0; i < notes.Count; i++)
             {
-                if (mask.NoteType == NoteType.MaskAdd)
+                var mask = notes[i];
+                if (!mask.IsMask || mask.Measure > CurrentMeasure)
+                    continue;
+
+                switch (mask.NoteType)
                 {
-                    // Check if there's a MaskRemove that counters the MaskAdd (unless the MaskAdd is later)
-                    var rem = masks.FirstOrDefault(x => x.NoteType == NoteType.MaskRemove &&
-                                                   x.Position == mask.Position && x.Size == mask.Size);
-                    if (rem == null || rem.Measure < mask.Measure)
-                        FillPie(MaskBrush, DrawRect, -mask.Position * 6.0f, -mask.Size * 6.0f);
-                }
-                else if (mask.NoteType == NoteType.MaskRemove) // Explicitly draw MaskRemove for edge cases
-                {
-                    FillPie(BackgroundBrush, DrawRect, -mask.Position * 6.0f, -mask.Size * 6.0f);
+                    case NoteType.MaskAdd:
+                    {
+                        var shouldDraw = true;
+                        for (var j = 0; j < chart.Notes.Count; j++)
+                        {
+                            var rem = notes[j];
+                            if (rem.NoteType == NoteType.MaskRemove && rem.Position == mask.Position && rem.Size == mask.Size)
+                            {
+                                if (rem.Measure >= mask.Measure)
+                                {
+                                    shouldDraw = false;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (shouldDraw)
+                            FillPie(MaskBrush, DrawRect, mask.Position * 6.0f, mask.Size * 6.0f);
+                        break;
+                    }
+                    // Explicitly draw MaskRemove for edge cases
+                    case NoteType.MaskRemove:
+                        FillPie(BackgroundBrush, DrawRect, -mask.Position * 6.0f, -mask.Size * 6.0f);
+                        break;
                 }
             }
         }

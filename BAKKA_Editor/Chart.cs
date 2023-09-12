@@ -291,9 +291,7 @@ namespace BAKKA_Editor
             if (TimeEvents == null || TimeEvents.Count == 0)
                 return new BeatInfo(-1, 0);
 
-            var evt = TimeEvents.Where(x => time >= x.StartTime).LastOrDefault();
-            if (evt == null)
-                evt = TimeEvents[0];
+            var evt = TimeEvents.LastOrDefault(x => time >= x.StartTime) ?? TimeEvents[0];
             return new BeatInfo((float)((time - evt.StartTime) / ((60000.0 / evt.BPM) * 4.0f * evt.TimeSig.Ratio) + evt.Measure));
         }
 
@@ -307,7 +305,7 @@ namespace BAKKA_Editor
             if (TimeEvents == null || TimeEvents.Count == 0)
                 return 0;
 
-            var evt = TimeEvents.Where(x => beat.MeasureDecimal >= x.Measure).LastOrDefault();
+            var evt = TimeEvents.LastOrDefault(x => beat.MeasureDecimal >= x.Measure);
             if (evt == null)
                 evt = TimeEvents[0];
             return (int)(((60000.0 / evt.BPM) * 4.0f * evt.TimeSig.Ratio) * (beat.MeasureDecimal - evt.Measure) + evt.StartTime);
