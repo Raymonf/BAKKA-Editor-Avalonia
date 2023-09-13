@@ -2467,9 +2467,9 @@ public partial class MainView : UserControl, IPassSetting
         try
         {
             if (PlatformUtils.FormFactorType == FormFactorType.Mobile)
-                currentSong = soundEngine.Play2D(await result[0].OpenReadAsync(), true, true);
+                currentSong = soundEngine.Play2D(await result[0].OpenReadAsync(), false, true);
             else
-                currentSong = soundEngine.Play2D(songFilePath, true, true);
+                currentSong = soundEngine.Play2D(songFilePath, false, true);
         }
         catch (Exception exception)
         {
