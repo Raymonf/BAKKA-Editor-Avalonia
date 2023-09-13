@@ -2416,6 +2416,9 @@ public partial class MainView : UserControl, IPassSetting
     {
         if (currentSong != null)
             currentSong.Volume = (float) trackBarVolume.Value / (float) trackBarVolume.Maximum;
+
+        // just in case, we'll set the hitsound volume too
+        hitsoundChannel?.SetVolume(Math.Clamp((float) trackBarHitsoundVolume.Value / (float) trackBarHitsoundVolume.Maximum, 0.0f, 1.0f));
     }
 
     private async Task ShowOpenSongDialog()
