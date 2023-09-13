@@ -323,14 +323,16 @@ public partial class MainView : UserControl, IPassSetting
         if (hitsoundChannel == null || currentSong == null)
             return;
 
-        // hitsounds
         var latency = 0.025;
         // we call bass_init with the latency flag, so we can get the latency from bass_info
         var hasBassInfo = ManagedBass.Bass.GetInfo(out var bassInfo);
         if (hasBassInfo)
             latency = bassInfo.Latency / 1000.0; // ms to seconds
+        var offset = 0.0;
+        if (userSettings.SoundSettings.HitsoundAdditionalOffsetMs != 0)
+            offset = userSettings.SoundSettings.HitsoundAdditionalOffsetMs / 1000.0;
         var info = chart.GetBeat(currentSong.PlayPosition);
-        var currentMeasure = info.MeasureDecimal + latency; // offset by latency
+        var currentMeasure = info.MeasureDecimal + latency + offset; // offset by latency
         while (currentNoteIndex < chart.Notes.Count && chart.Notes[currentNoteIndex].BeatInfo.MeasureDecimal <= currentMeasure)
         {
             var note = chart.Notes[currentNoteIndex];
