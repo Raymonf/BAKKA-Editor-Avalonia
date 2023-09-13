@@ -275,6 +275,14 @@ public partial class MainView : UserControl, IPassSetting
     {
         if (songTrackBar == null || currentSong == null)
             return;
+
+        // actually pause the song if we're at the end
+        if (currentSong.PlayPosition >= currentSong.PlayLength && !currentSong.Paused)
+        {
+            currentSong.Paused = true;
+            OnPauseSong();
+        }
+
         Dispatcher.UIThread.Post(() =>
         {
             songTrackBar.Value = (int)currentSong.PlayPosition;
@@ -355,7 +363,7 @@ public partial class MainView : UserControl, IPassSetting
         songFilePath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "ERROR.ogg");
         try
         {
-            currentSong = soundEngine.Play2D(songFilePath, true, true);
+            currentSong = soundEngine.Play2D(songFilePath, false, true);
         }
         catch {} // this is ok
 
@@ -2343,6 +2351,28 @@ public partial class MainView : UserControl, IPassSetting
         return await dialog.ShowAsync();
     }
 
+    private void OnPauseSong()
+    {
+        Dispatcher.UIThread.Invoke(() =>
+        {
+            playButton.Content = "Play";
+            updateTimer.IsEnabled = false;
+            updateTimer.Stop();
+            hitsoundTimer.Stop();
+        });
+    }
+
+    private void OnPlaySong()
+    {
+        Dispatcher.UIThread.Invoke(() =>
+        {
+            playButton.Content = "Pause";
+            updateTimer.IsEnabled = true;
+            updateTimer.Start();
+            hitsoundTimer.Start();
+        });
+    }
+
     private void PlayButton_OnClick(object? sender, RoutedEventArgs e)
     {
         currentNoteIndex = 0;
@@ -2361,17 +2391,11 @@ public partial class MainView : UserControl, IPassSetting
             currentSong.Paused = !currentSong.Paused;
             if (currentSong.Paused)
             {
-                playButton.Content = "Play";
-                updateTimer.IsEnabled = false;
-                updateTimer.Stop();
-                hitsoundTimer.Stop();
+                OnPauseSong();
             }
             else
             {
-                playButton.Content = "Pause";
-                updateTimer.IsEnabled = true;
-                updateTimer.Start();
-                hitsoundTimer.Start();
+                OnPlaySong();
             }
 
             // AV(fps): Round down so we can properly see newly added notes after pausing 
