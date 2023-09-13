@@ -331,7 +331,7 @@ public partial class MainView : UserControl, IPassSetting
         while (currentNoteIndex < chart.Notes.Count && chart.Notes[currentNoteIndex].BeatInfo.MeasureDecimal <= currentMeasure)
         {
             var note = chart.Notes[currentNoteIndex];
-            var isSoundedNote = (int) note.NoteType is >= (int) NoteType.TouchNoBonus and <= (int) NoteType.HoldStartNoBonus or >= (int) NoteType.Chain;
+            var isSoundedNote = (int) note.NoteType is >= (int) NoteType.TouchNoBonus and <= (int) NoteType.HoldStartNoBonus or >= (int) NoteType.Chain || (int)note.NoteType == (int) NoteType.HoldEnd;
             if (isSoundedNote && note.BeatInfo.MeasureDecimal > lastMeasure)
             {
                 hitsoundChannel?.Play(true);
