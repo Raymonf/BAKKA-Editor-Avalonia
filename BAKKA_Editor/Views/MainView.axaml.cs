@@ -281,6 +281,9 @@ public partial class MainView : UserControl, IPassSetting
         {
             currentSong.Paused = true;
             OnPauseSong();
+
+            // move to the beginning
+            currentSong.PlayPosition = 0;
         }
 
         Dispatcher.UIThread.Post(() =>
@@ -2353,6 +2356,7 @@ public partial class MainView : UserControl, IPassSetting
 
     private void OnPauseSong()
     {
+        currentNoteIndex = 0;
         Dispatcher.UIThread.Invoke(() =>
         {
             playButton.Content = "Play";

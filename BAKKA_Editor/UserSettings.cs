@@ -54,5 +54,6 @@ namespace BAKKA_Editor
         public bool HitsoundEnabled { get; set; } = false;
         public string HitsoundPath { get; set; } = "";
         public int HitsoundVolume { get; set; } = 50;
+        public int HitsoundAdditionalOffsetMs { get; set; } = 0;
     }
 }
