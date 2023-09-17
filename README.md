@@ -13,3 +13,4 @@ Neither the `iOS` nor `Android` projects function properly at this time. iOS sup
 * Built-in FLAC support
 * Badly-implemented and very, very approximate hitsounds (edit `settings.toml`)
 * Dark mode
+* You can actually type in the number boxes (is this a feature?)
