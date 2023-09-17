@@ -1,13 +1,27 @@
 <UserControl xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:BAKKA_Editor.ViewModels"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:controls="clr-namespace:BAKKA_Editor.Controls"
-        x:Class="BAKKA_Editor.Views.MainView"
-        PropertyChanged="AvaloniaObject_OnPropertyChanged">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:BAKKA_Editor.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1154" d:DesignHeight="800"
+             xmlns:controls="clr-namespace:BAKKA_Editor.Controls"
+             x:Class="BAKKA_Editor.Views.MainView"
+             PropertyChanged="AvaloniaObject_OnPropertyChanged">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Default">
+                    <SolidColorBrush x:Key="HeaderBorderColor" Color="#0f0f0f" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="HeaderBorderColor" Color="#444444" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
     <UserControl.Styles>
-        <Style Selector="Menu">
+        <!--<Style Selector="Menu">
             <Setter Property="Foreground" Value="#0f0f0f" />
         </Style>
         <Style Selector="MenuItem">
@@ -15,13 +29,13 @@
         </Style>
         <Style Selector="TextBlock">
             <Setter Property="Foreground" Value="#0f0f0f" />
-        </Style>
+        </Style>-->
         <Style Selector="RadioButton">
-            <Setter Property="Foreground" Value="#0f0f0f" />
+            <!-- <Setter Property="Foreground" Value="#0f0f0f" /> -->
             <Setter Property="Margin" Value="0,4,0,4" />
         </Style>
         <Style Selector="CheckBox">
-            <Setter Property="Foreground" Value="#0f0f0f" />
+            <!-- <Setter Property="Foreground" Value="#0f0f0f" /> -->
         </Style>
         <Style Selector="Button.note">
             <Setter Property="HorizontalAlignment" Value="Stretch" />
@@ -42,7 +56,7 @@
         <vm:MainViewModel />
     </Design.DataContext>
 
-    <DockPanel Margin="16">
+    <DockPanel Margin="8">
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
                 <MenuItem Header="_New..." Command="{Binding NewCommand}" InputGesture="Ctrl+N" />
@@ -63,10 +77,11 @@
                             Name="ShowCursorMenuItem"
                             BorderThickness="0"
                             IsHitTestVisible="False"
-                            IsChecked="{Binding ShowCursor}"/>
+                            IsChecked="{Binding ShowCursor}" />
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="Show Cursor During Playback" Command="{Binding ToggleShowCursorDuringPlaybackCommand}">
+                <MenuItem Header="Show Cursor During Playback"
+                          Command="{Binding ToggleShowCursorDuringPlaybackCommand}">
                     <MenuItem.Icon>
                         <CheckBox Margin="0"
                                   IsChecked="{Binding ShowCursorDuringPlayback}"
@@ -99,68 +114,88 @@
                                   IsHitTestVisible="False" />
                     </MenuItem.Icon>
                 </MenuItem>
-				<MenuItem Header="Show Gimmicks During Playback" Command="{Binding ToggleShowGimmicksDuringPlaybackInCircleViewCommand}">
-					<MenuItem.Icon>
-						<CheckBox IsChecked="{Binding ShowGimmicksDuringPlaybackInCircleView}"
+                <MenuItem Header="Show Gimmicks During Playback"
+                          Command="{Binding ToggleShowGimmicksDuringPlaybackInCircleViewCommand}">
+                    <MenuItem.Icon>
+                        <CheckBox IsChecked="{Binding ShowGimmicksDuringPlaybackInCircleView}"
                                   Name="ShowGimmicksDuringPlaybackInCircleViewMenuItem"
                                   BorderThickness="0"
                                   IsHitTestVisible="False" />
-					</MenuItem.Icon>
-				</MenuItem>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="Dark Mode" Command="{Binding ToggleDarkModeViewCommand}">
+                    <MenuItem.Icon>
+                        <CheckBox IsChecked="{Binding DarkMode}"
+                                  Name="ToggleDarkModeMenuItem"
+                                  BorderThickness="0"
+                                  IsHitTestVisible="False" />
+                    </MenuItem.Icon>
+                </MenuItem>
             </MenuItem>
             <MenuItem Header="_Chart">
                 <MenuItem Header="Initial Chart Settings" Command="{Binding OpenInitialChartSettings}" />
             </MenuItem>
         </Menu>
-        
+
         <Grid RowDefinitions="*">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" MaxWidth="260" />
             </Grid.ColumnDefinitions>
-            
+
             <!-- Left Side Grid -->
             <Grid RowDefinitions="*,120">
                 <!-- Top of Left Side Grid -->
                 <Grid RowDefinitions="*">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" MaxWidth="260" />
+                        <ColumnDefinition Width="260" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    
+
                     <!-- Left Stack Panel (Left Stack Panel, Canvas) -->
                     <StackPanel Name="LeftStackPanel" Orientation="Horizontal">
                         <ScrollViewer Name="LeftScrollViewer" VerticalScrollBarVisibility="Auto">
+                            <ScrollViewer.Styles>
+                                <Style Selector="Button">
+                                    <Setter Property="Height" Value="24" />
+                                </Style>
+                            </ScrollViewer.Styles>
                             <!-- Left Inner Stack Panel (Notes/Gimmicks, Selection, Note Settings) -->
-                            <StackPanel Name="LeftInnerStackPanel" Margin="8">
+                            <StackPanel Name="LeftInnerStackPanel" Margin="8" Width="260">
                                 <Grid RowDefinitions="*" ColumnDefinitions="*,*">
-                                    <HeaderedContentControl Header="Note Types" Background="Black" Margin="0,0,8,0">
+                                    <HeaderedContentControl Header="Note Types" Margin="0,0,8,0">
                                         <StackPanel Margin="8">
                                             <Button Name="tapButton" Classes="note" Background="Fuchsia"
+                                                    Foreground="Black"
                                                     Click="tapButton_Click">
                                                 Touch
                                             </Button>
                                             <Button Name="orangeButton" Classes="note" Background="Orange"
+                                                    Foreground="Black"
                                                     Click="orangeButton_Click">
                                                 ⤾ Slide
                                             </Button>
                                             <Button Name="greenButton" Classes="note" Background="Lime"
+                                                    Foreground="Black"
                                                     Click="greenButton_Click">
                                                 ⤿ Slide
                                             </Button>
-                                            <Button Name="redButton" Classes="note" Background="Red"
+                                            <Button Name="redButton" Classes="note" Background="Red" Foreground="Black"
                                                     Click="redButton_Click">
                                                 ↑ Snap
                                             </Button>
                                             <Button Name="blueButton" Classes="note" Background="Cyan"
+                                                    Foreground="Black"
                                                     Click="blueButton_Click">
                                                 ↓ Snap
                                             </Button>
                                             <Button Name="chainButton" Classes="note" Background="rgb(204, 190, 45)"
+                                                    Foreground="Black"
                                                     Click="chainButton_Click">
                                                 Chain
                                             </Button>
                                             <Button Name="holdButton" Classes="note" Background="Yellow"
+                                                    Foreground="Black"
                                                     Click="holdButton_Click">
                                                 Hold
                                             </Button>
@@ -169,7 +204,7 @@
                                                     Click="endChartButton_Click">
                                                 End of Chart
                                             </Button>
-                                            <CheckBox Name="endHoldCheck" IsChecked="False" Margin="0,4,0,4"
+                                            <CheckBox Name="endHoldCheck" IsChecked="False" Margin="0,0"
                                                       PropertyChanged="EndHoldCheck_OnPropertyChanged">
                                                 End Hold
                                             </CheckBox>
@@ -178,21 +213,29 @@
                                                          IsChecked="True"
                                                          GroupName="Note Types"
                                                          Content="No Bonus"
-                                                         Checked="BonusRadioCheck" />
+                                                         Margin="0,0"
+                                                         IsCheckedChanged="BonusRadioCheck" />
                                             <RadioButton Name="bonusRadio"
                                                          IsChecked="False"
                                                          GroupName="Note Types"
                                                          Content="Bonus Get"
-                                                         Checked="BonusRadioCheck" />
+                                                         Margin="0,0"
+                                                         IsCheckedChanged="BonusRadioCheck" />
                                             <RadioButton Name="flairRadio"
                                                          IsChecked="False"
                                                          GroupName="Note Types"
                                                          Content="R Note (Flair)"
-                                                         Checked="BonusRadioCheck" />
+                                                         Margin="0,0"
+                                                         IsCheckedChanged="BonusRadioCheck" />
                                         </StackPanel>
                                     </HeaderedContentControl>
                                     <Grid RowDefinitions="*,*" Grid.Column="1" Margin="0,0,8,0">
-                                        <HeaderedContentControl Header="Gimmick Types" Background="Black">
+                                        <Grid.Styles>
+                                            <Style Selector="RadioButton">
+                                                <Setter Property="Margin" Value="0,-1,0,-1" />
+                                            </Style>
+                                        </Grid.Styles>
+                                        <HeaderedContentControl Header="Gimmick Types">
                                             <StackPanel Margin="8">
                                                 <Button Name="maskButton" Classes="note" Click="maskButton_Click">
                                                     Mask
@@ -218,46 +261,46 @@
                                                              IsChecked="True"
                                                              GroupName="Gimmick Types"
                                                              Content="Add Mask"
-                                                             Checked="maskRatio_CheckChanged" />
+                                                             IsCheckedChanged="maskRatio_CheckChanged" />
                                                 <RadioButton Name="removeMaskRadio"
                                                              IsChecked="False"
                                                              GroupName="Gimmick Types"
                                                              Content="Remove Mask"
-                                                             Checked="maskRatio_CheckChanged" />
+                                                             IsCheckedChanged="maskRatio_CheckChanged" />
                                             </StackPanel>
                                         </HeaderedContentControl>
 
-                                        <HeaderedContentControl Grid.Row="1" Header="Mask Setting" Background="Black"
+                                        <HeaderedContentControl Grid.Row="1" Header="Mask Setting"
                                                                 VerticalAlignment="Bottom" Margin="0,8,0,0">
                                             <StackPanel Margin="8">
                                                 <RadioButton Name="clockwiseMaskRadio"
                                                              IsChecked="True"
                                                              GroupName="Mask Setting"
                                                              Content="Clockwise"
-                                                             Checked="maskRatio_CheckChanged" />
+                                                             IsCheckedChanged="maskRatio_CheckChanged" />
                                                 <RadioButton Name="cClockwiseMaskRadio"
                                                              IsChecked="False"
                                                              GroupName="Mask Setting"
                                                              Content="C-Clockwise"
-                                                             Checked="maskRatio_CheckChanged" />
+                                                             IsCheckedChanged="maskRatio_CheckChanged" />
                                                 <RadioButton Name="centerMaskRadio"
                                                              IsChecked="False"
                                                              GroupName="Mask Setting"
                                                              Content="From Center"
-                                                             Checked="maskRatio_CheckChanged" />
+                                                             IsCheckedChanged="maskRatio_CheckChanged" />
                                             </StackPanel>
                                         </HeaderedContentControl>
                                     </Grid>
                                 </Grid>
 
-                                <HeaderedContentControl Header="Current Selection" Background="Black" Margin="0,8,8,0">
+                                <HeaderedContentControl Header="Current Selection" Margin="0,8,8,0">
                                     <TextBlock Name="currentSelectionLabel" Margin="8">Touch</TextBlock>
                                 </HeaderedContentControl>
 
-                                <HeaderedContentControl Header="Current Note Settings" Background="Black"
+                                <HeaderedContentControl Header="Current Note Settings"
                                                         Margin="0,8,8,0">
                                     <StackPanel Margin="8">
-                                        <TextBlock>Position:</TextBlock>
+                                        <TextBlock Margin="0,0,0,4">Position:</TextBlock>
                                         <Grid ColumnDefinitions="100*,158*">
                                             <NumericUpDown Name="positionNumeric"
                                                            Value="0" Increment="1" Minimum="0" Maximum="59"
@@ -266,9 +309,10 @@
                                                     VerticalAlignment="Center"
                                                     Value="0" Minimum="0" Maximum="59"
                                                     SmallChange="1" LargeChange="5"
+                                                    Padding="8,0,0,0"
                                                     PropertyChanged="PositionTrackBar_OnPropertyChanged" />
                                         </Grid>
-                                        <TextBlock>Size:</TextBlock>
+                                        <TextBlock Margin="0,4">Size:</TextBlock>
                                         <Grid ColumnDefinitions="100*,158*">
                                             <NumericUpDown Name="sizeNumeric"
                                                            ShowButtonSpinner="False"
@@ -278,20 +322,21 @@
                                                     VerticalAlignment="Center"
                                                     Value="4" Minimum="4" Maximum="59"
                                                     SmallChange="1" LargeChange="5"
+                                                    Padding="8,0,0,0"
                                                     PropertyChanged="SizeTrackBar_OnPropertyChanged" />
                                         </Grid>
-                                        <TextBlock>Measure:</TextBlock>
+                                        <TextBlock Margin="0,4">Measure:</TextBlock>
                                         <Grid ColumnDefinitions="8*,4*,*,4*">
                                             <NumericUpDown Grid.Column="0" Name="measureNumeric"
                                                            HorizontalAlignment="Stretch"
                                                            Value="0" Increment="1" Minimum="0" Maximum="9999"
-                                                           Margin="0,0,4,0"
+                                                           Margin="0,0,8,0"
                                                            ValueChanged="MeasureNumeric_OnValueChanged" />
                                             <NumericUpDown Grid.Column="1" Name="beat1Numeric"
                                                            HorizontalAlignment="Stretch"
                                                            Value="0" Increment="1" Minimum="0" Maximum="1920"
                                                            ValueChanged="Beat1Numeric_OnValueChanged" />
-                                            <TextBlock Grid.Column="2" Text="/" Width="8" Margin="4,0,0,0"
+                                            <TextBlock Grid.Column="2" Text="/" Width="8" Margin="8,0,8,0"
                                                        VerticalAlignment="Center" />
                                             <NumericUpDown Grid.Column="3" Name="beat2Numeric"
                                                            HorizontalAlignment="Stretch"
@@ -303,15 +348,17 @@
 
                                 <Button Name="insertButton" Click="insertButton_Click" HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Center" Margin="0,4,8,0"
-                                        Content="{Binding InsertButtonText}"/>
+                                        Content="{Binding InsertButtonText}" />
                             </StackPanel>
                         </ScrollViewer>
                     </StackPanel>
 
                     <!-- Canvas Stack Panel -->
+
+                    <!-- Width="611" Height="524" -->
                     <StackPanel Grid.Column="1" Name="CanvasStackPanel">
                         <controls:SkiaCanvas Name="CircleControl" Background="Transparent" RenderSkia="RenderCanvas"
-                                             Width="611" Height="524"
+                                             HorizontalAlignment="Center" VerticalAlignment="Center"
                                              PointerPressed="CircleControl_OnPointerPressed"
                                              PointerReleased="CircleControl_OnPointerReleased"
                                              PointerMoved="CircleControl_OnPointerMoved"
@@ -323,10 +370,11 @@
                 <Grid Grid.Row="1" Name="BottomStackPanel">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" MaxWidth="160"/>
+                        <ColumnDefinition Width="*" MaxWidth="160" />
                     </Grid.ColumnDefinitions>
-                    
-                    <HeaderedContentControl Header="Playback" Background="Black" Margin="8,0,8,8" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+
+                    <HeaderedContentControl Header="Playback" Margin="8,0,8,8" VerticalAlignment="Stretch"
+                                            HorizontalAlignment="Stretch">
                         <StackPanel Margin="8">
                             <Grid ColumnDefinitions="130,*">
                                 <StackPanel Margin="8,0">
@@ -341,38 +389,46 @@
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="1">
-                                        <Slider Name="songTrackBar" Value="0" Minimum="0" Maximum="10" SmallChange="1"
-                                                LargeChange="5" PropertyChanged="SongTrackBar_OnPropertyChanged"
-                                                VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                                    <Slider Name="songTrackBar" Value="0" Minimum="0" Maximum="10" SmallChange="1"
+                                            LargeChange="5" PropertyChanged="SongTrackBar_OnPropertyChanged"
+                                            VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
 
-                                        <!-- Speed and Volume -->
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-                                            <StackPanel Orientation="Horizontal" Margin="0,0,16,0">
-                                                <TextBlock Name="LabelSpeed" HorizontalAlignment="Center" TextAlignment="Right" Margin="0,0,8,0"
-                                                           Width="100">
-                                                    Speed
-                                                </TextBlock>
-                                                <Slider Name="trackBarSpeed" Value="100" Minimum="0" Maximum="100"
-                                                        SmallChange="1" LargeChange="5" Width="100"
-                                                        HorizontalAlignment="Center"
-                                                        PropertyChanged="TrackBarSpeed_OnPropertyChanged" />
-                                            </StackPanel>
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock HorizontalAlignment="Center" TextAlignment="Right" Margin="0,0,8,0" Width="60">Volume</TextBlock>
-                                                <Slider Name="trackBarVolume" Value="100" Minimum="0" Maximum="100"
-                                                        SmallChange="1" LargeChange="5" Width="100"
-                                                        HorizontalAlignment="Center"
-                                                        PropertyChanged="TrackBarVolume_OnPropertyChanged" />
-                                            </StackPanel>
-                                            <StackPanel Orientation="Horizontal" Name="HitsoundPanel">
-                                                <TextBlock HorizontalAlignment="Center" TextAlignment="Right" Margin="0,0,8,0" Width="60">Hitsounds</TextBlock>
-                                                <Slider Name="trackBarHitsoundVolume" Value="100" Minimum="0" Maximum="100"
-                                                        SmallChange="1" LargeChange="5" Width="50"
-                                                        HorizontalAlignment="Center"
-                                                        PropertyChanged="TrackBarHitsounds_OnPropertyChanged" />
-                                            </StackPanel>
+                                    <!-- Speed and Volume -->
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,16,0">
+                                            <TextBlock Name="LabelSpeed" HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center" TextAlignment="Right"
+                                                       Margin="0,0,8,0"
+                                                       Width="100">
+                                                Speed
+                                            </TextBlock>
+                                            <Slider Name="trackBarSpeed" Value="100" Minimum="0" Maximum="100"
+                                                    SmallChange="1" LargeChange="5" Width="100"
+                                                    HorizontalAlignment="Center"
+                                                    PropertyChanged="TrackBarSpeed_OnPropertyChanged" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                       TextAlignment="Right" Margin="0,0,8,0" Width="60">
+                                                Volume
+                                            </TextBlock>
+                                            <Slider Name="trackBarVolume" Value="100" Minimum="0" Maximum="100"
+                                                    SmallChange="1" LargeChange="5" Width="100"
+                                                    HorizontalAlignment="Center"
+                                                    PropertyChanged="TrackBarVolume_OnPropertyChanged" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Name="HitsoundPanel">
+                                            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                       TextAlignment="Right" Margin="0,0,8,0" Width="60">
+                                                Hitsounds
+                                            </TextBlock>
+                                            <Slider Name="trackBarHitsoundVolume" Value="100" Minimum="0" Maximum="100"
+                                                    SmallChange="1" LargeChange="5" Width="50"
+                                                    HorizontalAlignment="Center"
+                                                    PropertyChanged="TrackBarHitsounds_OnPropertyChanged" />
                                         </StackPanel>
                                     </StackPanel>
+                                </StackPanel>
                             </Grid>
                             <StackPanel Orientation="Horizontal" Margin="10,4,0,0">
                                 <TextBlock FontWeight="Bold" Margin="0,0,8,0">Song File:</TextBlock>
@@ -380,9 +436,10 @@
                             </StackPanel>
                         </StackPanel>
                     </HeaderedContentControl>
-                    <HeaderedContentControl Grid.Column="1" Header="Visual Settings" Background="Black" Margin="0,0,0,8" HorizontalAlignment="Stretch">
+                    <HeaderedContentControl Grid.Column="1" Header="Visual Settings" Margin="0,0,0,8"
+                                            HorizontalAlignment="Stretch">
                         <StackPanel Margin="8">
-                            <TextBlock>Hi-Speed:</TextBlock>
+                            <TextBlock Margin="0,0,0,8">Hi-Speed:</TextBlock>
                             <NumericUpDown Name="visualHispeedNumeric"
                                            Minimum="0.001" Maximum="500" Value="0.5" Increment="0.05"
                                            ValueChanged="VisualHispeedNumeric_OnValueChanged" />
@@ -393,7 +450,7 @@
 
             <!-- Right Side Stack Panel (Note View, Gimmick View) -->
             <StackPanel Name="RightStackPanel" Grid.Column="1" VerticalAlignment="Bottom" Margin="8">
-                <HeaderedContentControl Header="Note View" Background="Black" Margin="0,0,0,8">
+                <HeaderedContentControl Header="Note View" Margin="0,0,0,8">
                     <StackPanel Margin="8">
                         <Grid RowDefinitions="*,*" ColumnDefinitions="*,*">
                             <Button Grid.Row="0" Grid.Column="0" Name="notePrevButton" Margin="0,0,2,4"
@@ -404,39 +461,40 @@
                                     Classes="center-text stretch" Click="NoteNextButton_OnClick">
                                 Next Note &gt;
                             </Button>
-                            <Button Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Name="notePrevMeasureButton" Margin="0,0,2,4"
+                            <Button Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Name="notePrevMeasureButton"
+                                    Margin="0,0,2,4"
                                     Classes="center-text stretch" Click="NoteJumpToCurrTimeButton_Click">
-                                Jump To Nearest Note @ Current Time
+                                Jump To Nearest Note
                             </Button>
                         </Grid>
                         <Grid RowDefinitions="*,*,*" ColumnDefinitions="*,*">
                             <Grid Grid.Row="0" Grid.Column="0" RowDefinitions="*" ColumnDefinitions="*,*"
                                   Margin="0,0,0,4">
                                 <TextBlock Text="Measure:" FontWeight="Bold"></TextBlock>
-                                <TextBlock Grid.Column="1" Name="noteMeasureLabel" Text="None"></TextBlock>
+                                <TextBlock Grid.Column="1" Name="noteMeasureLabel" Text="None" />
                             </Grid>
 
-                            <Grid Grid.Row="0" Grid.Column="1" RowDefinitions="*" ColumnDefinitions="*,*">
+                            <Grid Grid.Row="0" Grid.Column="1" RowDefinitions="*" ColumnDefinitions="*,*"
+                                  Margin="0,0,0,4">
                                 <TextBlock Text="Beat:" FontWeight="Bold"></TextBlock>
-                                <TextBlock Grid.Column="1" Name="noteBeatLabel" Text="None"></TextBlock>
+                                <TextBlock Grid.Column="1" Name="noteBeatLabel" Text="None" />
                             </Grid>
 
                             <Grid Grid.Row="1" Grid.Column="0" RowDefinitions="*" ColumnDefinitions="*,*"
                                   Margin="0,0,0,4">
                                 <TextBlock Text="Type:" FontWeight="Bold"></TextBlock>
-                                <TextBlock Grid.Column="1" Name="noteTypeLabel" Text="None"></TextBlock>
+                                <TextBlock Grid.Column="1" Name="noteTypeLabel" Width="170" HorizontalAlignment="Left" Text="None" />
                             </Grid>
 
                             <Grid Grid.Row="2" Grid.Column="0" RowDefinitions="*" ColumnDefinitions="*,*"
                                   Margin="0,0,0,4">
                                 <TextBlock Text="Position:" FontWeight="Bold"></TextBlock>
-                                <TextBlock Grid.Column="1" Name="notePositionLabel" Text="None">
-                                </TextBlock>
+                                <TextBlock Grid.Column="1" Name="notePositionLabel" Text="None" />
                             </Grid>
 
                             <Grid Grid.Row="2" Grid.Column="1" RowDefinitions="*" ColumnDefinitions="*,*">
                                 <TextBlock Text="Size:" FontWeight="Bold"></TextBlock>
-                                <TextBlock Grid.Column="1" Name="noteSizeLabel" Text="None"></TextBlock>
+                                <TextBlock Grid.Column="1" Name="noteSizeLabel" Text="None" />
                             </Grid>
                         </Grid>
 
@@ -447,7 +505,7 @@
 
                         <Grid RowDefinitions="*" ColumnDefinitions="*,*">
                             <Button Grid.Column="0" Name="noteEditSelectedButton" Margin="0,4,1,0"
-                                    Classes="center-text stretch" Height="60" Click="NoteEditSelectedButton_OnClick">
+                                    Classes="center-text stretch" Height="48" Click="NoteEditSelectedButton_OnClick">
                                 <StackPanel>
                                     <TextBlock HorizontalAlignment="Center">
                                         Edit Selected
@@ -459,7 +517,7 @@
                             </Button>
                             <Button Grid.Column="1" Name="noteDeleteSelectedButton" Foreground="Red"
                                     Margin="1,4,0,0"
-                                    Classes="center-text stretch" Height="60" Click="NoteDeleteSelectedButton_OnClick">
+                                    Classes="center-text stretch" Height="48" Click="NoteDeleteSelectedButton_OnClick">
                                 <StackPanel>
                                     <TextBlock HorizontalAlignment="Center">
                                         Delete Selected
@@ -473,23 +531,24 @@
                     </StackPanel>
                 </HeaderedContentControl>
 
-                <HeaderedContentControl Header="Gimmick View" Background="Black">
+                <HeaderedContentControl Header="Gimmick View">
                     <StackPanel Margin="8">
                         <Grid RowDefinitions="*,*,*" ColumnDefinitions="*,*">
                             <Button Grid.Row="0" Grid.Column="0" Name="gimmickPrevButton" Margin="0,0,1,4"
-                                    Classes="center-text stretch" Click="GimmickPrevButton_OnClick">
+                                    Padding="0,4" Classes="center-text stretch" Click="GimmickPrevButton_OnClick">
                                 Previous Gimmick
                             </Button>
                             <Button Grid.Row="0" Grid.Column="1" Name="gimmickNextButton" Margin="1,0,0,4"
-                                    Classes="center-text stretch" Click="GimmickNextButton_OnClick">
+                                    Padding="0,4" Classes="center-text stretch" Click="GimmickNextButton_OnClick">
                                 Next Gimmick
                             </Button>
 
-                            <Button Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Name="gimmickJumpToCurrTimeButton" Margin="1,0,0,4"
+                            <Button Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Name="gimmickJumpToCurrTimeButton"
+                                    Margin="1,0,0,4"
                                     Classes="center-text stretch" Click="GimmickJumpToCurrTimeButton_OnClick">
-                                Jump To Nearest Gimmick @ Current Time
+                                Jump To Nearest Gimmick
                             </Button>
-                            
+
                             <Grid Grid.Row="2" Grid.Column="0" RowDefinitions="*" ColumnDefinitions="*,*"
                                   Margin="0,0,0,4">
                                 <TextBlock Text="Measure:" FontWeight="Bold"></TextBlock>

@@ -3,9 +3,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:BAKKA_Editor.ViewModels"
-        mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="220"
-        Width="300" Height="220"
-        MaxWidth="300" MaxHeight="220"
+        mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="180"
+        Width="300" Height="180"
+        MaxWidth="300" MaxHeight="180"
         x:Class="BAKKA_Editor.Views.InitChartSettingsView"
         Name="ChartSettingsView">
     <Panel>
@@ -34,37 +34,30 @@
                     <ColumnDefinition Width="*"></ColumnDefinition>
                 </Grid.ColumnDefinitions>
 
-                <Grid Grid.Row="0" ColumnDefinitions="1.5*,2*" Margin="0,0,0,4">
+                <Grid Grid.Row="0" ColumnDefinitions="1.5*,2*" Margin="0,0,0,8">
                     <TextBlock Text="BPM" />
                     <NumericUpDown Grid.Column="1" Value="{Binding Bpm}" ShowButtonSpinner="False" />
                 </Grid>
 
-                <Grid Grid.Row="1" ColumnDefinitions="1.5*,2*" Margin="0,0,0,4">
+                <Grid Grid.Row="1" ColumnDefinitions="1.5*,2*" Margin="0,0,0,8">
                     <TextBlock Grid.Column="0" Text="Time Signature" />
                     <Grid Grid.Column="1" ColumnDefinitions="2*,Auto,2*" RowDefinitions="Auto,Auto,Auto">
                         <NumericUpDown Grid.Column="0" Value="{Binding TimeSigUpper}" ShowButtonSpinner="False" />
-                        <TextBlock Grid.Column="1" Text="/" Margin="4,0"></TextBlock>
-                        <NumericUpDown Grid.Column="2" Value="{Binding TimeSigLower}" ShowButtonSpinner="False" />
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="/" Margin="4,0"></TextBlock>
+                        <NumericUpDown Grid.Row="0" Grid.Column="2" Value="{Binding TimeSigLower}" ShowButtonSpinner="False" />
                     </Grid>
                 </Grid>
 
-                <Grid Grid.Row="2" ColumnDefinitions="1.5*,2*" Margin="0,0,0,4">
+                <Grid Grid.Row="2" ColumnDefinitions="1.5*,2*" Margin="0,0,0,8">
                     <TextBlock Text="Offset" />
                     <NumericUpDown Grid.Column="1" Value="{Binding Offset}" ShowButtonSpinner="False" />
                 </Grid>
 
-                <Grid Grid.Row="3" ColumnDefinitions="1.5*,2*" Margin="0,0,0,4">
+                <Grid Grid.Row="3" ColumnDefinitions="1.5*,2*" Margin="0,0,0,8">
                     <TextBlock Text="Movie Offset" />
                     <NumericUpDown Grid.Column="1" Value="{Binding MovieOffset}" ShowButtonSpinner="False" />
                 </Grid>
             </Grid>
-
-            <!--<Button Width="260" Margin="0,4,0,0"
-                    HorizontalContentAlignment="Center"
-                    Command="{Binding SaveSettingsCommand, Mode=OneWay}"
-                    CommandParameter="{Binding ElementName=ChartSettingsView}">
-                Save Settings
-            </Button>-->
         </StackPanel>
     </Panel>
 </UserControl>

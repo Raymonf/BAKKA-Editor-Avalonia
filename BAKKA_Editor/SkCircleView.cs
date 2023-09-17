@@ -249,11 +249,14 @@ namespace BAKKA_Editor
         /// Creates the background brush with the passed in color if it's null.
         /// </summary>
         /// <param name="color">SKColor</param>
-        public void DrawBackground(SKColor color)
+        public void DrawBackground(SKColor color, bool setBrush = false, bool isDarkMode = false)
         {
-            if (BackgroundBrush == null)
+            if (setBrush || BackgroundBrush == null)
+            {
                 // Remember background color for drawing later
                 BackgroundBrush = Utils.CreateFillBrush(color, false);
+            }
+
             canvas.Clear(color);
         }
         

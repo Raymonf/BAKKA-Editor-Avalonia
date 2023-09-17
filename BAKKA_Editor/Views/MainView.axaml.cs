@@ -30,7 +30,7 @@ namespace BAKKA_Editor.Views;
 public partial class MainView : UserControl, IPassSetting
 {
     private static bool IsDesktop => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
-    private static readonly SKColor BackColor = SKColors.LightGray;
+    private static SKColor BackColor = SKColors.LightGray;
 
     // File selector state
     private string openFilename = "";
@@ -42,6 +42,7 @@ public partial class MainView : UserControl, IPassSetting
 
     // View State
     public bool CanShutdown = false;
+    public bool ResetBackColor = true;
     
     // Chart
     Chart chart = new();
@@ -108,10 +109,10 @@ public partial class MainView : UserControl, IPassSetting
 
     public MainView()
     {
-        Application.Current.RequestedThemeVariant = ThemeVariant.Light;
+        Application.Current.RequestedThemeVariant = ThemeVariant.Dark; //.Light;
         
         InitializeComponent();
-        Background = new SolidColorBrush(new Avalonia.Media.Color(BackColor.Alpha, BackColor.Red, BackColor.Green, BackColor.Blue));
+        // Background = new SolidColorBrush(new Avalonia.Media.Color(BackColor.Alpha, BackColor.Red, BackColor.Green, BackColor.Blue));
         Setup();
     }
 
@@ -170,19 +171,20 @@ public partial class MainView : UserControl, IPassSetting
         }
 
         // Apply settings
-        var vm = (MainViewModel?) DataContext;
-        if (vm != null)
-        {
-            vm.ShowCursor = userSettings.ViewSettings.ShowCursor;
-            vm.ShowCursorDuringPlayback = userSettings.ViewSettings.ShowCursorDuringPlayback;
-            vm.HighlightViewedNote = userSettings.ViewSettings.HighlightViewedNote;
-            vm.SelectLastInsertedNote = userSettings.ViewSettings.SelectLastInsertedNote;
-            vm.ShowGimmicksInCircleView = userSettings.ViewSettings.ShowGimmicks;
-            vm.ShowGimmicksDuringPlaybackInCircleView = userSettings.ViewSettings.ShowGimmicksDuringPlayback;
-        }
+        DataContext ??= new MainViewModel();
+        var vm = (MainViewModel) DataContext!;
+        vm.ShowCursor = userSettings.ViewSettings.ShowCursor;
+        vm.ShowCursorDuringPlayback = userSettings.ViewSettings.ShowCursorDuringPlayback;
+        vm.HighlightViewedNote = userSettings.ViewSettings.HighlightViewedNote;
+        vm.SelectLastInsertedNote = userSettings.ViewSettings.SelectLastInsertedNote;
+        vm.ShowGimmicksInCircleView = userSettings.ViewSettings.ShowGimmicks;
+        vm.ShowGimmicksDuringPlaybackInCircleView = userSettings.ViewSettings.ShowGimmicksDuringPlayback;
+        vm.DarkMode = userSettings.ViewSettings.DarkMode;
+        
         visualHispeedNumeric.Value = (decimal)userSettings.ViewSettings.HispeedSetting;
         trackBarVolume.Value = userSettings.ViewSettings.Volume;
         trackBarHitsoundVolume.Value = Math.Clamp(userSettings.SoundSettings.HitsoundVolume, 0, 100);
+        SetDarkMode(userSettings.ViewSettings.DarkMode);
 
         autoSaveTimer =
             new DispatcherTimer(TimeSpan.FromMilliseconds(userSettings.SaveSettings.AutoSaveInterval * 60000),
@@ -509,7 +511,7 @@ public partial class MainView : UserControl, IPassSetting
 
         skCircleView.SetCanvas(canvas);
 
-        skCircleView.DrawBackground(BackColor);
+        skCircleView.DrawBackground(BackColor, ResetBackColor);
 
         // Draw masks
         skCircleView.DrawMasks(chart);
@@ -609,6 +611,9 @@ public partial class MainView : UserControl, IPassSetting
 
     private void Beat1Numeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
     {
+        if (beat1Numeric.Value == null || beat2Numeric.Value == null)
+            return;
+        
         if (beat1Numeric.Value >= beat2Numeric.Value)
         {
             measureNumeric.Value++;
@@ -893,6 +898,9 @@ public partial class MainView : UserControl, IPassSetting
 
     private void updateTime()
     {
+        if (measureNumeric.Value == null || beat1Numeric.Value == null || beat2Numeric.Value == null)
+            return;
+        
         if (currentSong == null || (currentSong != null && currentSong.Paused))
         {
             skCircleView.CurrentMeasure =
@@ -1198,7 +1206,7 @@ public partial class MainView : UserControl, IPassSetting
 
     private void PositionNumeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
     {
-        if (positionNumeric != null && positionTrackBar != null)
+        if (positionNumeric != null && positionTrackBar != null && positionNumeric.Value != null)
         {
             positionNumericFloat = (float)positionNumeric.Value;
             if ((int)positionTrackBar.Value != (int)positionNumeric.Value)
@@ -1209,7 +1217,7 @@ public partial class MainView : UserControl, IPassSetting
     private void PositionTrackBar_OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
     {
         // TODO: tighten property check
-        if (positionNumeric != null && positionTrackBar != null)
+        if (positionNumeric != null && positionTrackBar != null && positionNumeric.Value != null)
         {
             if ((int)positionNumeric.Value != (int)positionTrackBar.Value)
                 positionNumeric.Value = (int)positionTrackBar.Value;
@@ -1220,7 +1228,7 @@ public partial class MainView : UserControl, IPassSetting
     private void SizeNumeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
     {
         // TODO: tighten property check
-        if (sizeNumeric != null && sizeTrackBar != null)
+        if (sizeNumeric != null && sizeTrackBar != null && sizeNumeric.Value != null)
         {
             sizeNumericFloat = (float)sizeNumeric.Value;
             if ((int)sizeTrackBar.Value != (int)sizeNumeric.Value)
@@ -1231,7 +1239,7 @@ public partial class MainView : UserControl, IPassSetting
     private void SizeTrackBar_OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
     {
         // TODO: tighten property check
-        if (sizeNumeric != null && sizeTrackBar != null)
+        if (sizeNumeric != null && sizeTrackBar != null && sizeNumeric.Value != null)
         {
             if ((int)sizeNumeric.Value != (int)sizeTrackBar.Value)
                 sizeNumeric.Value = (int)sizeTrackBar.Value;
@@ -1604,6 +1612,10 @@ public partial class MainView : UserControl, IPassSetting
                 result = true;
             }
         }
+        
+        // prevent crash later
+        if (string.IsNullOrEmpty(saveFilename))
+            return false;
 
         // if we had to prompt and didn't get a file, stop now
         if (prompt && !result) return false;
@@ -2556,15 +2568,20 @@ public partial class MainView : UserControl, IPassSetting
 
     private void VisualHispeedNumeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
     {
-        var value = (float) visualHispeedNumeric.Value;
+        var value = (float?) visualHispeedNumeric.Value;
+        if (value == null)
+            return;
         if (value >= (float) visualHispeedNumeric.Minimum && value <= (float) visualHispeedNumeric.Maximum)
-            skCircleView.Hispeed = value;
+            skCircleView.Hispeed = value.Value;
         else
             visualHispeedNumeric.Value = (decimal) skCircleView.Hispeed;
     }
 
     protected override void OnKeyDown(KeyEventArgs e)
     {
+        if (TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is TextBox)
+            return;
+        
         switch (e.Key)
         {
             case Key.I:
@@ -2702,6 +2719,14 @@ public partial class MainView : UserControl, IPassSetting
         userSettings.ViewSettings.ShowGimmicksDuringPlayback = value;
     }
 
+    public void SetDarkMode(bool value)
+    {
+        userSettings.ViewSettings.DarkMode = value;
+        Application.Current.RequestedThemeVariant = value ? ThemeVariant.Dark : ThemeVariant.Light;
+        BackColor = SKColor.Parse(value ? "#ff444444" : "#FFF3F3F3");
+        ResetBackColor = true;
+    }
+    
     private void Window_OnClosing(object? sender, CancelEventArgs e)
     {
         // we need this condition because Shutdown() calls Close()

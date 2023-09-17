@@ -4,8 +4,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:BAKKA_Editor.ViewModels"
         xmlns:controls="clr-namespace:BAKKA_Editor.Controls"
-        mc:Ignorable="d" d:DesignWidth="380" d:DesignHeight="375"
-        MaxWidth="380" MaxHeight="375"
+        mc:Ignorable="d" d:DesignWidth="380" d:DesignHeight="328"
+        Width="380" Height="328"
+        MaxWidth="380" MaxHeight="328"
         x:Class="BAKKA_Editor.Views.GimmickView">
     <Design.DataContext>
         <viewModels:GimmicksViewModel />
