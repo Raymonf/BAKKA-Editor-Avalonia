@@ -2723,7 +2723,8 @@ public partial class MainView : UserControl, IPassSetting
     public void SetDarkMode(bool value)
     {
         userSettings.ViewSettings.DarkMode = value;
-        Application.Current.RequestedThemeVariant = value ? ThemeVariant.Dark : ThemeVariant.Light;
+        if (Application.Current != null)
+            Application.Current.RequestedThemeVariant = value ? ThemeVariant.Dark : ThemeVariant.Light;
         BackColor = SKColor.Parse(value ? "#ff444444" : "#FFF3F3F3");
         ResetBackColor = true;
     }
