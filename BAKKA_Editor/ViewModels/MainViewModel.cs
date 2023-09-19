@@ -1,13 +1,12 @@
-﻿using System.Reactive;
+﻿using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using BAKKA_Editor.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
-using ReactiveUI;
 
 namespace BAKKA_Editor.ViewModels;
 
-public partial class MainViewModel : ObservableObject
+public partial class MainViewModel : ViewModelBase
 {
     [ObservableProperty] private bool areMeasureButtonsVisible;
 
@@ -24,139 +23,155 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool showGimmicksDuringPlaybackInCircleView = true;
     [ObservableProperty] private bool showGimmicksInCircleView = true;
 
-    public MainViewModel()
-    {
-        OpenInitialChartSettings = ReactiveCommand.CreateFromTask(async () =>
-        {
-            var mainWindow = Target();
-            if (mainWindow != null)
-                await mainWindow.OpenChartSettings_OnClick();
-        });
-        NewCommand = ReactiveCommand.CreateFromTask(async () =>
-        {
-            var mainWindow = Target();
-            if (mainWindow != null)
-                await mainWindow.NewMenuItem_OnClick()!;
-        });
-        OpenCommand = ReactiveCommand.CreateFromTask(async () =>
-        {
-            var mainWindow = Target();
-            if (mainWindow != null)
-                await mainWindow.OpenMenuItem_OnClick()!;
-        });
-        SaveCommand = ReactiveCommand.CreateFromTask(async () =>
-        {
-            var mainWindow = Target();
-            if (mainWindow != null)
-                await mainWindow.SaveMenuItem_OnClick()!;
-        });
-        SaveAsCommand = ReactiveCommand.CreateFromTask(async () =>
-        {
-            var mainWindow = Target();
-            if (mainWindow != null)
-                await mainWindow.SaveAsMenuItem_OnClick()!;
-        });
-        ExitCommand = ReactiveCommand.CreateFromTask(async () =>
-        {
-            var mainWindow = Target();
-            if (mainWindow != null)
-                await mainWindow.ExitMenuItem_OnClick()!;
-        });
-        UndoCommand = ReactiveCommand.Create(() =>
-        {
-            var mainWindow = Target();
-            mainWindow?.UndoMenuItem_OnClick();
-        });
-        RedoCommand = ReactiveCommand.Create(() =>
-        {
-            var mainWindow = Target();
-            mainWindow?.RedoMenuItem_OnClick();
-        });
-        ToggleShowCursorCommand = ReactiveCommand.Create(() =>
-        {
-            ShowCursor = !ShowCursor;
+    // Music UI State
 
-            var mainWindow = Target();
-            mainWindow?.SetShowCursor(ShowCursor);
-        });
-        ToggleShowCursorDuringPlaybackCommand = ReactiveCommand.Create(() =>
-        {
-            ShowCursorDuringPlayback = !ShowCursorDuringPlayback;
-
-            var mainWindow = Target();
-            mainWindow?.SetShowCursorDuringPlayback(ShowCursorDuringPlayback);
-        });
-        ToggleHighlightViewedNoteCommand = ReactiveCommand.Create(() =>
-        {
-            HighlightViewedNote = !HighlightViewedNote;
-
-            var mainWindow = Target();
-            mainWindow?.SetHighlightViewedNote(HighlightViewedNote);
-        });
-        ToggleSelectLastInsertedNoteCommand = ReactiveCommand.Create(() =>
-        {
-            SelectLastInsertedNote = !SelectLastInsertedNote;
-
-            var mainWindow = Target();
-            mainWindow?.SetSelectLastInsertedNote(SelectLastInsertedNote);
-        });
-        ToggleGimmicksInCircleViewCommand = ReactiveCommand.Create(() =>
-        {
-            ShowGimmicksInCircleView = !ShowGimmicksInCircleView;
-
-            var mainWindow = Target();
-            mainWindow?.SetShowGimmicksInCircleView(ShowGimmicksInCircleView);
-        });
-        ToggleShowGimmicksDuringPlaybackInCircleViewCommand = ReactiveCommand.Create(() =>
-        {
-            ShowGimmicksDuringPlaybackInCircleView = !ShowGimmicksDuringPlaybackInCircleView;
-
-            var mainWindow = Target();
-            mainWindow?.SetShowGimmicksDuringPlaybackInCircleView(ShowGimmicksDuringPlaybackInCircleView);
-        });
-        ToggleDarkModeViewCommand = ReactiveCommand.Create(() =>
-        {
-            DarkMode = !DarkMode;
-
-            var mainWindow = Target();
-            mainWindow?.SetDarkMode(DarkMode);
-        });
-        ToggleShowMeasureButtonsCommand = ReactiveCommand.Create(() =>
-        {
-            AreMeasureButtonsVisible = !AreMeasureButtonsVisible;
-
-            var mainWindow = Target();
-            mainWindow?.SetShowMeasureButtons(AreMeasureButtonsVisible);
-        });
-    }
+    [ObservableProperty] private double sizeTrackBar = 0.0;
+    [ObservableProperty] private double positionTrackBar = 0.0;
+    [ObservableProperty] private decimal sizeNumeric = 0;
+    [ObservableProperty] private decimal positionNumeric = 0;
 
     // Commands
-    public ReactiveCommand<Unit, Unit> NewCommand { get; set; }
-    public ReactiveCommand<Unit, Unit> ExitCommand { get; }
-    public ReactiveCommand<Unit, Unit> OpenCommand { get; }
-    public ReactiveCommand<Unit, Unit> SaveCommand { get; }
-    public ReactiveCommand<Unit, Unit> SaveAsCommand { get; }
-    public ReactiveCommand<Unit, Unit> UndoCommand { get; set; }
-    public ReactiveCommand<Unit, Unit> RedoCommand { get; set; }
-    public ReactiveCommand<Unit, Unit> ToggleShowCursorCommand { get; set; }
-    public ReactiveCommand<Unit, Unit> ToggleShowCursorDuringPlaybackCommand { get; set; }
-    public ReactiveCommand<Unit, Unit> ToggleHighlightViewedNoteCommand { get; set; }
-    public ReactiveCommand<Unit, Unit> ToggleSelectLastInsertedNoteCommand { get; set; }
-    public ReactiveCommand<Unit, Unit> ToggleGimmicksInCircleViewCommand { get; set; }
-    public ReactiveCommand<Unit, Unit> ToggleShowGimmicksDuringPlaybackInCircleViewCommand { get; set; }
-    public ReactiveCommand<Unit, Unit> ToggleDarkModeViewCommand { get; set; }
-    public ReactiveCommand<Unit, Unit> ToggleShowMeasureButtonsCommand { get; set; }
-    public ReactiveCommand<Unit, Unit> OpenInitialChartSettings { get; }
+    public async Task<bool> NewCommand()
+    {
+        var mainWindow = Target();
+        if (mainWindow != null)
+            await mainWindow.NewMenuItem_OnClick();
+        return true;
+    }
 
-    private static IPassSetting? Target()
+    public async Task<bool> OpenCommand()
+    {
+        var mainWindow = Target();
+        if (mainWindow != null)
+            await mainWindow.OpenMenuItem_OnClick();
+        return true;
+    }
+
+    public async Task<bool> SaveCommand()
+    {
+        var mainWindow = Target();
+        if (mainWindow != null)
+            await mainWindow.SaveMenuItem_OnClick();
+        return true;
+    }
+
+    public bool SaveAsCommand()
+    {
+        var mainWindow = Target();
+        mainWindow?.SaveAsMenuItem_OnClick();
+        return true;
+    }
+
+    public bool ExitCommand()
+    {
+        var mainWindow = Target();
+        mainWindow?.ExitMenuItem_OnClick();
+        return true;
+    }
+
+    public bool UndoCommand()
+    {
+        var mainWindow = Target();
+        mainWindow?.UndoMenuItem_OnClick();
+        return true;
+    }
+
+    public bool RedoCommand()
+    {
+        var mainWindow = Target();
+        mainWindow?.RedoMenuItem_OnClick();
+        return true;
+    }
+
+    public bool ToggleShowCursorCommand()
+    {
+        ShowCursor = !ShowCursor;
+
+        var mainWindow = Target();
+        mainWindow?.SetShowCursor(ShowCursor);
+        return true;
+    }
+
+    public bool ToggleShowCursorDuringPlaybackCommand()
+    {
+        ShowCursorDuringPlayback = !ShowCursorDuringPlayback;
+
+        var mainWindow = Target();
+        mainWindow?.SetShowCursorDuringPlayback(ShowCursorDuringPlayback);
+        return true;
+    }
+
+    public bool ToggleHighlightViewedNoteCommand()
+    {
+        HighlightViewedNote = !HighlightViewedNote;
+
+        var mainWindow = Target();
+        mainWindow?.SetHighlightViewedNote(HighlightViewedNote);
+        return true;
+    }
+
+    public bool ToggleSelectLastInsertedNoteCommand()
+    {
+        SelectLastInsertedNote = !SelectLastInsertedNote;
+
+        var mainWindow = Target();
+        mainWindow?.SetSelectLastInsertedNote(SelectLastInsertedNote);
+        return true;
+    }
+
+    public bool ToggleGimmicksInCircleViewCommand()
+    {
+        ShowGimmicksInCircleView = !ShowGimmicksInCircleView;
+
+        var mainWindow = Target();
+        mainWindow?.SetShowGimmicksInCircleView(ShowGimmicksInCircleView);
+        return true;
+    }
+
+    public bool ToggleShowGimmicksDuringPlaybackInCircleViewCommand()
+    {
+        ShowGimmicksDuringPlaybackInCircleView = !ShowGimmicksDuringPlaybackInCircleView;
+
+        var mainWindow = Target();
+        mainWindow?.SetShowGimmicksDuringPlaybackInCircleView(ShowGimmicksDuringPlaybackInCircleView);
+        return true;
+    }
+
+    public bool ToggleDarkModeViewCommand()
+    {
+        DarkMode = !DarkMode;
+
+        var mainWindow = Target();
+        mainWindow?.SetDarkMode(DarkMode);
+        return true;
+    }
+
+    public bool ToggleShowMeasureButtonsCommand()
+    {
+        AreMeasureButtonsVisible = !AreMeasureButtonsVisible;
+
+        var mainWindow = Target();
+        mainWindow?.SetShowMeasureButtons(AreMeasureButtonsVisible);
+        return true;
+    }
+
+    public async Task<bool> OpenInitialChartSettings()
+    {
+        var mainWindow = Target();
+        if (mainWindow != null)
+            await mainWindow.OpenChartSettings_OnClick();
+        return true;
+    }
+
+    private static MainView? Target()
     {
         var lifetime = Application.Current?.ApplicationLifetime;
         if (lifetime is IClassicDesktopStyleApplicationLifetime)
-            return (IPassSetting?)
+            return ((MainWindow?)
                 (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)
-                ?.MainWindow;
+                ?.MainWindow)?.View;
 
-        return (IPassSetting?)
+        return (MainView?)
             (Application.Current?.ApplicationLifetime as ISingleViewApplicationLifetime)
             ?.MainView;
     }

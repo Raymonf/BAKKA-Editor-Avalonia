@@ -16,12 +16,12 @@
     </Design.DataContext>
 
     <Window.KeyBindings>
-        <KeyBinding Gesture="Ctrl+O" Command="{Binding OpenCommand}" />
-        <KeyBinding Gesture="Ctrl+Z" Command="{Binding UndoCommand}" />
-        <KeyBinding Gesture="Ctrl+Y" Command="{Binding RedoCommand}" />
-        <KeyBinding Gesture="Ctrl+N" Command="{Binding NewCommand}" />
-        <KeyBinding Gesture="Ctrl+Shift+S" Command="{Binding SaveAsCommand}" />
-        <KeyBinding Gesture="Ctrl+S" Command="{Binding SaveCommand}" />
+        <KeyBinding Gesture="Ctrl+O" Command="{Binding OnOpenCommand}" />
+        <KeyBinding Gesture="Ctrl+Z" Command="{Binding OnUndoCommand}" />
+        <KeyBinding Gesture="Ctrl+Y" Command="{Binding OnRedoCommand}" />
+        <KeyBinding Gesture="Ctrl+N" Command="{Binding OnNewCommand}" />
+        <KeyBinding Gesture="Ctrl+Shift+S" Command="{Binding OnSaveAsCommand}" />
+        <KeyBinding Gesture="Ctrl+S" Command="{Binding OnSaveCommand}" />
     </Window.KeyBindings>
     <Grid RowDefinitions="*" ColumnDefinitions="*">
         <views:MainView Name="View" />

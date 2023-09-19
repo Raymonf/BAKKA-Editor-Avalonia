@@ -25,7 +25,7 @@ using Tomlyn;
 
 namespace BAKKA_Editor.Views;
 
-public partial class MainView : UserControl, IPassSetting
+public partial class MainView : UserControl
 {
     private static SKColor BackColor = SKColors.LightGray;
     private string autosaveFile = "";
@@ -33,6 +33,7 @@ public partial class MainView : UserControl, IPassSetting
 
     // View State
     public bool CanShutdown;
+    private MainViewModel _vm;
 
     // Chart
     private Chart chart = new();
@@ -74,14 +75,12 @@ public partial class MainView : UserControl, IPassSetting
     private OperationManager opManager;
 
     // Threading pain hack
-    private float positionNumericFloat;
     public bool ResetBackColor = true;
     private string saveFilename = ""; // for desktop
 
     private Stream? saveFileStream; // for iOS, or something?
     private int selectedGimmickIndex = -1;
     private int selectedNoteIndex = -1;
-    private float sizeNumericFloat;
 
     // Playfield
     private SkCircleView skCircleView;
@@ -102,8 +101,9 @@ public partial class MainView : UserControl, IPassSetting
     {
         Application.Current.RequestedThemeVariant = ThemeVariant.Dark; //.Light;
 
+        // set up the data context before InitializeComponent()
+        DataContext ??= new MainViewModel();
         InitializeComponent();
-        // Background = new SolidColorBrush(new Avalonia.Media.Color(BackColor.Alpha, BackColor.Red, BackColor.Green, BackColor.Blue));
         Setup();
     }
 
@@ -356,16 +356,15 @@ public partial class MainView : UserControl, IPassSetting
         }
 
         // Apply settings
-        DataContext ??= new MainViewModel();
-        var vm = (MainViewModel) DataContext!;
-        vm.ShowCursor = userSettings.ViewSettings.ShowCursor;
-        vm.ShowCursorDuringPlayback = userSettings.ViewSettings.ShowCursorDuringPlayback;
-        vm.HighlightViewedNote = userSettings.ViewSettings.HighlightViewedNote;
-        vm.SelectLastInsertedNote = userSettings.ViewSettings.SelectLastInsertedNote;
-        vm.ShowGimmicksInCircleView = userSettings.ViewSettings.ShowGimmicks;
-        vm.ShowGimmicksDuringPlaybackInCircleView = userSettings.ViewSettings.ShowGimmicksDuringPlayback;
-        vm.DarkMode = userSettings.ViewSettings.DarkMode;
-        vm.AreMeasureButtonsVisible = userSettings.ViewSettings.ShowMeasureButtons;
+        _vm = (MainViewModel) DataContext!;
+        _vm.ShowCursor = userSettings.ViewSettings.ShowCursor;
+        _vm.ShowCursorDuringPlayback = userSettings.ViewSettings.ShowCursorDuringPlayback;
+        _vm.HighlightViewedNote = userSettings.ViewSettings.HighlightViewedNote;
+        _vm.SelectLastInsertedNote = userSettings.ViewSettings.SelectLastInsertedNote;
+        _vm.ShowGimmicksInCircleView = userSettings.ViewSettings.ShowGimmicks;
+        _vm.ShowGimmicksDuringPlaybackInCircleView = userSettings.ViewSettings.ShowGimmicksDuringPlayback;
+        _vm.DarkMode = userSettings.ViewSettings.DarkMode;
+        _vm.AreMeasureButtonsVisible = userSettings.ViewSettings.ShowMeasureButtons;
 
         visualHispeedNumeric.Value = (decimal) userSettings.ViewSettings.HispeedSetting;
         trackBarVolume.Value = userSettings.ViewSettings.Volume;
@@ -706,7 +705,7 @@ public partial class MainView : UserControl, IPassSetting
         if (currentSong != null && !currentSong.Paused) showCursor = userSettings.ViewSettings.ShowCursorDuringPlayback;
 
         // Draw cursor
-        if (showCursor) skCircleView.DrawCursor(currentNoteType, positionNumericFloat, sizeNumericFloat);
+        if (showCursor) skCircleView.DrawCursor(currentNoteType, (float)_vm.PositionNumeric, (float)_vm.SizeNumeric);
     }
 
     private void CircleControl_OnWheel(object? sender, PointerWheelEventArgs e)
@@ -987,8 +986,8 @@ public partial class MainView : UserControl, IPassSetting
                 break;
         }
 
-        if (sizeNumeric.Value < minSize) sizeNumeric.Value = minSize;
-        if (sizeTrackBar.Value < minSize) sizeTrackBar.Value = minSize;
+        if (_vm.SizeNumeric < minSize) _vm.SizeNumeric = minSize;
+        if (_vm.SizeTrackBar < minSize) _vm.SizeTrackBar = minSize;
         sizeNumeric.Minimum = minSize;
         sizeTrackBar.Minimum = minSize;
     }
@@ -1047,8 +1046,8 @@ public partial class MainView : UserControl, IPassSetting
     private void ResetChartTime()
     {
         measureNumeric.Value = beat1Numeric.Value = 0;
-        positionNumeric.Value = positionNumeric.Minimum;
-        sizeNumeric.Value = sizeNumeric.Minimum;
+        _vm.PositionNumeric = positionNumeric.Minimum;
+        _vm.SizeNumeric = sizeNumeric.Minimum;
         updateTime();
     }
 
@@ -1352,45 +1351,26 @@ public partial class MainView : UserControl, IPassSetting
 
     private void PositionNumeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
     {
-        if (positionNumeric != null && positionTrackBar != null && positionNumeric.Value != null)
-        {
-            positionNumericFloat = (float) positionNumeric.Value;
-            if ((int) positionTrackBar.Value != (int) positionNumeric.Value)
-                positionTrackBar.Value = (int) positionNumeric.Value;
-        }
+        if ((int) _vm.PositionTrackBar != (int) _vm.PositionNumeric)
+            _vm.PositionTrackBar = (int) _vm.PositionNumeric;
     }
 
     private void PositionTrackBar_OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
     {
-        // TODO: tighten property check
-        if (positionNumeric != null && positionTrackBar != null && positionNumeric.Value != null)
-        {
-            if ((int) positionNumeric.Value != (int) positionTrackBar.Value)
-                positionNumeric.Value = (int) positionTrackBar.Value;
-            positionNumericFloat = (float) positionNumeric.Value;
-        }
+        if ((int) _vm.PositionNumeric != (int) _vm.PositionTrackBar)
+            _vm.PositionNumeric = (int) _vm.PositionTrackBar;
     }
 
     private void SizeNumeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
     {
-        // TODO: tighten property check
-        if (sizeNumeric != null && sizeTrackBar != null && sizeNumeric.Value != null)
-        {
-            sizeNumericFloat = (float) sizeNumeric.Value;
-            if ((int) sizeTrackBar.Value != (int) sizeNumeric.Value)
-                sizeTrackBar.Value = (int) sizeNumeric.Value;
-        }
+        if ((int) _vm.SizeTrackBar != (int) _vm.SizeNumeric)
+            _vm.SizeTrackBar = (int) _vm.SizeNumeric;
     }
 
     private void SizeTrackBar_OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
     {
-        // TODO: tighten property check
-        if (sizeNumeric != null && sizeTrackBar != null && sizeNumeric.Value != null)
-        {
-            if ((int) sizeNumeric.Value != (int) sizeTrackBar.Value)
-                sizeNumeric.Value = (int) sizeTrackBar.Value;
-            sizeNumericFloat = (float) sizeNumeric.Value;
-        }
+        if ((int) _vm.SizeNumeric != (int) _vm.SizeTrackBar)
+            _vm.SizeNumeric = (int) _vm.SizeTrackBar;
     }
 
     private void insertButton_Click(object? sender, RoutedEventArgs e)
@@ -1412,8 +1392,8 @@ public partial class MainView : UserControl, IPassSetting
             {
                 BeatInfo = currentBeat,
                 NoteType = currentNoteType,
-                Position = (int) positionNumeric.Value!,
-                Size = (int) sizeNumeric.Value!,
+                Position = (int) _vm.PositionNumeric,
+                Size = (int) _vm.SizeNumeric,
                 HoldChange = true
             };
             switch (currentNoteType)
@@ -1560,7 +1540,7 @@ public partial class MainView : UserControl, IPassSetting
         var yCen = -(point.Position.Y - CircleControl.DesiredSize.Height / 2);
         // Update the location of mouse click inside the circle
         skCircleView.UpdateMouseDown((float) xCen, (float) yCen, point.Position.ToSystemDrawing());
-        positionNumeric.Value = skCircleView.mouseDownPos;
+        _vm.PositionNumeric = skCircleView.mouseDownPos;
     }
 
     private void CircleControl_OnPointerReleased(object? sender, PointerReleasedEventArgs e)
@@ -1582,7 +1562,7 @@ public partial class MainView : UserControl, IPassSetting
         // Mouse down position wasn't within the window or wasn't a left click, do nothing.
         if (!point.Properties.IsLeftButtonPressed || skCircleView.mouseDownPos <= -1) return;
 
-        var initialSize = (int) sizeNumeric.Value;
+        var initialSize = (int) _vm.SizeNumeric;
 
         {
             // X and Y are relative to the upper left of the panel
@@ -1593,12 +1573,12 @@ public partial class MainView : UserControl, IPassSetting
             // Left click will alter the note width and possibly position depending on which direction we move
             if (theta == skCircleView.mouseDownPos)
             {
-                positionNumeric.Value = skCircleView.mouseDownPos;
+                _vm.PositionNumeric = skCircleView.mouseDownPos;
                 initialSize = 1;
             }
             else if ((theta > skCircleView.mouseDownPos || skCircleView.rolloverPos) && !skCircleView.rolloverNeg)
             {
-                positionNumeric.Value = skCircleView.mouseDownPos;
+                _vm.PositionNumeric = skCircleView.mouseDownPos;
                 if (skCircleView.rolloverPos)
                     initialSize = Math.Min(theta + 60 - skCircleView.mouseDownPos + 1, 60);
                 else
@@ -1606,16 +1586,16 @@ public partial class MainView : UserControl, IPassSetting
             }
             else if (theta < skCircleView.mouseDownPos || skCircleView.rolloverNeg)
             {
-                positionNumeric.Value = theta;
+                _vm.PositionNumeric = theta;
                 if (skCircleView.rolloverNeg)
                     initialSize = Math.Min(skCircleView.mouseDownPos + 60 - theta + 1, 60);
                 else
                     initialSize = skCircleView.mouseDownPos - theta + 1;
             }
 
-            if (initialSize < sizeNumeric.Minimum) sizeNumeric.Value = sizeNumeric.Minimum;
-            else if (initialSize > 60) sizeNumeric.Value = 60;
-            else sizeNumeric.Value = initialSize;
+            if (initialSize < sizeNumeric.Minimum) _vm.SizeNumeric = sizeNumeric.Minimum;
+            else if (initialSize > 60) _vm.SizeNumeric = 60;
+            else _vm.SizeNumeric = initialSize;
         }
     }
 
@@ -2003,8 +1983,8 @@ public partial class MainView : UserControl, IPassSetting
         var newNote = new Note
         {
             BeatInfo = currentNote.BeatInfo,
-            Position = (int) positionNumeric.Value.Value,
-            Size = (int) sizeNumeric.Value.Value
+            Position = (int) _vm.PositionNumeric,
+            Size = (int) _vm.SizeNumeric
         };
         opManager.InvokeAndPush(new EditNote(currentNote, newNote));
         UpdateNoteLabels();

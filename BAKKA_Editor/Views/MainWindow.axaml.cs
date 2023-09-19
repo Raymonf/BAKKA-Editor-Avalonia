@@ -1,13 +1,13 @@
+using System;
 using System.Reactive;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
-using ReactiveUI;
 
 namespace BAKKA_Editor.Views;
 
-public partial class MainWindow : Window, IPassSetting
+public partial class MainWindow : Window
 {
     public MainWindow()
     {
@@ -15,157 +15,79 @@ public partial class MainWindow : Window, IPassSetting
 #if DEBUG
         this.AttachDevTools();
 #endif
-
-        NewCommand = ReactiveCommand.CreateFromTask(NewMenuItem_OnClick);
-        OpenCommand = ReactiveCommand.CreateFromTask(OpenMenuItem_OnClick);
-        SaveCommand = ReactiveCommand.CreateFromTask(SaveMenuItem_OnClick);
-        SaveAsCommand = ReactiveCommand.CreateFromTask(SaveAsMenuItem_OnClick);
-        ExitCommand = ReactiveCommand.CreateFromTask(ExitMenuItem_OnClick);
-        UndoCommand = ReactiveCommand.Create(UndoMenuItem_OnClick);
-        RedoCommand = ReactiveCommand.Create(RedoMenuItem_OnClick);
     }
 
-    // Commands
-    public ReactiveCommand<Unit, Unit> NewCommand { get; set; }
-    public ReactiveCommand<Unit, Unit> ExitCommand { get; }
-    public ReactiveCommand<Unit, Unit> OpenCommand { get; }
-    public ReactiveCommand<Unit, Unit> SaveCommand { get; }
-    public ReactiveCommand<Unit, Unit> SaveAsCommand { get; }
-    public ReactiveCommand<Unit, Unit> UndoCommand { get; set; }
-    public ReactiveCommand<Unit, Unit> RedoCommand { get; set; }
+    private MainView? GetMainView() => this.FindControl<MainView>("View");
 
-    public async Task OpenChartSettings_OnClick()
+    private void RunInView(Func<MainView?, Task> action)
     {
         var view = GetMainView();
         if (view == null)
             return;
-        Dispatcher.UIThread.Post(async () => await view.OpenChartSettings_OnClick(), DispatcherPriority.Background);
+        Dispatcher.UIThread.Post(() => action(view), DispatcherPriority.Background);
     }
 
-    public async Task NewMenuItem_OnClick()
+    public void OnNewCommand()
     {
-        var view = GetMainView();
-        if (view == null)
-            return;
-        Dispatcher.UIThread.Post(async () => await view.NewMenuItem_OnClick(), DispatcherPriority.Background);
+        RunInView(view =>
+        {
+            view?.NewMenuItem_OnClick();
+            return Task.CompletedTask;
+        });
     }
 
-    public async Task OpenMenuItem_OnClick()
+    public void OnOpenCommand()
     {
-        var view = GetMainView();
-        if (view == null)
-            return;
-        Dispatcher.UIThread.Post(async () => await view.OpenMenuItem_OnClick(), DispatcherPriority.Background);
+        RunInView(view =>
+        {
+            view?.OpenMenuItem_OnClick();
+            return Task.CompletedTask;
+        });
     }
 
-    public async Task SaveMenuItem_OnClick()
+    public void OnSaveCommand()
     {
-        var view = GetMainView();
-        if (view == null)
-            return;
-        Dispatcher.UIThread.Post(async () => await view.SaveMenuItem_OnClick(), DispatcherPriority.Background);
+        RunInView(view =>
+        {
+            view?.SaveMenuItem_OnClick();
+            return Task.CompletedTask;
+        });
     }
 
-    public async Task SaveAsMenuItem_OnClick()
+    public void OnSaveAsCommand()
     {
-        var view = GetMainView();
-        if (view == null)
-            return;
-        Dispatcher.UIThread.Post(async () => await view.SaveAsMenuItem_OnClick(), DispatcherPriority.Background);
+        RunInView(view =>
+        {
+            view?.SaveAsMenuItem_OnClick();
+            return Task.CompletedTask;
+        });
     }
 
-    public async Task ExitMenuItem_OnClick()
+    public void ExitMenuItem_OnClick()
     {
-        var view = GetMainView();
-        if (view == null)
-            return;
-        Dispatcher.UIThread.Post(async () => await view.ExitMenuItem_OnClick(), DispatcherPriority.Background);
+        RunInView(view =>
+        {
+            view?.ExitMenuItem_OnClick();
+            return Task.CompletedTask;
+        });
     }
 
-    public void UndoMenuItem_OnClick()
+    public void OnUndoCommand()
     {
-        var view = GetMainView();
-        if (view == null)
-            return;
-        Dispatcher.UIThread.Post(() => view.UndoMenuItem_OnClick(), DispatcherPriority.Background);
+        RunInView(view =>
+        {
+            view?.UndoMenuItem_OnClick();
+            return Task.CompletedTask;
+        });
     }
 
-    public void RedoMenuItem_OnClick()
+    public void OnRedoCommand()
     {
-        var view = GetMainView();
-        if (view == null)
-            return;
-        Dispatcher.UIThread.Post(() => view.RedoMenuItem_OnClick(), DispatcherPriority.Background);
-    }
-
-    public void SetShowCursor(bool value)
-    {
-        var view = GetMainView();
-        if (view == null)
-            return;
-        Dispatcher.UIThread.Post(() => view.SetShowCursor(value), DispatcherPriority.Background);
-    }
-
-    public void SetShowCursorDuringPlayback(bool value)
-    {
-        var view = GetMainView();
-        if (view == null)
-            return;
-        Dispatcher.UIThread.Post(() => view.SetShowCursorDuringPlayback(value), DispatcherPriority.Background);
-    }
-
-    public void SetHighlightViewedNote(bool value)
-    {
-        var view = GetMainView();
-        if (view == null)
-            return;
-        Dispatcher.UIThread.Post(() => view.SetHighlightViewedNote(value), DispatcherPriority.Background);
-    }
-
-    public void SetSelectLastInsertedNote(bool value)
-    {
-        var view = GetMainView();
-        if (view == null)
-            return;
-        Dispatcher.UIThread.Post(() => view.SetSelectLastInsertedNote(value), DispatcherPriority.Background);
-    }
-
-    public void SetShowGimmicksInCircleView(bool value)
-    {
-        var view = GetMainView();
-        if (view == null)
-            return;
-        Dispatcher.UIThread.Post(() => view.SetShowGimmicksInCircleView(value), DispatcherPriority.Background);
-    }
-
-    public void SetShowGimmicksDuringPlaybackInCircleView(bool value)
-    {
-        var view = GetMainView();
-        if (view == null)
-            return;
-        Dispatcher.UIThread.Post(() => view.SetShowGimmicksDuringPlaybackInCircleView(value),
-            DispatcherPriority.Background);
-    }
-
-    public void SetDarkMode(bool value)
-    {
-        var view = GetMainView();
-        if (view == null)
-            return;
-        Dispatcher.UIThread.Post(() => view.SetDarkMode(value), DispatcherPriority.Background);
-    }
-
-    public void SetShowMeasureButtons(bool value)
-    {
-        var view = GetMainView();
-        if (view == null)
-            return;
-        Dispatcher.UIThread.Post(() => view.SetShowMeasureButtons(value), DispatcherPriority.Background);
-    }
-
-    private MainView? GetMainView()
-    {
-        return this.FindControl<MainView>("View");
+        RunInView(view =>
+        {
+            view?.RedoMenuItem_OnClick();
+            return Task.CompletedTask;
+        });
     }
 
     private void Window_OnClosing(object? sender, WindowClosingEventArgs e)
@@ -175,6 +97,6 @@ public partial class MainWindow : Window, IPassSetting
         if (view == null || view.CanShutdown)
             return;
         e.Cancel = true;
-        Dispatcher.UIThread.Post(async () => await view.ExitMenuItem_OnClick(), DispatcherPriority.Background);
+        Dispatcher.UIThread.Post(() => view.ExitMenuItem_OnClick(), DispatcherPriority.Background);
     }
 }
