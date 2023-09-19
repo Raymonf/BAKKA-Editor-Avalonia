@@ -132,7 +132,7 @@
             </MenuItem>
         </Menu>
 
-        <Grid RowDefinitions="*">
+        <Grid RowDefinitions="*" Margin="0,-4,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" MaxWidth="260" />
