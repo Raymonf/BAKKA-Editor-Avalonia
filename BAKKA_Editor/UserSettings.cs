@@ -27,6 +27,7 @@ namespace BAKKA_Editor
         public float HispeedSetting { get; set; } = 1.5f;
         public int Volume { get; set; } = 100;
         public bool DarkMode { get; set; } = false;
+        public bool ShowMeasureButtons { get; set; } = false;
     }
 
     internal class SaveSettings

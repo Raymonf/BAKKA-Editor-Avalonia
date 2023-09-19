@@ -174,4 +174,12 @@ public partial class MainWindow : Window, IPassSetting
             return;
         Dispatcher.UIThread.Post(() => view.SetDarkMode(value), DispatcherPriority.Background);
     }
+
+    public void SetShowMeasureButtons(bool value)
+    {
+        var view = GetMainView();
+        if (view == null)
+            return;
+        Dispatcher.UIThread.Post(() => view.SetShowMeasureButtons(value), DispatcherPriority.Background);
+    }
 }

@@ -19,4 +19,5 @@ public interface IPassSetting
     public void SetShowGimmicksInCircleView(bool value);
     public void SetShowGimmicksDuringPlaybackInCircleView(bool value);
     public void SetDarkMode(bool value);
+    public void SetShowMeasureButtons(bool value);
 }

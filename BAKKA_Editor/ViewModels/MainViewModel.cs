@@ -119,6 +119,13 @@ public partial class MainViewModel : ObservableObject
             var mainWindow = Target();
             mainWindow?.SetDarkMode(DarkMode);
         });
+        ToggleShowMeasureButtonsCommand = ReactiveCommand.Create(() =>
+        {
+            AreMeasureButtonsVisible = !AreMeasureButtonsVisible;
+
+            var mainWindow = Target();
+            mainWindow?.SetShowMeasureButtons(AreMeasureButtonsVisible);
+        });
     }
 
     // View Model Settings State
@@ -130,6 +137,7 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool showGimmicksDuringPlaybackInCircleView = true;
     
     [ObservableProperty] private bool darkMode = false;
+    [ObservableProperty] private bool areMeasureButtonsVisible = false;
     
     // Button Text
     [ObservableProperty] private string insertButtonText = "Insert Object (I)";
@@ -149,5 +157,6 @@ public partial class MainViewModel : ObservableObject
     public ReactiveCommand<Unit, Unit> ToggleGimmicksInCircleViewCommand { get; set; }
     public ReactiveCommand<Unit, Unit> ToggleShowGimmicksDuringPlaybackInCircleViewCommand { get; set; }
     public ReactiveCommand<Unit, Unit> ToggleDarkModeViewCommand { get; set; }
+    public ReactiveCommand<Unit, Unit> ToggleShowMeasureButtonsCommand { get; set; }
     public ReactiveCommand<Unit, Unit> OpenInitialChartSettings { get; }
 }

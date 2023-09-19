@@ -180,7 +180,8 @@ public partial class MainView : UserControl, IPassSetting
         vm.ShowGimmicksInCircleView = userSettings.ViewSettings.ShowGimmicks;
         vm.ShowGimmicksDuringPlaybackInCircleView = userSettings.ViewSettings.ShowGimmicksDuringPlayback;
         vm.DarkMode = userSettings.ViewSettings.DarkMode;
-        
+        vm.AreMeasureButtonsVisible = userSettings.ViewSettings.ShowMeasureButtons;
+
         visualHispeedNumeric.Value = (decimal)userSettings.ViewSettings.HispeedSetting;
         trackBarVolume.Value = userSettings.ViewSettings.Volume;
         trackBarHitsoundVolume.Value = Math.Clamp(userSettings.SoundSettings.HitsoundVolume, 0, 100);
@@ -2763,5 +2764,54 @@ public partial class MainView : UserControl, IPassSetting
         userSettings.SoundSettings.HitsoundVolume = (int)trackBarHitsoundVolume.Value;
         var volume = (float) trackBarHitsoundVolume.Value / (float) trackBarHitsoundVolume.Maximum;
         hitsoundChannel?.SetVolume(Math.Clamp(volume, 0.0f, 1.0f));
+    }
+
+    private void MeasurePrevButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (chart.Notes.Count == 0)
+            return;
+
+        var last = chart.Notes[selectedNoteIndex].BeatInfo.Measure;
+        var note = chart.Notes.LastOrDefault(x => x.BeatInfo.Measure < last);
+        if (note != null)
+        {
+            selectedNoteIndex = chart.Notes.IndexOf(note);
+        }
+        else
+        {
+            note = chart.Notes.LastOrDefault(x => x.BeatInfo.Measure > last);
+            if (note != null)
+            {
+                selectedNoteIndex = chart.Notes.IndexOf(note);
+            }
+        }
+        UpdateNoteLabels();
+    }
+
+    private void MeasureNextButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (chart.Notes.Count == 0)
+            return;
+
+        var last = chart.Notes[selectedNoteIndex].BeatInfo.Measure;
+        var note = chart.Notes.FirstOrDefault(x => x.BeatInfo.Measure > last);
+        if (note != null)
+        {
+            selectedNoteIndex = chart.Notes.IndexOf(note);
+        }
+        else
+        {
+            note = chart.Notes.FirstOrDefault(x => x.BeatInfo.Measure < last);
+            if (note != null)
+            {
+                selectedNoteIndex = chart.Notes.IndexOf(note);
+            }
+        }
+        UpdateNoteLabels();
+    }
+
+    public void SetShowMeasureButtons(bool value)
+    {
+        userSettings.ViewSettings.ShowMeasureButtons = value;
     }
 }
