@@ -1,4 +1,4 @@
-# BAKKA Editor Avalonia Port
+# BAKKA Editor Avalonia ~~Port~~ Fork
 
 A Marvelously simple and scuffed editor, but this time it's cross-platform (tested on Windows, Linux, and macOS)! Currently mostly up-to-date with upstream v2.1.8.
 
