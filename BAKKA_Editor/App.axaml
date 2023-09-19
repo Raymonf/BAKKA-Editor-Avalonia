@@ -14,7 +14,7 @@
     </Application.Resources>
 
     <Application.Styles>
-        <styling:FluentAvaloniaTheme />
+        <styling:FluentAvaloniaTheme PreferUserAccentColor="True" />
 
         <!-- FluentAvalonia overrides -->
         <Style Selector="Slider">
