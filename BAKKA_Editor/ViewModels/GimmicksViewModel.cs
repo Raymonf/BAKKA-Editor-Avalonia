@@ -58,11 +58,11 @@ public partial class GimmicksViewModel : ObservableObject
     public GimmickMeasureInputViewModel RevEnd1MeasureInfo { get; set; } = new();
     public GimmickMeasureInputViewModel RevEnd2MeasureInfo { get; set; } = new();
     
-    public float StartMeasure { get { return (float)StartMeasureInfo.Measure + (float)StartMeasureInfo.Beat1 / (float)StartMeasureInfo.Beat2; } }
-    public float StopEndMeasure { get { return (float)StopEndMeasureInfo.Measure + (float)StopEndMeasureInfo.Beat1 / (float)StopEndMeasureInfo.Beat2; } }
-    public float RevEnd1Measure { get { return (float)RevEnd1MeasureInfo.Measure + (float)RevEnd1MeasureInfo.Beat1 / (float)RevEnd1MeasureInfo.Beat2; } }
-    public float RevEnd2Measure { get { return (float)RevEnd2MeasureInfo.Measure + (float)RevEnd2MeasureInfo.Beat1 / (float)RevEnd2MeasureInfo.Beat2; } }
-    
+    public float StartMeasure => (float)StartMeasureInfo.Measure + (float)StartMeasureInfo.Beat1 / (float)StartMeasureInfo.Beat2;
+    public float StopEndMeasure => (float)StopEndMeasureInfo.Measure + (float)StopEndMeasureInfo.Beat1 / (float)StopEndMeasureInfo.Beat2;
+    public float RevEnd1Measure => (float)RevEnd1MeasureInfo.Measure + (float)RevEnd1MeasureInfo.Beat1 / (float)RevEnd1MeasureInfo.Beat2;
+    public float RevEnd2Measure => (float)RevEnd2MeasureInfo.Measure + (float)RevEnd2MeasureInfo.Beat1 / (float)RevEnd2MeasureInfo.Beat2;
+
     public ContentDialog? Dialog { get; set; }
     public RelayCommand<UserControl> OkCommand { get; }
     private void OnOk(UserControl? userControl)
