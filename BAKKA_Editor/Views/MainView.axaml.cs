@@ -43,7 +43,7 @@ public partial class MainView : UserControl, IPassSetting
     // View State
     public bool CanShutdown = false;
     public bool ResetBackColor = true;
-    
+
     // Chart
     Chart chart = new();
     string songFilePath = "";
@@ -110,7 +110,7 @@ public partial class MainView : UserControl, IPassSetting
     public MainView()
     {
         Application.Current.RequestedThemeVariant = ThemeVariant.Dark; //.Light;
-        
+
         InitializeComponent();
         // Background = new SolidColorBrush(new Avalonia.Media.Color(BackColor.Alpha, BackColor.Red, BackColor.Green, BackColor.Blue));
         Setup();
@@ -441,7 +441,7 @@ public partial class MainView : UserControl, IPassSetting
                                 {
                                     DeleteAutosaves();
                                 }
-                                
+
                                 autoSaveTimer.Start();
                             });
                     }
@@ -452,7 +452,7 @@ public partial class MainView : UserControl, IPassSetting
         {
             tempStatusPath = PlatformUtils.GetTempFileName().Replace(".tmp", ".bakka");
             File.WriteAllText(tempStatusPath, "false");
-                                
+
             autoSaveTimer.Start();
         }
     }
@@ -522,7 +522,7 @@ public partial class MainView : UserControl, IPassSetting
 
         // Draw degree lines
         skCircleView.DrawDegreeLines();
-        
+
         // Draw Gimmicks
         skCircleView.DrawGimmicks(chart, userSettings.ViewSettings.ShowGimmicks, selectedGimmickIndex);
 
@@ -550,7 +550,7 @@ public partial class MainView : UserControl, IPassSetting
 
     private void CircleControl_OnWheel(object? sender, PointerWheelEventArgs e)
     {
-        // throttle mouse wheel delta for trackpads which spam wheel events 
+        // throttle mouse wheel delta for trackpads which spam wheel events
         curDelta += e.Delta.Y;
         if (curDelta is > -0.5 and < 0.5)
             return;
@@ -614,7 +614,7 @@ public partial class MainView : UserControl, IPassSetting
     {
         if (beat1Numeric.Value == null || beat2Numeric.Value == null)
             return;
-        
+
         if (beat1Numeric.Value >= beat2Numeric.Value)
         {
             measureNumeric.Value++;
@@ -827,7 +827,7 @@ public partial class MainView : UserControl, IPassSetting
                 minSize = 1;
                 break;
         }
-        
+
         if (sizeNumeric.Value < minSize)    sizeNumeric.Value = minSize;
         if (sizeTrackBar.Value < minSize)   sizeTrackBar.Value = minSize;
         sizeNumeric.Minimum = minSize;
@@ -901,7 +901,7 @@ public partial class MainView : UserControl, IPassSetting
     {
         if (measureNumeric.Value == null || beat1Numeric.Value == null || beat2Numeric.Value == null)
             return;
-        
+
         if (currentSong == null || (currentSong != null && currentSong.Paused))
         {
             skCircleView.CurrentMeasure =
@@ -1017,7 +1017,7 @@ public partial class MainView : UserControl, IPassSetting
         // don't reset hold state if we're already inserting a hold
         if (isInsertingHold)
             return;
-        
+
         if (noBonusRadio.IsChecked.Value)
             SetSelectedObject(NoteType.HoldStartNoBonus);
         else if (bonusRadio.IsChecked.Value)
@@ -1352,7 +1352,7 @@ public partial class MainView : UserControl, IPassSetting
     private void SetNonHoldButtonState(bool state)
     {
         isInsertingHold = !state;
-        
+
         tapButton.IsEnabled = state;
         orangeButton.IsEnabled = state;
         greenButton.IsEnabled = state;
@@ -1453,7 +1453,7 @@ public partial class MainView : UserControl, IPassSetting
         }
 
         int initialSize = (int)sizeNumeric.Value;
-        
+
         {
             // X and Y are relative to the upper left of the panel
             var xCen = point.Position.X - (CircleControl.DesiredSize.Width / 2);
@@ -1482,7 +1482,7 @@ public partial class MainView : UserControl, IPassSetting
                 else
                     initialSize = skCircleView.mouseDownPos - theta + 1;
             }
-            
+
             if (initialSize < sizeNumeric.Minimum) sizeNumeric.Value = sizeNumeric.Minimum;
             else if (initialSize > 60) sizeNumeric.Value = 60;
             else sizeNumeric.Value = initialSize;
@@ -1494,7 +1494,7 @@ public partial class MainView : UserControl, IPassSetting
         var window = new InitChartSettingsView();
         window.DataContext = chartSettingsViewModel;
         chartSettingsViewModel.SaveSettings = false;
-        
+
         var dialog = new ContentDialog
         {
             Title = "Initial Chart Settings",
@@ -1510,7 +1510,7 @@ public partial class MainView : UserControl, IPassSetting
             async () =>
             {
                 await dialog.ShowAsync();
-                
+
                 if (!chartSettingsViewModel.SaveSettings)
                     return;
 
@@ -1565,12 +1565,12 @@ public partial class MainView : UserControl, IPassSetting
     {
         if (!await PromptSave())
             return;
-        
+
         if (tempStatusPath != "")
             File.Delete(tempStatusPath);
         if (tempFilePath != "")
             File.Delete(tempFilePath);
-        
+
         // Update user settings.toml
         try
         {
@@ -1590,7 +1590,7 @@ public partial class MainView : UserControl, IPassSetting
     private async Task<bool> SaveFile(bool prompt = true)
     {
         var result = prompt;
-        
+
         if (prompt || saveFilename.Length < 1)
         {
             var file = await GetStorageProvider().SaveFilePickerAsync(new FilePickerSaveOptions()
@@ -1613,7 +1613,7 @@ public partial class MainView : UserControl, IPassSetting
                 result = true;
             }
         }
-        
+
         // prevent crash later
         if (string.IsNullOrEmpty(saveFilename))
             return false;
@@ -1739,8 +1739,8 @@ public partial class MainView : UserControl, IPassSetting
             BeatInfo = new BeatInfo((int)measureNumeric.Value, (int)beat1Numeric.Value * 1920 / (int)beat2Numeric.Value),
             GimmickType = GimmickType.BpmChange
         }, GimmicksViewModel.FormReason.New);
-        
-        
+
+
         var dialog = new ContentDialog
         {
             Title = "Gimmick Settings",
@@ -1861,7 +1861,7 @@ public partial class MainView : UserControl, IPassSetting
         {
             Title = "Gimmick Settings",
             Content = window,
-            PrimaryButtonCommand = vm.OkCommand, 
+            PrimaryButtonCommand = vm.OkCommand,
             PrimaryButtonText = "Save",
             CloseButtonText = "Cancel"
         };
@@ -2235,7 +2235,7 @@ public partial class MainView : UserControl, IPassSetting
             var vm = new GimmicksViewModel();
             window.DataContext = vm;
             window.SetGimmick(gimmick, GimmicksViewModel.FormReason.Edit, gim1, gim2);
-            
+
             var dialog = new ContentDialog
             {
                 Title = "Gimmick Settings",
@@ -2357,7 +2357,7 @@ public partial class MainView : UserControl, IPassSetting
             secondaryText = "No";
             closeText = "Cancel";
         }
-        
+
         var dialog = new ContentDialog
         {
             Title = title,
@@ -2417,7 +2417,7 @@ public partial class MainView : UserControl, IPassSetting
                 OnPlaySong();
             }
 
-            // AV(fps): Round down so we can properly see newly added notes after pausing 
+            // AV(fps): Round down so we can properly see newly added notes after pausing
             measureNumeric.Value = (int) measureNumeric.Value!;
             beat1Numeric.Value = (int) beat1Numeric.Value!;
             beat2Numeric.Value = (int) beat2Numeric.Value!;
@@ -2474,10 +2474,10 @@ public partial class MainView : UserControl, IPassSetting
                 }
             },
         });
-        
+
         if (result.Count < 1)
             return;
-        
+
         songFilePath = result[0].Path.LocalPath;
         songFileLabel.Text = Path.GetFileName(songFilePath);
 
@@ -2582,7 +2582,7 @@ public partial class MainView : UserControl, IPassSetting
     {
         if (TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is TextBox)
             return;
-        
+
         switch (e.Key)
         {
             case Key.I:
@@ -2727,7 +2727,7 @@ public partial class MainView : UserControl, IPassSetting
         BackColor = SKColor.Parse(value ? "#ff444444" : "#FFF3F3F3");
         ResetBackColor = true;
     }
-    
+
     private void Window_OnClosing(object? sender, CancelEventArgs e)
     {
         // we need this condition because Shutdown() calls Close()
