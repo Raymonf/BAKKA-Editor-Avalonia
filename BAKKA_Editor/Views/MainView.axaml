@@ -6,7 +6,8 @@
              mc:Ignorable="d" d:DesignWidth="1154" d:DesignHeight="800"
              xmlns:controls="clr-namespace:BAKKA_Editor.Controls"
              x:Class="BAKKA_Editor.Views.MainView"
-             PropertyChanged="AvaloniaObject_OnPropertyChanged">
+             PropertyChanged="AvaloniaObject_OnPropertyChanged"
+             Focusable="True">
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.ThemeDictionaries>
@@ -297,45 +298,60 @@
                                     <StackPanel Margin="8">
                                         <TextBlock Margin="0,0,0,4">Position:</TextBlock>
                                         <Grid ColumnDefinitions="100*,158*">
-                                            <NumericUpDown Name="positionNumeric"
-                                                           Value="{Binding PositionNumeric}" Increment="1" Minimum="0" Maximum="59"
-                                                           ValueChanged="PositionNumeric_OnValueChanged" />
-                                            <Slider Grid.Column="1" Name="positionTrackBar"
+                                            <NumericUpDown
+                                                Value="{Binding PositionNumeric}" Increment="1"
+                                                Minimum="{Binding PositionNumericMinimum}"
+                                                Maximum="{Binding PositionNumericMaximum}"
+                                                ValueChanged="PositionNumeric_OnValueChanged" />
+                                            <Slider Grid.Column="1"
                                                     VerticalAlignment="Center"
-                                                    Value="{Binding PositionTrackBar}" Minimum="0" Maximum="59"
+                                                    Value="{Binding PositionTrackBar}"
+                                                    Minimum="{Binding PositionTrackBarMinimum}"
+                                                    Maximum="{Binding PositionTrackBarMaximum}"
                                                     SmallChange="1" LargeChange="5"
                                                     Padding="8,0,0,0"
-                                                    PropertyChanged="PositionTrackBar_OnPropertyChanged" />
+                                                    PropertyChanged="PositionTrackBar_OnPropertyChanged"
+                                                    PointerWheelChanged="PositionTrackBar_OnPointerWheelChanged" />
                                         </Grid>
                                         <TextBlock Margin="0,4">Size:</TextBlock>
                                         <Grid ColumnDefinitions="100*,158*">
-                                            <NumericUpDown Name="sizeNumeric"
-                                                           ShowButtonSpinner="False"
-                                                           Value="{Binding SizeNumeric}" Increment="1" Minimum="0" Maximum="59"
-                                                           ValueChanged="SizeNumeric_OnValueChanged" />
-                                            <Slider Grid.Column="1" Name="sizeTrackBar"
+                                            <NumericUpDown
+                                                Value="{Binding SizeNumeric}" Increment="1"
+                                                Minimum="{Binding SizeNumericMinimum}"
+                                                Maximum="{Binding SizeNumericMaximum}"
+                                                ValueChanged="SizeNumeric_OnValueChanged" />
+                                            <Slider Grid.Column="1"
                                                     VerticalAlignment="Center"
-                                                    Value="{Binding SizeTrackBar}" Minimum="4" Maximum="59"
+                                                    Value="{Binding SizeTrackBar}"
+                                                    Minimum="{Binding SizeTrackBarMinimum}"
+                                                    Maximum="{Binding SizeTrackBarMaximum}"
                                                     SmallChange="1" LargeChange="5"
                                                     Padding="8,0,0,0"
-                                                    PropertyChanged="SizeTrackBar_OnPropertyChanged" />
+                                                    PropertyChanged="SizeTrackBar_OnPropertyChanged"
+                                                    PointerWheelChanged="SizeTrackBar_OnPointerWheelChanged" />
                                         </Grid>
                                         <TextBlock Margin="0,4">Measure:</TextBlock>
                                         <Grid ColumnDefinitions="8*,4*,*,4*">
-                                            <NumericUpDown Grid.Column="0" Name="measureNumeric"
+                                            <NumericUpDown Grid.Column="0"
                                                            HorizontalAlignment="Stretch"
-                                                           Value="0" Increment="1" Minimum="0" Maximum="9999"
+                                                           Value="{Binding MeasureNumeric}" Increment="1"
+                                                           Minimum="{Binding MeasureNumericMinimum}"
+                                                           Maximum="{Binding MeasureNumericMaximum}"
                                                            Margin="0,0,8,0"
                                                            ValueChanged="MeasureNumeric_OnValueChanged" />
-                                            <NumericUpDown Grid.Column="1" Name="beat1Numeric"
+                                            <NumericUpDown Grid.Column="1"
                                                            HorizontalAlignment="Stretch"
-                                                           Value="0" Increment="1" Minimum="0" Maximum="1920"
+                                                           Value="{Binding Beat1Numeric}" Increment="1"
+                                                           Minimum="{Binding Beat1NumericMinimum}"
+                                                           Maximum="{Binding Beat1NumericMaximum}"
                                                            ValueChanged="Beat1Numeric_OnValueChanged" />
                                             <TextBlock Grid.Column="2" Text="/" Width="8" Margin="8,0,8,0"
                                                        VerticalAlignment="Center" />
-                                            <NumericUpDown Grid.Column="3" Name="beat2Numeric"
+                                            <NumericUpDown Grid.Column="3"
                                                            HorizontalAlignment="Stretch"
-                                                           Value="16" Increment="1" Minimum="0" Maximum="1920"
+                                                           Value="{Binding Beat2Numeric}" Increment="1"
+                                                           Minimum="{Binding Beat2NumericMinimum}"
+                                                           Maximum="{Binding Beat2NumericMaximum}"
                                                            ValueChanged="Beat2Numeric_OnValueChanged" />
                                         </Grid>
                                     </StackPanel>
@@ -384,7 +400,8 @@
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="1">
-                                    <Slider Name="songTrackBar" Value="0" Minimum="0" Maximum="10" SmallChange="1"
+                                    <Slider Value="{Binding SongTrackBar}" Minimum="0"
+                                            Maximum="{Binding SongTrackBarMaximum}" SmallChange="1"
                                             LargeChange="5" PropertyChanged="SongTrackBar_OnPropertyChanged"
                                             VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
 
@@ -397,7 +414,8 @@
                                                        Width="100">
                                                 Speed
                                             </TextBlock>
-                                            <Slider Name="trackBarSpeed" Value="100" Minimum="0" Maximum="100"
+                                            <Slider Value="{Binding SpeedTrackBar}" Minimum="0"
+                                                    Maximum="{Binding SpeedTrackBarMaximum}"
                                                     SmallChange="1" LargeChange="5" Width="100"
                                                     HorizontalAlignment="Center"
                                                     PropertyChanged="TrackBarSpeed_OnPropertyChanged" />
@@ -407,7 +425,8 @@
                                                        TextAlignment="Right" Margin="0,0,8,0" Width="60">
                                                 Volume
                                             </TextBlock>
-                                            <Slider Name="trackBarVolume" Value="100" Minimum="0" Maximum="100"
+                                            <Slider Name="trackBarVolume" Value="{Binding VolumeTrackBar}" Minimum="0"
+                                                    Maximum="{Binding VolumeTrackBarMaximum}"
                                                     SmallChange="1" LargeChange="5" Width="100"
                                                     HorizontalAlignment="Center"
                                                     PropertyChanged="TrackBarVolume_OnPropertyChanged" />
@@ -417,7 +436,8 @@
                                                        TextAlignment="Right" Margin="0,0,8,0" Width="60">
                                                 Hitsounds
                                             </TextBlock>
-                                            <Slider Name="trackBarHitsoundVolume" Value="100" Minimum="0" Maximum="100"
+                                            <Slider Value="{Binding HitsoundVolumeTrackBar}" Minimum="0"
+                                                    Maximum="{Binding HitsoundVolumeMaximum}"
                                                     SmallChange="1" LargeChange="5" Width="50"
                                                     HorizontalAlignment="Center"
                                                     PropertyChanged="TrackBarHitsounds_OnPropertyChanged" />
@@ -435,8 +455,9 @@
                                             HorizontalAlignment="Stretch">
                         <StackPanel Margin="8">
                             <TextBlock Margin="0,0,0,8">Hi-Speed:</TextBlock>
-                            <NumericUpDown Name="visualHispeedNumeric"
-                                           Minimum="0.001" Maximum="500" Value="0.5" Increment="0.05"
+                            <NumericUpDown Minimum="{Binding VisualHiSpeedNumericMinimum}"
+                                           Maximum="{Binding VisualHiSpeedNumericMaximum}"
+                                           Value="{Binding VisualHiSpeedNumeric}" Increment="0.05"
                                            ValueChanged="VisualHispeedNumeric_OnValueChanged" />
                         </StackPanel>
                     </HeaderedContentControl>

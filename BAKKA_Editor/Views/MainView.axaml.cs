@@ -34,6 +34,7 @@ public partial class MainView : UserControl
     // View State
     public bool CanShutdown;
     private MainViewModel _vm;
+    private bool SwallowKeyUp = false;
 
     // Chart
     private Chart chart = new();
@@ -105,6 +106,8 @@ public partial class MainView : UserControl
         DataContext ??= new MainViewModel();
         InitializeComponent();
         Setup();
+        AddHandler(KeyDownEvent, OnPreviewKeyDown, RoutingStrategies.Tunnel);
+        AddHandler(KeyUpEvent, OnPreviewKeyUp, RoutingStrategies.Tunnel);
     }
 
     private static bool IsDesktop => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ||
@@ -365,10 +368,9 @@ public partial class MainView : UserControl
         _vm.ShowGimmicksDuringPlaybackInCircleView = userSettings.ViewSettings.ShowGimmicksDuringPlayback;
         _vm.DarkMode = userSettings.ViewSettings.DarkMode;
         _vm.AreMeasureButtonsVisible = userSettings.ViewSettings.ShowMeasureButtons;
-
-        visualHispeedNumeric.Value = (decimal) userSettings.ViewSettings.HispeedSetting;
-        trackBarVolume.Value = userSettings.ViewSettings.Volume;
-        trackBarHitsoundVolume.Value = Math.Clamp(userSettings.SoundSettings.HitsoundVolume, 0, 100);
+        _vm.VisualHiSpeedNumeric = (decimal) userSettings.ViewSettings.HispeedSetting;
+        _vm.VolumeTrackBar = userSettings.ViewSettings.Volume;
+        _vm.HitsoundVolumeTrackBar = Math.Clamp(userSettings.SoundSettings.HitsoundVolume, 0, 100);
         SetDarkMode(userSettings.ViewSettings.DarkMode);
 
         autoSaveTimer =
@@ -393,7 +395,6 @@ public partial class MainView : UserControl
         hitsoundTimer =
             new DispatcherTimer(TimeSpan.FromMilliseconds(8), DispatcherPriority.Background, HitsoundTimer_Tick);
         hitsoundTimer.IsEnabled = false;
-        // updateTimer.Start();
 
         Dispatcher.UIThread.Post(async () => await CheckAutoSaves(), DispatcherPriority.Background);
 
@@ -447,7 +448,7 @@ public partial class MainView : UserControl
 
     private void UpdateTimer_Tick(object? sender, EventArgs e)
     {
-        if (songTrackBar == null || currentSong == null)
+        if (currentSong == null)
             return;
 
         // actually pause the song if we're at the end
@@ -460,36 +461,33 @@ public partial class MainView : UserControl
             currentSong.PlayPosition = 0;
         }
 
-        Dispatcher.UIThread.Post(() =>
+        _vm.SongTrackBar = (int) currentSong.PlayPosition;
+        var info = chart.GetBeat(currentSong.PlayPosition);
+        if (info.Measure != -1)
         {
-            songTrackBar.Value = (int) currentSong.PlayPosition;
-            var info = chart.GetBeat(currentSong.PlayPosition);
-            if (info.Measure != -1)
-            {
-                if (valueTriggerEvent == EventSource.None)
-                    valueTriggerEvent = EventSource.UpdateTick;
-                if (info.Measure < 0) measureNumeric.Value = 0;
-                else measureNumeric.Value = info.Measure;
-                // TODO: weird rounding behavior for slow scrolling on longer songs...?
-                // investigate how to fix this. is it related to playback position precision from bass?
-                // +5 seems to work as a primitive "round up"
-                var beat1 = (int) ((info.Beat + 5) / 1920.0f * (float) beat2Numeric.Value);
-                if ((int) beat1Numeric.Value != beat1)
-                    beat1Numeric.Value = beat1;
-                skCircleView.CurrentMeasure = info.MeasureDecimal;
-                if (valueTriggerEvent == EventSource.UpdateTick)
-                    valueTriggerEvent = EventSource.None;
+            if (valueTriggerEvent == EventSource.None)
+                valueTriggerEvent = EventSource.UpdateTick;
+            if (info.Measure < 0) _vm.MeasureNumeric = 0;
+            else _vm.MeasureNumeric = info.Measure;
+            // TODO: weird rounding behavior for slow scrolling on longer songs...?
+            // investigate how to fix this. is it related to playback position precision from bass?
+            // +5 seems to work as a primitive "round up"
+            var beat1 = (int) ((info.Beat + 5) / 1920.0f * (float) _vm.Beat2Numeric);
+            if ((int) _vm.Beat1Numeric != beat1)
+                _vm.Beat1Numeric = beat1;
+            skCircleView.CurrentMeasure = info.MeasureDecimal;
+            if (valueTriggerEvent == EventSource.UpdateTick)
+                valueTriggerEvent = EventSource.None;
 
 
-                // TODO Fix hi-speed (it needs to be able to display multiple hi-speeds in the circle view at once)
-                //// Change hi-speed, if applicable
-                //var hispeed = chart.Gimmicks.Where(x => x.Measure <= info.Measure && x.GimmickType == GimmickType.HiSpeedChange).LastOrDefault();
-                //if (hispeed != null && hispeed.HiSpeed != circleView.TotalMeasureShowNotes)
-                //{
-                //    visualHispeedNumeric.Value = (decimal)hispeed.HiSpeed;
-                //}
-            }
-        });
+            // TODO Fix hi-speed (it needs to be able to display multiple hi-speeds in the circle view at once)
+            //// Change hi-speed, if applicable
+            //var hispeed = chart.Gimmicks.Where(x => x.Measure <= info.Measure && x.GimmickType == GimmickType.HiSpeedChange).LastOrDefault();
+            //if (hispeed != null && hispeed.HiSpeed != circleView.TotalMeasureShowNotes)
+            //{
+            //    _vm.VisualHiSpeedNumeric = (decimal)hispeed.HiSpeed;
+            //}
+        }
     }
 
     private void HitsoundTimer_Tick(object? sender, EventArgs e)
@@ -550,8 +548,8 @@ public partial class MainView : UserControl
             /* Volume is represented as a float from 0-1. */
             UpdateSongVolume();
 
-            songTrackBar.Value = 0;
-            songTrackBar.Maximum = (int) currentSong.PlayLength;
+            _vm.SongTrackBar = 0;
+            _vm.SongTrackBarMaximum = (int) currentSong.PlayLength;
         }
         else
         {
@@ -705,7 +703,7 @@ public partial class MainView : UserControl
         if (currentSong != null && !currentSong.Paused) showCursor = userSettings.ViewSettings.ShowCursorDuringPlayback;
 
         // Draw cursor
-        if (showCursor) skCircleView.DrawCursor(currentNoteType, (float)_vm.PositionNumeric, (float)_vm.SizeNumeric);
+        if (showCursor) skCircleView.DrawCursor(currentNoteType, (float) _vm.PositionNumeric, (float) _vm.SizeNumeric);
     }
 
     private void CircleControl_OnWheel(object? sender, PointerWheelEventArgs e)
@@ -718,33 +716,33 @@ public partial class MainView : UserControl
         curDelta = 0;
         if ((e.KeyModifiers & KeyModifiers.Alt) != 0)
         {
-            switch (beat2Numeric.Value)
+            switch (_vm.Beat2Numeric)
             {
                 // Shift beat division by standard musical quantization
                 // TODO: Take time signature into account?
                 case < 2:
                 {
                     if (delta > 0)
-                        beat2Numeric.Value = 2;
+                        _vm.Beat2Numeric = 2;
                     return;
                 }
                 case 2 when delta < 0:
-                    beat2Numeric.Value = 1;
+                    _vm.Beat2Numeric = 1;
                     return;
             }
 
             var low = 0;
             var high = 1;
-            while (!(beat2Numeric.Value >= 1 << low && beat2Numeric.Value <= 1 << high))
+            while (!(_vm.Beat2Numeric >= 1 << low && _vm.Beat2Numeric <= 1 << high))
             {
                 low++;
                 high++;
             }
 
             if (delta < 0)
-                beat2Numeric.Value = 1 << low;
+                _vm.Beat2Numeric = 1 << low;
             else if (high < 10)
-                beat2Numeric.Value = 1 << (high + 1);
+                _vm.Beat2Numeric = 1 << (high + 1);
         }
         else if ((e.KeyModifiers & KeyModifiers.Shift) != 0)
         {
@@ -756,9 +754,9 @@ public partial class MainView : UserControl
         {
             valueTriggerEvent = EventSource.MouseWheel;
             if (delta > 0)
-                beat1Numeric.Value = (int) beat1Numeric.Value + 1;
+                _vm.Beat1Numeric = (int) _vm.Beat1Numeric + 1;
             else
-                beat1Numeric.Value = (int) beat1Numeric.Value - 1;
+                _vm.Beat1Numeric = (int) _vm.Beat1Numeric - 1;
         }
     }
 
@@ -771,42 +769,45 @@ public partial class MainView : UserControl
 
     private void Beat1Numeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
     {
-        if (beat1Numeric.Value == null || beat2Numeric.Value == null)
+        if (e.NewValue == null)
             return;
 
-        if (beat1Numeric.Value >= beat2Numeric.Value)
+        var value = e.NewValue;
+
+        if (value >= _vm.Beat2Numeric)
         {
-            measureNumeric.Value++;
-            beat1Numeric.Value = 0;
+            _vm.MeasureNumeric++;
+            _vm.Beat1Numeric = 0;
             return;
         }
 
-        if (beat1Numeric.Value < 0)
+        if (value < 0)
         {
-            if (measureNumeric.Value > 0)
+            if (_vm.MeasureNumeric > 0)
             {
-                measureNumeric.Value--;
-                beat1Numeric.Value = beat2Numeric.Value - 1;
+                _vm.MeasureNumeric--;
+                _vm.Beat1Numeric = _vm.Beat2Numeric - 1;
                 return;
             }
 
-            if (measureNumeric.Value == 0)
+            if (_vm.MeasureNumeric == 0)
             {
-                beat1Numeric.Value = 0;
+                _vm.Beat1Numeric = 0;
                 return;
             }
+        }
+
+        if (currentSong != null && !IsSongPlaying() && valueTriggerEvent != EventSource.TrackBar)
+        {
+            var time = chart.GetTime(new BeatInfo((int) _vm.MeasureNumeric,
+                (int) value * 1920 / (int) _vm.Beat2Numeric));
+            if (time < 0)
+                _vm.SongTrackBar = 0;
+            else
+                _vm.SongTrackBar = time;
         }
 
         updateTime();
-        if (currentSong != null && !IsSongPlaying() && valueTriggerEvent != EventSource.TrackBar)
-        {
-            var time = chart.GetTime(new BeatInfo((int) measureNumeric.Value,
-                (int) beat1Numeric.Value * 1920 / (int) beat2Numeric.Value));
-            if (time < 0)
-                songTrackBar.Value = 0;
-            else
-                songTrackBar.Value = time;
-        }
 
         valueTriggerEvent = EventSource.None;
     }
@@ -988,8 +989,8 @@ public partial class MainView : UserControl
 
         if (_vm.SizeNumeric < minSize) _vm.SizeNumeric = minSize;
         if (_vm.SizeTrackBar < minSize) _vm.SizeTrackBar = minSize;
-        sizeNumeric.Minimum = minSize;
-        sizeTrackBar.Minimum = minSize;
+        _vm.SizeNumericMinimum = minSize;
+        _vm.SizeTrackBarMinimum = minSize;
     }
 
     private void updateLabel(string text)
@@ -1045,20 +1046,17 @@ public partial class MainView : UserControl
 
     private void ResetChartTime()
     {
-        measureNumeric.Value = beat1Numeric.Value = 0;
-        _vm.PositionNumeric = positionNumeric.Minimum;
-        _vm.SizeNumeric = sizeNumeric.Minimum;
+        _vm.MeasureNumeric = _vm.Beat1Numeric = 0;
+        _vm.PositionNumeric = _vm.PositionNumericMinimum;
+        _vm.SizeNumeric = _vm.SizeNumericMinimum;
         updateTime();
     }
 
     private void updateTime()
     {
-        if (measureNumeric.Value == null || beat1Numeric.Value == null || beat2Numeric.Value == null)
-            return;
-
         if (currentSong == null || (currentSong != null && currentSong.Paused))
             skCircleView.CurrentMeasure =
-                (float) measureNumeric.Value + (float) beat1Numeric.Value / (float) beat2Numeric.Value;
+                (float) _vm.MeasureNumeric + (float) _vm.Beat1Numeric / (float) _vm.Beat2Numeric;
 
         if (currentNoteType is NoteType.HoldJoint or NoteType.HoldEnd)
             insertButton.IsEnabled = !(lastNote.BeatInfo.MeasureDecimal >= skCircleView.CurrentMeasure);
@@ -1351,26 +1349,38 @@ public partial class MainView : UserControl
 
     private void PositionNumeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
     {
-        if ((int) _vm.PositionTrackBar != (int) _vm.PositionNumeric)
-            _vm.PositionTrackBar = (int) _vm.PositionNumeric;
+        if (e.NewValue == null)
+            return;
+        var newValue = Convert.ToInt32(e.NewValue);
+        if ((int) _vm.PositionTrackBar != newValue)
+            _vm.PositionTrackBar = newValue;
     }
 
     private void PositionTrackBar_OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
     {
-        if ((int) _vm.PositionNumeric != (int) _vm.PositionTrackBar)
-            _vm.PositionNumeric = (int) _vm.PositionTrackBar;
+        if (!e.Property.Name.Equals("Value", StringComparison.InvariantCultureIgnoreCase) || e.NewValue == null)
+            return;
+        var newValue = Convert.ToInt32(e.NewValue);
+        if ((int) _vm.PositionNumeric != newValue)
+            _vm.PositionNumeric = newValue;
     }
 
     private void SizeNumeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
     {
-        if ((int) _vm.SizeTrackBar != (int) _vm.SizeNumeric)
-            _vm.SizeTrackBar = (int) _vm.SizeNumeric;
+        if (e.NewValue == null)
+            return;
+        var newValue = Convert.ToInt32(e.NewValue);
+        if ((int) _vm.SizeTrackBar != newValue)
+            _vm.SizeTrackBar = newValue;
     }
 
     private void SizeTrackBar_OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
     {
-        if ((int) _vm.SizeNumeric != (int) _vm.SizeTrackBar)
-            _vm.SizeNumeric = (int) _vm.SizeTrackBar;
+        if (!e.Property.Name.Equals("Value", StringComparison.InvariantCultureIgnoreCase) || e.NewValue == null)
+            return;
+        var newValue = Convert.ToInt32(e.NewValue);
+        if ((int) _vm.SizeNumeric != newValue)
+            _vm.SizeNumeric = newValue;
     }
 
     private void insertButton_Click(object? sender, RoutedEventArgs e)
@@ -1383,8 +1393,8 @@ public partial class MainView : UserControl
         if (!insertButton.IsEnabled)
             return;
 
-        var currentBeat = new BeatInfo((int) measureNumeric.Value,
-            (int) beat1Numeric.Value * 1920 / (int) beat2Numeric.Value);
+        var currentBeat = new BeatInfo((int) _vm.MeasureNumeric,
+            (int) _vm.Beat1Numeric * 1920 / (int) _vm.Beat2Numeric);
 
         if (currentGimmickType == GimmickType.NoGimmick)
         {
@@ -1593,7 +1603,7 @@ public partial class MainView : UserControl
                     initialSize = skCircleView.mouseDownPos - theta + 1;
             }
 
-            if (initialSize < sizeNumeric.Minimum) _vm.SizeNumeric = sizeNumeric.Minimum;
+            if (initialSize < _vm.SizeNumericMinimum) _vm.SizeNumeric = _vm.SizeNumericMinimum;
             else if (initialSize > 60) _vm.SizeNumeric = 60;
             else _vm.SizeNumeric = initialSize;
         }
@@ -1768,8 +1778,8 @@ public partial class MainView : UserControl
         window.DataContext = vm;
         window.SetGimmick(new Gimmick
         {
-            BeatInfo = new BeatInfo((int) measureNumeric.Value,
-                (int) beat1Numeric.Value * 1920 / (int) beat2Numeric.Value),
+            BeatInfo = new BeatInfo((int) _vm.MeasureNumeric,
+                (int) _vm.Beat1Numeric * 1920 / (int) _vm.Beat2Numeric),
             GimmickType = GimmickType.BpmChange
         }, GimmicksViewModel.FormReason.New);
 
@@ -1800,8 +1810,8 @@ public partial class MainView : UserControl
         window.SetGimmick(
             new Gimmick
             {
-                BeatInfo = new BeatInfo((int) measureNumeric.Value,
-                    (int) beat1Numeric.Value * 1920 / (int) beat2Numeric.Value),
+                BeatInfo = new BeatInfo((int) _vm.MeasureNumeric,
+                    (int) _vm.Beat1Numeric * 1920 / (int) _vm.Beat2Numeric),
                 GimmickType = GimmickType.TimeSignatureChange
             }, GimmicksViewModel.FormReason.New);
         var dialog = new ContentDialog
@@ -1830,8 +1840,8 @@ public partial class MainView : UserControl
         window.SetGimmick(
             new Gimmick
             {
-                BeatInfo = new BeatInfo((int) measureNumeric.Value,
-                    (int) beat1Numeric.Value * 1920 / (int) beat2Numeric.Value),
+                BeatInfo = new BeatInfo((int) _vm.MeasureNumeric,
+                    (int) _vm.Beat1Numeric * 1920 / (int) _vm.Beat2Numeric),
                 GimmickType = GimmickType.HiSpeedChange
             }, GimmicksViewModel.FormReason.New);
         var dialog = new ContentDialog
@@ -1860,8 +1870,8 @@ public partial class MainView : UserControl
         window.SetGimmick(
             new Gimmick
             {
-                BeatInfo = new BeatInfo((int) measureNumeric.Value,
-                    (int) beat1Numeric.Value * 1920 / (int) beat2Numeric.Value),
+                BeatInfo = new BeatInfo((int) _vm.MeasureNumeric,
+                    (int) _vm.Beat1Numeric * 1920 / (int) _vm.Beat2Numeric),
                 GimmickType = GimmickType.StopStart
             }, GimmicksViewModel.FormReason.New);
         var dialog = new ContentDialog
@@ -1890,8 +1900,8 @@ public partial class MainView : UserControl
         window.SetGimmick(
             new Gimmick
             {
-                BeatInfo = new BeatInfo((int) measureNumeric.Value,
-                    (int) beat1Numeric.Value * 1920 / (int) beat2Numeric.Value),
+                BeatInfo = new BeatInfo((int) _vm.MeasureNumeric,
+                    (int) _vm.Beat1Numeric * 1920 / (int) _vm.Beat2Numeric),
                 GimmickType = GimmickType.ReverseStart
             }, GimmicksViewModel.FormReason.New);
         var dialog = new ContentDialog
@@ -2345,17 +2355,17 @@ public partial class MainView : UserControl
             }
 
             UpdateSongVolume();
-            currentSong.PlayPosition = (uint) songTrackBar.Value;
             currentSong.Paused = !currentSong.Paused;
+            currentSong.PlayPosition = (uint) _vm.SongTrackBar;
             if (currentSong.Paused)
                 OnPauseSong();
             else
                 OnPlaySong();
 
             // AV(fps): Round down so we can properly see newly added notes after pausing
-            measureNumeric.Value = (int) measureNumeric.Value!;
-            beat1Numeric.Value = (int) beat1Numeric.Value!;
-            beat2Numeric.Value = (int) beat2Numeric.Value!;
+            _vm.MeasureNumeric = (int) _vm.MeasureNumeric!;
+            _vm.Beat1Numeric = (int) _vm.Beat1Numeric!;
+            _vm.Beat2Numeric = (int) _vm.Beat2Numeric!;
             playButton.AppendHotkey(userSettings.HotkeySettings.PlayHotkey);
         }
 
@@ -2365,11 +2375,11 @@ public partial class MainView : UserControl
     private void UpdateSongVolume()
     {
         if (currentSong != null)
-            currentSong.Volume = (float) trackBarVolume.Value / (float) trackBarVolume.Maximum;
+            currentSong.Volume = (float) _vm.VolumeTrackBar / (float) _vm.VolumeTrackBarMaximum;
 
         // just in case, we'll set the hitsound volume too
         hitsoundChannel?.SetVolume(
-            Math.Clamp((float) trackBarHitsoundVolume.Value / (float) trackBarHitsoundVolume.Maximum, 0.0f, 1.0f));
+            Math.Clamp((float) _vm.HitsoundVolumeTrackBar / (float) _vm.HitsoundVolumeMaximum, 0.0f, 1.0f));
     }
 
     private async Task ShowOpenSongDialog()
@@ -2441,11 +2451,11 @@ public partial class MainView : UserControl
             /* Volume is represented as a float from 0-1. */
             UpdateSongVolume();
 
-            songTrackBar.Value = 0;
-            songTrackBar.Maximum = (int) currentSong.PlayLength;
+            _vm.SongTrackBar = 0;
+            _vm.SongTrackBarMaximum = (int) currentSong.PlayLength;
             playButton.IsEnabled = true;
-            measureNumeric.Value = 0;
-            beat1Numeric.Value = 0;
+            _vm.MeasureNumeric = 0;
+            _vm.Beat1Numeric = 0;
         }
     }
 
@@ -2457,36 +2467,30 @@ public partial class MainView : UserControl
     private void SongTrackBar_OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
     {
         // TODO: tighten property check
-        if (currentSong == null || songTrackBar == null)
+        if (currentSong == null)
             return;
         if (IsSongPlaying())
             return;
 
-        currentSong.PlayPosition = (uint) songTrackBar.Value;
+        currentSong.PlayPosition = (uint) _vm.SongTrackBar;
         var info = chart.GetBeat(currentSong.PlayPosition);
-        var ignoreBeatSet = valueTriggerEvent == EventSource.ManualMeasureSet;
         if (info.Measure != -1 && valueTriggerEvent != EventSource.MouseWheel)
         {
-            if (!ignoreBeatSet)
-            {
-                valueTriggerEvent = EventSource.TrackBar;
-                if (info.Measure < 0) measureNumeric.Value = 0;
-                else measureNumeric.Value = info.Measure;
-                beat1Numeric.Value = (int) (info.Beat / 1920.0f * (float) beat2Numeric.Value);
-            }
-
+            valueTriggerEvent = EventSource.TrackBar;
+            _vm.MeasureNumeric = info.Measure < 0 ? 0 : info.Measure;
+            _vm.Beat1Numeric = (int) (info.Beat / 1920.0f * (float) _vm.Beat2Numeric);
             skCircleView.CurrentMeasure = info.MeasureDecimal;
         }
 
-        if (valueTriggerEvent != EventSource.MouseWheel)
-            valueTriggerEvent = EventSource.None;
+        // if (valueTriggerEvent != EventSource.MouseWheel)
+        valueTriggerEvent = EventSource.None;
     }
 
     private void TrackBarVolume_OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
     {
         if (trackBarVolume == null)
             return;
-        userSettings.ViewSettings.Volume = (int) trackBarVolume.Value;
+        userSettings.ViewSettings.Volume = (int) _vm.VolumeTrackBar;
         if (currentSong != null && e.Property.Name == "Value")
             UpdateSongVolume();
     }
@@ -2494,107 +2498,131 @@ public partial class MainView : UserControl
     private void TrackBarSpeed_OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
     {
         /* No song, nothing to do. */
-        if (trackBarSpeed == null || currentSong == null)
+        if (currentSong == null)
             return;
-        currentSong.PlaybackSpeed = (float) (trackBarSpeed.Value / (float) trackBarSpeed.Maximum);
+        currentSong.PlaybackSpeed = (float) (_vm.SpeedTrackBar / (float) _vm.SpeedTrackBarMaximum);
         LabelSpeed.Text = $"Speed (x{currentSong.PlaybackSpeed:0.00})";
     }
 
     private void VisualHispeedNumeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
     {
-        var value = (float?) visualHispeedNumeric.Value;
-        if (value == null)
-            return;
-        if (value >= (float) visualHispeedNumeric.Minimum && value <= (float) visualHispeedNumeric.Maximum)
-            skCircleView.Hispeed = value.Value;
+        var value = (float) _vm.VisualHiSpeedNumeric;
+        if (value >= (float) _vm.VisualHiSpeedNumericMinimum && value <= (float) _vm.VisualHiSpeedNumericMaximum)
+            // update
+            skCircleView.Hispeed = value;
         else
-            visualHispeedNumeric.Value = (decimal) skCircleView.Hispeed;
+            // revert
+            _vm.VisualHiSpeedNumeric = (decimal) skCircleView.Hispeed;
     }
 
-    protected override void OnKeyDown(KeyEventArgs e)
+    protected void OnPreviewKeyUp(object? sender, KeyEventArgs e)
+    {
+        if (!userSettings.ViewSettings.UseSpaceToPlaySink || !SwallowKeyUp)
+            return;
+        e.Handled = true;
+        SwallowKeyUp = false;
+    }
+
+    protected void OnPreviewKeyDown(object? sender, KeyEventArgs e)
     {
         if (TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is TextBox)
             return;
 
-        switch (e.Key)
+        try
         {
-            case Key.I:
-                if (insertButton.IsEnabled)
-                    insertButton_Click(null, e);
-                insertButton.Focus();
-                e.Handled = true;
-                return;
-            case Key.Up:
-            case Key.Down:
-                if (!e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+            switch (e.Key)
+            {
+                case Key.Space:
+                    if (!userSettings.ViewSettings.UseSpaceToPlaySink)
+                    {
+                        base.OnKeyDown(e);
+                        return;
+                    }
+                    e.Handled = true;
+                    PlayButton_OnClick(null, e);
                     return;
-                playbackVolumeChange(e.Key == Key.Up);
-                e.Handled = true;
-                return;
-            default:
-                var key = (int) e.Key;
-                if (key == userSettings.HotkeySettings.TouchHotkey)
-                {
-                    if (tapButton.IsEnabled)
-                        tapButton_Click(null, e);
-                    tapButton.Focus();
+                case Key.I:
+                    if (insertButton.IsEnabled)
+                        insertButton_Click(null, e);
+                    insertButton.Focus();
                     e.Handled = true;
-                }
-                else if (key == userSettings.HotkeySettings.SlideLeftHotkey)
-                {
-                    if (orangeButton.IsEnabled)
-                        orangeButton_Click(null, e);
-                    orangeButton.Focus();
+                    return;
+                case Key.Up:
+                case Key.Down:
+                    if (!e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+                        return;
+                    playbackVolumeChange(e.Key == Key.Up);
                     e.Handled = true;
-                }
-                else if (key == userSettings.HotkeySettings.SlideRightHotkey)
-                {
-                    if (greenButton.IsEnabled)
-                        greenButton_Click(null, e);
-                    greenButton.Focus();
-                    e.Handled = true;
-                }
-                else if (key == userSettings.HotkeySettings.SnapUpHotkey)
-                {
-                    if (redButton.IsEnabled)
-                        redButton_Click(null, e);
-                    redButton.Focus();
-                    e.Handled = true;
-                }
-                else if (key == userSettings.HotkeySettings.SnapDownHotkey)
-                {
-                    if (blueButton.IsEnabled)
-                        blueButton_Click(null, e);
-                    blueButton.Focus();
-                    e.Handled = true;
-                }
-                else if (key == userSettings.HotkeySettings.ChainHotkey)
-                {
-                    if (chainButton.IsEnabled)
-                        chainButton_Click(null, e);
-                    chainButton.Focus();
-                    e.Handled = true;
-                }
-                else if (key == userSettings.HotkeySettings.HoldHotkey)
-                {
-                    if (holdButton.IsEnabled)
-                        holdButton_Click(null, e);
-                    holdButton.Focus();
-                    e.Handled = true;
-                }
-                else if (key == userSettings.HotkeySettings.PlayHotkey)
-                {
-                    if (playButton.IsEnabled)
-                        PlayButton_OnClick(null, e);
-                    playButton.Focus();
-                    e.Handled = true;
-                }
-                else
-                {
-                    base.OnKeyDown(e);
-                }
+                    return;
+                default:
+                    var key = (int) e.Key;
+                    if (key == userSettings.HotkeySettings.TouchHotkey)
+                    {
+                        if (tapButton.IsEnabled)
+                            tapButton_Click(null, e);
+                        tapButton.Focus();
+                        e.Handled = true;
+                    }
+                    else if (key == userSettings.HotkeySettings.SlideLeftHotkey)
+                    {
+                        if (orangeButton.IsEnabled)
+                            orangeButton_Click(null, e);
+                        orangeButton.Focus();
+                        e.Handled = true;
+                    }
+                    else if (key == userSettings.HotkeySettings.SlideRightHotkey)
+                    {
+                        if (greenButton.IsEnabled)
+                            greenButton_Click(null, e);
+                        greenButton.Focus();
+                        e.Handled = true;
+                    }
+                    else if (key == userSettings.HotkeySettings.SnapUpHotkey)
+                    {
+                        if (redButton.IsEnabled)
+                            redButton_Click(null, e);
+                        redButton.Focus();
+                        e.Handled = true;
+                    }
+                    else if (key == userSettings.HotkeySettings.SnapDownHotkey)
+                    {
+                        if (blueButton.IsEnabled)
+                            blueButton_Click(null, e);
+                        blueButton.Focus();
+                        e.Handled = true;
+                    }
+                    else if (key == userSettings.HotkeySettings.ChainHotkey)
+                    {
+                        if (chainButton.IsEnabled)
+                            chainButton_Click(null, e);
+                        chainButton.Focus();
+                        e.Handled = true;
+                    }
+                    else if (key == userSettings.HotkeySettings.HoldHotkey)
+                    {
+                        if (holdButton.IsEnabled)
+                            holdButton_Click(null, e);
+                        holdButton.Focus();
+                        e.Handled = true;
+                    }
+                    else if (key == userSettings.HotkeySettings.PlayHotkey)
+                    {
+                        if (playButton.IsEnabled)
+                            PlayButton_OnClick(null, e);
+                        playButton.Focus();
+                        e.Handled = true;
+                    }
+                    else
+                    {
+                        base.OnKeyDown(e);
+                    }
 
-                return;
+                    return;
+            }
+        }
+        finally
+        {
+            SwallowKeyUp = e.Handled;
         }
     }
 
@@ -2602,10 +2630,10 @@ public partial class MainView : UserControl
     {
         var val = (int) trackBarVolume.LargeChange;
         /* Bounds check. */
-        if (increase && trackBarVolume.Value + val > trackBarVolume.Maximum)
-            val = (int) (trackBarVolume.Maximum - trackBarVolume.Value);
-        else if (!increase && trackBarVolume.Value - val < trackBarVolume.Minimum)
-            val = (int) (trackBarVolume.Value - trackBarVolume.Minimum);
+        if (increase && _vm.VolumeTrackBar + val > _vm.VolumeTrackBarMaximum)
+            val = (int) (_vm.VolumeTrackBarMaximum - _vm.VolumeTrackBar);
+        else if (!increase && _vm.VolumeTrackBar - val < trackBarVolume.Minimum)
+            val = (int) (_vm.VolumeTrackBar - trackBarVolume.Minimum);
 
         if (!increase) val *= -1;
 
@@ -2613,7 +2641,7 @@ public partial class MainView : UserControl
          * Updating the trackbar volume will call the trackBarVolume_Changed
          * callback, which will update the current song volume.
          */
-        trackBarVolume.Value += val;
+        _vm.VolumeTrackBar += val;
         trackBarVolume.Focus();
     }
 
@@ -2646,10 +2674,8 @@ public partial class MainView : UserControl
 
     private void TrackBarHitsounds_OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
     {
-        if (trackBarHitsoundVolume == null || hitsoundChannel == null || e.Property.Name != "Value")
-            return;
-        userSettings.SoundSettings.HitsoundVolume = (int) trackBarHitsoundVolume.Value;
-        var volume = (float) trackBarHitsoundVolume.Value / (float) trackBarHitsoundVolume.Maximum;
+        userSettings.SoundSettings.HitsoundVolume = (int) _vm.HitsoundVolumeTrackBar;
+        var volume = (float) _vm.HitsoundVolumeTrackBar / (float) _vm.HitsoundVolumeMaximum;
         hitsoundChannel?.SetVolume(Math.Clamp(volume, 0.0f, 1.0f));
     }
 
@@ -2700,7 +2726,25 @@ public partial class MainView : UserControl
         MouseWheel,
         SongPlaying,
         TrackBar,
-        ManualMeasureSet,
         UpdateTick
+    }
+
+    private void PositionTrackBar_OnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
+    {
+        e.Handled = true;
+
+        var factor = userSettings.ViewSettings.SliderScrollFactor;
+        var delta = e.Delta.Y > 0 ? factor : -factor;
+        _vm.PositionTrackBar = Math.Clamp(_vm.PositionTrackBar + delta, _vm.PositionTrackBarMinimum,
+            _vm.PositionTrackBarMaximum);
+    }
+
+    private void SizeTrackBar_OnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
+    {
+        e.Handled = true;
+
+        var factor = userSettings.ViewSettings.SliderScrollFactor;
+        var delta = e.Delta.Y > 0 ? factor : -factor;
+        _vm.SizeTrackBar = Math.Clamp(_vm.SizeTrackBar + delta, _vm.SizeTrackBarMinimum, _vm.SizeTrackBarMaximum);
     }
 }

@@ -25,10 +25,50 @@ public partial class MainViewModel : ViewModelBase
 
     // Music UI State
 
+    // TODO: move this stuff out of here
     [ObservableProperty] private double sizeTrackBar = 0.0;
+    [ObservableProperty] private int sizeTrackBarMinimum = 4;
+    [ObservableProperty] private int sizeTrackBarMaximum = 59;
+
     [ObservableProperty] private double positionTrackBar = 0.0;
+    [ObservableProperty] private int positionTrackBarMinimum = 0;
+    [ObservableProperty] private int positionTrackBarMaximum = 59;
+
     [ObservableProperty] private decimal sizeNumeric = 0;
+    [ObservableProperty] private int sizeNumericMinimum = 4;
+    [ObservableProperty] private int sizeNumericMaximum = 59;
+
     [ObservableProperty] private decimal positionNumeric = 0;
+    [ObservableProperty] private int positionNumericMinimum = 0;
+    [ObservableProperty] private int positionNumericMaximum = 59;
+
+    [ObservableProperty] private decimal measureNumeric = 0;
+    [ObservableProperty] private int measureNumericMinimum = 0;
+    [ObservableProperty] private int measureNumericMaximum = 9999;
+
+    [ObservableProperty] private decimal beat1Numeric = 0;
+    [ObservableProperty] private int beat1NumericMinimum = 0;
+    [ObservableProperty] private int beat1NumericMaximum = 1920;
+
+    [ObservableProperty] private decimal beat2Numeric = 16;
+    [ObservableProperty] private int beat2NumericMinimum = 0;
+    [ObservableProperty] private int beat2NumericMaximum = 1920;
+
+    [ObservableProperty] private double songTrackBar = 0.0;
+    [ObservableProperty] private int songTrackBarMaximum = 0;
+
+    [ObservableProperty] private double speedTrackBar = 100;
+    [ObservableProperty] private int speedTrackBarMaximum = 100;
+
+    [ObservableProperty] private double volumeTrackBar = 100;
+    [ObservableProperty] private int volumeTrackBarMaximum = 100;
+
+    [ObservableProperty] private double hitsoundVolumeTrackBar = 50;
+    [ObservableProperty] private int hitsoundVolumeMaximum = 100;
+
+    [ObservableProperty] private decimal visualHiSpeedNumeric = 0.5m;
+    [ObservableProperty] private double visualHiSpeedNumericMinimum = 0.001;
+    [ObservableProperty] private double visualHiSpeedNumericMaximum = 500;
 
     // Commands
     public async Task<bool> NewCommand()
