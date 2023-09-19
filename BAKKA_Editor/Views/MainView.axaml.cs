@@ -1546,7 +1546,6 @@ public partial class MainView : UserControl, IPassSetting
                 if (selectedGimmickIndex == -1)
                     selectedGimmickIndex = 0;
                 UpdateGimmickLabels();
-                chart.Gimmicks = chart.Gimmicks.OrderBy(x => x.Measure).ToList();
                 chart.RecalcTime();
             });
     }
