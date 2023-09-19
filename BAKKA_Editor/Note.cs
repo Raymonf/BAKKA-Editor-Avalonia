@@ -6,28 +6,35 @@ namespace BAKKA_Editor;
 
 internal class BeatInfo
 {
-    public int Beat;
-    public int Measure;
+    public readonly int Beat;
+    public readonly int Measure;
+    public readonly float MeasureDecimal;
 
     public BeatInfo(int measure, int beat)
     {
         Measure = measure;
         Beat = beat;
+        MeasureDecimal = GetMeasureDecimal();
     }
 
     public BeatInfo(float measure)
     {
         Measure = (int) Math.Floor(measure);
         Beat = (int) ((measure - Measure) * 1920.0f);
+        MeasureDecimal = GetMeasureDecimal();
     }
 
     public BeatInfo(BeatInfo info)
     {
         Measure = info.Measure;
         Beat = info.Beat;
+        MeasureDecimal = GetMeasureDecimal();
     }
 
-    public float MeasureDecimal => Measure + Beat / 1920.0f;
+    private float GetMeasureDecimal()
+    {
+        return Measure + Beat / 1920.0f;
+    }
 }
 
 internal class TimeSignature
