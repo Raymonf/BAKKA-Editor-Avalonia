@@ -24,6 +24,8 @@ internal class ViewSettings
     public int Volume { get; set; } = 100;
     public bool DarkMode { get; set; } = false;
     public bool ShowMeasureButtons { get; set; } = false;
+    public int SliderScrollFactor { get; set; } = 3;
+    public bool UseSpaceToPlaySink { get; set; } = false;
 }
 
 internal class SaveSettings
