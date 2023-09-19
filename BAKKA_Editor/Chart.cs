@@ -21,7 +21,7 @@ namespace BAKKA_Editor
         /// Movie offset in seconds
         /// </summary>
         public double MovieOffset { get; set; }
-        String SongFileName { get; set; }
+        string SongFileName { get; set; }
         List<Gimmick> TimeEvents { get; set; }
         public bool HasInitEvents
         {
@@ -29,8 +29,8 @@ namespace BAKKA_Editor
             {
                 return TimeEvents != null &&
                     TimeEvents.Count > 0 &&
-                    Gimmicks.Count(x => x.Measure == 0 && x.GimmickType == GimmickType.BpmChange) >= 1 &&
-                    Gimmicks.Count(x => x.Measure == 0 && x.GimmickType == GimmickType.TimeSignatureChange) >= 1;
+                    Gimmicks.Any(x => x.Measure == 0 && x.GimmickType == GimmickType.BpmChange) &&
+                    Gimmicks.Any(x => x.Measure == 0 && x.GimmickType == GimmickType.TimeSignatureChange);
             }
         }
         public bool IsSaved { get; set; }
