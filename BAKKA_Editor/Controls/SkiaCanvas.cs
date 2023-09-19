@@ -1,7 +1,6 @@
 ﻿using System;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Platform;
 using Avalonia.Rendering.SceneGraph;
@@ -11,11 +10,20 @@ using SkiaSharp;
 
 namespace BAKKA_Editor.Controls;
 
-public partial class SkiaCanvas : UserControl
+public class SkiaCanvas : UserControl
 {
-    class SkiaDrawOp : ICustomDrawOperation
+    public event Action<SKCanvas>? RenderSkia;
+
+    public override void Render(DrawingContext context)
     {
-        private Action<SKCanvas> renderFunc;
+        if (RenderSkia != null)
+            context.Custom(new SkiaDrawOp(new Rect(0, 0, DesiredSize.Width, DesiredSize.Height), RenderSkia));
+        Dispatcher.UIThread.InvokeAsync(InvalidateVisual, DispatcherPriority.Background);
+    }
+
+    private class SkiaDrawOp : ICustomDrawOperation
+    {
+        private readonly Action<SKCanvas> renderFunc;
 
         public SkiaDrawOp(Rect bounds, Action<SKCanvas> render)
         {
@@ -28,8 +36,16 @@ public partial class SkiaCanvas : UserControl
         }
 
         public Rect Bounds { get; }
-        public bool HitTest(Point p) => false;
-        public bool Equals(ICustomDrawOperation? other) => false;
+
+        public bool HitTest(Point p)
+        {
+            return false;
+        }
+
+        public bool Equals(ICustomDrawOperation? other)
+        {
+            return false;
+        }
 
         public void Render(ImmediateDrawingContext context)
         {
@@ -40,18 +56,5 @@ public partial class SkiaCanvas : UserControl
             var canvas = lease.SkCanvas;
             renderFunc.Invoke(canvas);
         }
-    }
-
-    public event Action<SKCanvas>? RenderSkia;
-
-    public SkiaCanvas()
-    {
-    }
-
-    public override void Render(DrawingContext context)
-    {
-        if (RenderSkia != null)
-            context.Custom(new SkiaDrawOp(new Rect(0, 0, DesiredSize.Width, DesiredSize.Height), RenderSkia));
-        Dispatcher.UIThread.InvokeAsync(InvalidateVisual, DispatcherPriority.Background);
     }
 }

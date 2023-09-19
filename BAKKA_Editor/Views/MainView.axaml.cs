@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Avalonia;
@@ -12,7 +11,6 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Media;
 using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
@@ -29,83 +27,76 @@ namespace BAKKA_Editor.Views;
 
 public partial class MainView : UserControl, IPassSetting
 {
-    private static bool IsDesktop => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
     private static SKColor BackColor = SKColors.LightGray;
-
-    // File selector state
-    private string openFilename = "";
-    private Stream? openChartFileReadStream;
-    private Stream? openChartFileWriteStream;
-
-    private Stream? saveFileStream; // for iOS, or something?
-    private string saveFilename = ""; // for desktop
+    private string autosaveFile = "";
+    private DispatcherTimer autoSaveTimer;
 
     // View State
-    public bool CanShutdown = false;
-    public bool ResetBackColor = true;
+    public bool CanShutdown;
 
     // Chart
-    Chart chart = new();
-    string songFilePath = "";
-    bool isNewFile = true;
-    bool isRecoveredFile = false;
+    private Chart chart = new();
 
     // Dialogs
-    ChartSettingsViewModel chartSettingsViewModel;
+    private ChartSettingsViewModel chartSettingsViewModel;
 
-    // Operations
-    OperationManager opManager;
-
-    // Playfield
-    SkCircleView skCircleView;
+    private double curDelta;
+    private BonusType currentBonusType = BonusType.NoBonus;
+    private GimmickType currentGimmickType = GimmickType.NoGimmick;
+    private int currentNoteIndex;
 
     // Note Selection
-    NoteType currentNoteType = NoteType.TouchNoBonus;
-    GimmickType currentGimmickType = GimmickType.NoGimmick;
-    BonusType currentBonusType = BonusType.NoBonus;
-    int selectedGimmickIndex = -1;
-    int selectedNoteIndex = -1;
-    Note? lastNote;
-    Note? nextSelectedNote; // so that we know the last newly inserted note
-    Note? endOfChartNote;
-    bool isInsertingHold = false;
-
-    // Music
-    private IBakkaSoundEngine soundEngine;
+    private NoteType currentNoteType = NoteType.TouchNoBonus;
     private IBakkaSound? currentSong;
-
-    // Timers
-    private DispatcherTimer updateTimer;
-    private DispatcherTimer autoSaveTimer;
-    private DispatcherTimer hitsoundTimer;
-
-    // Control updates
-    enum EventSource
-    {
-        None,
-        MouseWheel,
-        SongPlaying,
-        TrackBar,
-        ManualMeasureSet,
-        UpdateTick
-    };
-
-    // Threading pain hack
-    float positionNumericFloat = 0.0f;
-    float sizeNumericFloat = 0.0f;
-
-    EventSource valueTriggerEvent = EventSource.None;
+    private Note? endOfChartNote;
 
     // Program info
-    string fileVersion = "";
-    UserSettings userSettings = new();
-    string tempFilePath = "";
-    string tempStatusPath = "";
-    string autosaveFile = "";
+    private string fileVersion = "";
+    private IBakkaSampleChannel? hitsoundChannel;
 
     // Hitsounds
     private IBakkaSample? hitsoundSample;
-    private IBakkaSampleChannel? hitsoundChannel;
+    private DispatcherTimer hitsoundTimer;
+    private bool isInsertingHold;
+    private bool isNewFile = true;
+    private bool isRecoveredFile;
+
+    private readonly float lastMeasure = 0.0f;
+    private Note? lastNote;
+    private Note? nextSelectedNote; // so that we know the last newly inserted note
+    private Stream? openChartFileReadStream;
+    private Stream? openChartFileWriteStream;
+
+    // File selector state
+    private string openFilename = "";
+
+    // Operations
+    private OperationManager opManager;
+
+    // Threading pain hack
+    private float positionNumericFloat;
+    public bool ResetBackColor = true;
+    private string saveFilename = ""; // for desktop
+
+    private Stream? saveFileStream; // for iOS, or something?
+    private int selectedGimmickIndex = -1;
+    private int selectedNoteIndex = -1;
+    private float sizeNumericFloat;
+
+    // Playfield
+    private SkCircleView skCircleView;
+    private string songFilePath = "";
+
+    // Music
+    private IBakkaSoundEngine soundEngine;
+    private string tempFilePath = "";
+    private string tempStatusPath = "";
+
+    // Timers
+    private DispatcherTimer updateTimer;
+    private UserSettings userSettings = new();
+
+    private EventSource valueTriggerEvent = EventSource.None;
 
     public MainView()
     {
@@ -116,12 +107,204 @@ public partial class MainView : UserControl, IPassSetting
         Setup();
     }
 
+    private static bool IsDesktop => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ||
+                                     RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ||
+                                     RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+
+    public async Task SaveMenuItem_OnClick()
+    {
+        await SaveFile(isNewFile || isRecoveredFile);
+    }
+
+    public async Task SaveAsMenuItem_OnClick()
+    {
+        await SaveFile();
+    }
+
+    public async Task ExitMenuItem_OnClick()
+    {
+        if (!await PromptSave())
+            return;
+
+        if (tempStatusPath != "")
+            File.Delete(tempStatusPath);
+        if (tempFilePath != "")
+            File.Delete(tempFilePath);
+
+        // Update user settings.toml
+        try
+        {
+            if (File.Exists("settings.toml"))
+                File.WriteAllText("settings.toml", Toml.FromModel(userSettings));
+        }
+        catch (Exception ex)
+        {
+            await ShowBlockingMessageBox("Warning",
+                $"Settings failed to save: {ex}");
+        }
+
+        CanShutdown = true;
+        (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.Shutdown();
+    }
+
+    public async Task NewMenuItem_OnClick()
+    {
+        if (!await PromptSave())
+            return;
+
+        chart = new Chart();
+        isNewFile = true;
+        isRecoveredFile = false;
+        ResetChartTime();
+        DeleteAutosaves();
+        UpdateNoteLabels(-1);
+        UpdateGimmickLabels(-1);
+        SetText();
+        opManager.Clear();
+    }
+
+    public async Task OpenChartSettings_OnClick()
+    {
+        await ShowInitialSettings();
+    }
+
+    public async Task OpenMenuItem_OnClick()
+    {
+        if (!await PromptSave())
+            return;
+
+        var result = await GetStorageProvider().OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            AllowMultiple = false,
+            FileTypeFilter = new List<FilePickerFileType>
+            {
+                new("MER files")
+                {
+                    Patterns = new[] {"*.mer"},
+                    AppleUniformTypeIdentifiers = new[] {"public.item"}
+                }
+            }
+        });
+        if (result.Count < 1)
+            // await ShowBlockingMessageBox("Error", "No file selected.");
+            return;
+
+        openChartFileReadStream = await result[0].OpenReadAsync();
+        openFilename = result[0].Path.LocalPath;
+        if (OpenFile() && !IsDesktop)
+            openChartFileWriteStream = await result[0].OpenWriteAsync();
+    }
+
+    public void UndoMenuItem_OnClick()
+    {
+        if (opManager.CanUndo)
+        {
+            var op = opManager.Undo();
+            if (op != null)
+            {
+                UpdateControlsFromOperation(op, OperationDirection.Undo);
+                //check for if it's a segment hold, if so treat them as 1 object by doing everything twice
+                if (op.GetType() == typeof(RemoveHoldNote))
+                    foreach (var note in chart.Notes)
+                        if (note.IsHold && note.NextNote == null && note.PrevNote == null)
+                        {
+                            if (opManager.CanUndo)
+                            {
+                                var op2 = opManager.Undo();
+                                if (op2 != null)
+                                {
+                                    UpdateControlsFromOperation(op2, OperationDirection.Undo);
+                                    //check for the edge case of someone placing a hold start then deleting it
+                                    if (op2.GetType() == typeof(InsertHoldNote)) RedoMenuItem_OnClick();
+                                }
+                            }
+
+                            return;
+                        }
+            }
+        }
+    }
+
+    public void RedoMenuItem_OnClick()
+    {
+        if (opManager.CanRedo)
+        {
+            var op = opManager.Redo();
+            if (op != null)
+            {
+                UpdateControlsFromOperation(op, OperationDirection.Redo);
+                //check for if it's a segment hold, if so treat them as 1 object by doing everything twice
+                if (op.GetType() == typeof(RemoveHoldNote))
+                    foreach (var note in chart.Notes)
+                        if (note.IsHold && note.NextNote == null && note.PrevNote == null)
+                        {
+                            if (opManager.CanRedo)
+                            {
+                                var op2 = opManager.Redo();
+                                if (op2 != null)
+                                {
+                                    UpdateControlsFromOperation(op2, OperationDirection.Redo);
+                                    //check for the edge case of someone placing a hold start then deleting it
+                                    if (op2.GetType() == typeof(InsertHoldNote)) UndoMenuItem_OnClick();
+                                }
+                            }
+
+                            return;
+                        }
+            }
+        }
+    }
+
+    public void SetShowCursor(bool value)
+    {
+        userSettings.ViewSettings.ShowCursor = value;
+    }
+
+    public void SetShowCursorDuringPlayback(bool value)
+    {
+        userSettings.ViewSettings.ShowCursorDuringPlayback = value;
+    }
+
+    public void SetHighlightViewedNote(bool value)
+    {
+        userSettings.ViewSettings.HighlightViewedNote = value;
+    }
+
+    public void SetSelectLastInsertedNote(bool value)
+    {
+        userSettings.ViewSettings.SelectLastInsertedNote = value;
+    }
+
+    public void SetShowGimmicksInCircleView(bool value)
+    {
+        userSettings.ViewSettings.ShowGimmicks = value;
+    }
+
+    public void SetShowGimmicksDuringPlaybackInCircleView(bool value)
+    {
+        userSettings.ViewSettings.ShowGimmicksDuringPlayback = value;
+    }
+
+    public void SetDarkMode(bool value)
+    {
+        userSettings.ViewSettings.DarkMode = value;
+        if (Application.Current != null)
+            Application.Current.RequestedThemeVariant = value ? ThemeVariant.Dark : ThemeVariant.Light;
+        BackColor = SKColor.Parse(value ? "#ff444444" : "#FFF3F3F3");
+        ResetBackColor = true;
+    }
+
+    public void SetShowMeasureButtons(bool value)
+    {
+        userSettings.ViewSettings.ShowMeasureButtons = value;
+    }
+
     private void Setup()
     {
         soundEngine = new BassBakkaSoundEngine();
-        chartSettingsViewModel = new();
-        skCircleView = new(new SizeF(611, 611));
-        opManager = new();
+        chartSettingsViewModel = new ChartSettingsViewModel();
+        skCircleView = new SkCircleView(new SizeF(611, 611));
+        opManager = new OperationManager();
 
         SetInitialSong();
 
@@ -153,17 +336,19 @@ public partial class MainView : UserControl, IPassSetting
         };
 
         // Program info
-         /*var asm = Assembly.GetExecutingAssembly();
-          var fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(asm.Location);
-          if (fvi.FileVersion != null)
-          {
-              fileVersion = fvi.FileVersion;
-              SetText();
-          }*/
+        /*var asm = Assembly.GetExecutingAssembly();
+         var fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(asm.Location);
+         if (fvi.FileVersion != null)
+         {
+             fileVersion = fvi.FileVersion;
+             SetText();
+         }*/
 
         // Look for user settings
         if (File.Exists("settings.toml"))
+        {
             userSettings = Toml.ToModel<UserSettings>(File.ReadAllText("settings.toml"));
+        }
         else
         {
             userSettings = new UserSettings();
@@ -182,7 +367,7 @@ public partial class MainView : UserControl, IPassSetting
         vm.DarkMode = userSettings.ViewSettings.DarkMode;
         vm.AreMeasureButtonsVisible = userSettings.ViewSettings.ShowMeasureButtons;
 
-        visualHispeedNumeric.Value = (decimal)userSettings.ViewSettings.HispeedSetting;
+        visualHispeedNumeric.Value = (decimal) userSettings.ViewSettings.HispeedSetting;
         trackBarVolume.Value = userSettings.ViewSettings.Volume;
         trackBarHitsoundVolume.Value = Math.Clamp(userSettings.SoundSettings.HitsoundVolume, 0, 100);
         SetDarkMode(userSettings.ViewSettings.DarkMode);
@@ -224,10 +409,7 @@ public partial class MainView : UserControl, IPassSetting
     {
         if (!userSettings.SoundSettings.HitsoundEnabled)
         {
-            Dispatcher.UIThread.Post(async () =>
-            {
-                HitsoundPanel.IsVisible = false;
-            });
+            Dispatcher.UIThread.Post(async () => { HitsoundPanel.IsVisible = false; });
             return;
         }
 
@@ -235,7 +417,8 @@ public partial class MainView : UserControl, IPassSetting
         if (!File.Exists(hitsoundPath))
         {
             Dispatcher.UIThread.Post(
-                async () => await ShowBlockingMessageBox("Hitsound Error", "Hitsounds were enabled but the path to the hitsound file is not valid (not found)."));
+                async () => await ShowBlockingMessageBox("Hitsound Error",
+                    "Hitsounds were enabled but the path to the hitsound file is not valid (not found)."));
             return;
         }
 
@@ -243,36 +426,25 @@ public partial class MainView : UserControl, IPassSetting
         {
             hitsoundSample = new BassBakkaSample(hitsoundPath);
             if (hitsoundSample.Loaded)
-            {
                 hitsoundChannel = hitsoundSample.GetChannel();
-            }
             else
-            {
                 Dispatcher.UIThread.Post(async () => await ShowBlockingMessageBox("Error",
-                        "Failed to load the hitsound. Ensure it is a valid flac, wav, or ogg (Vorbis) file."));
-            }
+                    "Failed to load the hitsound. Ensure it is a valid flac, wav, or ogg (Vorbis) file."));
         }
         catch (Exception ex)
         {
             Dispatcher.UIThread.Post(
-                async () => await ShowBlockingMessageBox("Hitsound Error", "An error occurred trying to create the hitsound channel: " + ex.Message));
+                async () => await ShowBlockingMessageBox("Hitsound Error",
+                    "An error occurred trying to create the hitsound channel: " + ex.Message));
         }
     }
 
     private IStorageProvider GetStorageProvider()
     {
         if (VisualRoot != null && VisualRoot is TopLevel)
-        {
             return (VisualRoot as TopLevel)!.StorageProvider;
-        }
-        else
-        {
-            throw new Exception(":(");
-        }
+        throw new Exception(":(");
     }
-
-    private float lastMeasure = 0.0f;
-    private int currentNoteIndex = 0;
 
     private void UpdateTimer_Tick(object? sender, EventArgs e)
     {
@@ -291,7 +463,7 @@ public partial class MainView : UserControl, IPassSetting
 
         Dispatcher.UIThread.Post(() =>
         {
-            songTrackBar.Value = (int)currentSong.PlayPosition;
+            songTrackBar.Value = (int) currentSong.PlayPosition;
             var info = chart.GetBeat(currentSong.PlayPosition);
             if (info.Measure != -1)
             {
@@ -302,8 +474,8 @@ public partial class MainView : UserControl, IPassSetting
                 // TODO: weird rounding behavior for slow scrolling on longer songs...?
                 // investigate how to fix this. is it related to playback position precision from bass?
                 // +5 seems to work as a primitive "round up"
-                var beat1 = (int)((info.Beat + 5) / 1920.0f * (float)beat2Numeric.Value);
-                if ((int)beat1Numeric.Value != beat1)
+                var beat1 = (int) ((info.Beat + 5) / 1920.0f * (float) beat2Numeric.Value);
+                if ((int) beat1Numeric.Value != beat1)
                     beat1Numeric.Value = beat1;
                 skCircleView.CurrentMeasure = info.MeasureDecimal;
                 if (valueTriggerEvent == EventSource.UpdateTick)
@@ -326,24 +498,21 @@ public partial class MainView : UserControl, IPassSetting
         if (hitsoundChannel == null || currentSong == null)
             return;
 
-        var latency = 0.025;
         // we call bass_init with the latency flag, so we can get the latency from bass_info
-        var hasBassInfo = ManagedBass.Bass.GetInfo(out var bassInfo);
-        if (hasBassInfo)
-            latency = bassInfo.Latency / 1000.0; // ms to seconds
+        var latency = soundEngine.GetLatency();
         var offset = 0.0;
         if (userSettings.SoundSettings.HitsoundAdditionalOffsetMs != 0)
             offset = userSettings.SoundSettings.HitsoundAdditionalOffsetMs / 1000.0;
         var info = chart.GetBeat(currentSong.PlayPosition);
         var currentMeasure = info.MeasureDecimal + latency + offset; // offset by latency
-        while (currentNoteIndex < chart.Notes.Count && chart.Notes[currentNoteIndex].BeatInfo.MeasureDecimal <= currentMeasure)
+        while (currentNoteIndex < chart.Notes.Count &&
+               chart.Notes[currentNoteIndex].BeatInfo.MeasureDecimal <= currentMeasure)
         {
             var note = chart.Notes[currentNoteIndex];
-            var isSoundedNote = (int) note.NoteType is >= (int) NoteType.TouchNoBonus and <= (int) NoteType.HoldStartNoBonus or >= (int) NoteType.Chain || (int)note.NoteType == (int) NoteType.HoldEnd;
-            if (isSoundedNote && note.BeatInfo.MeasureDecimal > lastMeasure)
-            {
-                hitsoundChannel?.Play(true);
-            }
+            var isSoundedNote =
+                (int) note.NoteType is >= (int) NoteType.TouchNoBonus and <= (int) NoteType.HoldStartNoBonus
+                or >= (int) NoteType.Chain || (int) note.NoteType == (int) NoteType.HoldEnd;
+            if (isSoundedNote && note.BeatInfo.MeasureDecimal > lastMeasure) hitsoundChannel?.Play(true);
             currentNoteIndex++;
         }
     }
@@ -357,7 +526,7 @@ public partial class MainView : UserControl, IPassSetting
         if ((chart.Notes.Count > 0 || chart.Gimmicks.Count > 0) && !chart.IsSaved)
         {
             chart.WriteFile(tempFileStream, false);
-            File.WriteAllLines(tempStatusPath, new string[] {"true", DateTime.Now.ToString("yyyy-MM-dd HH:mm")});
+            File.WriteAllLines(tempStatusPath, new[] {"true", DateTime.Now.ToString("yyyy-MM-dd HH:mm")});
         }
         else
         {
@@ -368,12 +537,14 @@ public partial class MainView : UserControl, IPassSetting
     private void SetInitialSong()
     {
         // :)
-        songFilePath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "ERROR.ogg");
+        songFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ERROR.ogg");
         try
         {
             currentSong = soundEngine.Play2D(songFilePath, false, true);
         }
-        catch {} // this is ok
+        catch
+        {
+        } // this is ok
 
         if (currentSong != null)
         {
@@ -391,7 +562,7 @@ public partial class MainView : UserControl, IPassSetting
 
     private void SetText()
     {
-        string save = chart.IsSaved ? "" : "*";
+        var save = chart.IsSaved ? "" : "*";
         // string name = isRecoveredFile ? "Auto-Save Recover" : (isNewFile ? "New File" : saveFilename);
         // Title = $"{save}BAKKA Editor {fileVersion} - [{name}]";
         // TODO: Title bind support
@@ -408,11 +579,11 @@ public partial class MainView : UserControl, IPassSetting
             var statusLines = File.ReadAllLines(tempStatusPath);
             if (statusLines.Length > 0)
             {
-                bool checkAutosave = false;
+                var checkAutosave = false;
                 bool.TryParse(statusLines[0], out checkAutosave);
                 if (checkAutosave)
                 {
-                    string autosaveTime = ".";
+                    var autosaveTime = ".";
                     if (statusLines.Length > 1)
                         autosaveTime = " from " + statusLines[1] + ".";
                     if (oldAutosave.Length > 0)
@@ -437,10 +608,7 @@ public partial class MainView : UserControl, IPassSetting
                                     OpenFile();
                                 }
 
-                                if (!isRecoveredFile)
-                                {
-                                    DeleteAutosaves();
-                                }
+                                if (!isRecoveredFile) DeleteAutosaves();
 
                                 autoSaveTimer.Start();
                             });
@@ -459,12 +627,12 @@ public partial class MainView : UserControl, IPassSetting
 
     private bool OpenFile()
     {
-        chart = new();
+        chart = new Chart();
         if (!chart.ParseFile(openChartFileReadStream))
         {
             Dispatcher.UIThread.Post(
                 async () => await ShowBlockingMessageBox("Error", "Failed to parse file. Ensure it is not corrupted."));
-            chart = new();
+            chart = new Chart();
             openChartFileReadStream.Close();
             return false;
         }
@@ -472,10 +640,10 @@ public partial class MainView : UserControl, IPassSetting
         // Successful parse
         var initGimmicks = chart.Gimmicks.Where(x => x.StartTime == 0);
         var initBpm = initGimmicks.FirstOrDefault(x => x.GimmickType == GimmickType.BpmChange);
-        double bpm = initBpm != null ? initBpm.BPM : 120.0;
+        var bpm = initBpm != null ? initBpm.BPM : 120.0;
         var initTimeSig = initGimmicks.FirstOrDefault(x => x.GimmickType == GimmickType.TimeSignatureChange);
-        int timeSigUpper = initTimeSig != null ? initTimeSig.TimeSig.Upper : 4;
-        int timeSigLower = initTimeSig != null ? initTimeSig.TimeSig.Lower : 4;
+        var timeSigUpper = initTimeSig != null ? initTimeSig.TimeSig.Upper : 4;
+        var timeSigLower = initTimeSig != null ? initTimeSig.TimeSig.Lower : 4;
         chartSettingsViewModel.Bpm = bpm;
         chartSettingsViewModel.TimeSigUpper = timeSigUpper;
         chartSettingsViewModel.TimeSigLower = timeSigLower;
@@ -497,13 +665,14 @@ public partial class MainView : UserControl, IPassSetting
     {
         var oldAutosave = Directory.GetFiles(PlatformUtils.GetTempPath(), "*.mer");
         foreach (var file in oldAutosave)
-        {
             try
             {
                 if (file != keep)
                     File.Delete(file);
-            } catch { }
-        }
+            }
+            catch
+            {
+            }
     }
 
     private void RenderCanvas(SKCanvas canvas)
@@ -533,20 +702,12 @@ public partial class MainView : UserControl, IPassSetting
         skCircleView.DrawNotes(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex);
 
         // Determine if cursor should be showing
-        bool showCursor = userSettings.ViewSettings.ShowCursor || skCircleView.mouseDownPos != -1;
-        if (currentSong != null && !currentSong.Paused)
-        {
-            showCursor = userSettings.ViewSettings.ShowCursorDuringPlayback;
-        }
+        var showCursor = userSettings.ViewSettings.ShowCursor || skCircleView.mouseDownPos != -1;
+        if (currentSong != null && !currentSong.Paused) showCursor = userSettings.ViewSettings.ShowCursorDuringPlayback;
 
         // Draw cursor
-        if (showCursor)
-        {
-            skCircleView.DrawCursor(currentNoteType, positionNumericFloat, sizeNumericFloat);
-        }
+        if (showCursor) skCircleView.DrawCursor(currentNoteType, positionNumericFloat, sizeNumericFloat);
     }
-
-    private double curDelta = 0;
 
     private void CircleControl_OnWheel(object? sender, PointerWheelEventArgs e)
     {
@@ -575,7 +736,7 @@ public partial class MainView : UserControl, IPassSetting
 
             var low = 0;
             var high = 1;
-            while (!(beat2Numeric.Value >= (1 << low) && beat2Numeric.Value <= (1 << high)))
+            while (!(beat2Numeric.Value >= 1 << low && beat2Numeric.Value <= 1 << high))
             {
                 low++;
                 high++;
@@ -606,8 +767,7 @@ public partial class MainView : UserControl, IPassSetting
     {
         if (currentSong != null && !currentSong.Paused)
             return true;
-        else
-            return false;
+        return false;
     }
 
     private void Beat1Numeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
@@ -621,7 +781,8 @@ public partial class MainView : UserControl, IPassSetting
             beat1Numeric.Value = 0;
             return;
         }
-        else if (beat1Numeric.Value < 0)
+
+        if (beat1Numeric.Value < 0)
         {
             if (measureNumeric.Value > 0)
             {
@@ -629,7 +790,8 @@ public partial class MainView : UserControl, IPassSetting
                 beat1Numeric.Value = beat2Numeric.Value - 1;
                 return;
             }
-            else if (measureNumeric.Value == 0)
+
+            if (measureNumeric.Value == 0)
             {
                 beat1Numeric.Value = 0;
                 return;
@@ -639,7 +801,8 @@ public partial class MainView : UserControl, IPassSetting
         updateTime();
         if (currentSong != null && !IsSongPlaying() && valueTriggerEvent != EventSource.TrackBar)
         {
-            int time = chart.GetTime(new BeatInfo((int)measureNumeric.Value, (int)beat1Numeric.Value * 1920 / (int)beat2Numeric.Value));
+            var time = chart.GetTime(new BeatInfo((int) measureNumeric.Value,
+                (int) beat1Numeric.Value * 1920 / (int) beat2Numeric.Value));
             if (time < 0)
                 songTrackBar.Value = 0;
             else
@@ -679,7 +842,7 @@ public partial class MainView : UserControl, IPassSetting
                 gimmickValueLabel.Text = gimmick.BPM.ToString("F6");
                 break;
             case GimmickType.TimeSignatureChange:
-                gimmickValueLabel.Text = gimmick.TimeSig.Upper.ToString() + " / " + gimmick.TimeSig.Lower.ToString();
+                gimmickValueLabel.Text = gimmick.TimeSig.Upper + " / " + gimmick.TimeSig.Lower;
                 break;
             case GimmickType.HiSpeedChange:
                 gimmickValueLabel.Text = gimmick.HiSpeed.ToString("F6");
@@ -699,19 +862,15 @@ public partial class MainView : UserControl, IPassSetting
         if (chart.Gimmicks.Count == 0
             || (gimmick.Measure == 0 && (gimmick.GimmickType == GimmickType.BpmChange ||
                                          gimmick.GimmickType == GimmickType.TimeSignatureChange)))
-        {
             gimmickDeleteButton.IsEnabled = false;
-        }
         else
-        {
             gimmickDeleteButton.IsEnabled = true;
-        }
     }
 
     private void SetSelectedObject(NoteType type)
     {
         currentNoteType = type;
-        int minSize = 1;
+        var minSize = 1;
         switch (type)
         {
             case NoteType.TouchNoBonus:
@@ -828,13 +987,13 @@ public partial class MainView : UserControl, IPassSetting
                 break;
         }
 
-        if (sizeNumeric.Value < minSize)    sizeNumeric.Value = minSize;
-        if (sizeTrackBar.Value < minSize)   sizeTrackBar.Value = minSize;
+        if (sizeNumeric.Value < minSize) sizeNumeric.Value = minSize;
+        if (sizeTrackBar.Value < minSize) sizeTrackBar.Value = minSize;
         sizeNumeric.Minimum = minSize;
         sizeTrackBar.Minimum = minSize;
     }
 
-    void updateLabel(string text)
+    private void updateLabel(string text)
     {
         currentSelectionLabel.Text = text;
     }
@@ -871,7 +1030,6 @@ public partial class MainView : UserControl, IPassSetting
         if (!note.IsMask)
             noteMaskLabel.Text = "N/A";
         else
-        {
             switch (note.MaskFill)
             {
                 case MaskType.Clockwise:
@@ -883,10 +1041,7 @@ public partial class MainView : UserControl, IPassSetting
                 case MaskType.Center:
                     noteMaskLabel.Text = "From Center";
                     break;
-                default:
-                    break;
             }
-        }
     }
 
     private void ResetChartTime()
@@ -903,27 +1058,17 @@ public partial class MainView : UserControl, IPassSetting
             return;
 
         if (currentSong == null || (currentSong != null && currentSong.Paused))
-        {
             skCircleView.CurrentMeasure =
-                (float) measureNumeric.Value + ((float) beat1Numeric.Value / (float) beat2Numeric.Value);
-        }
+                (float) measureNumeric.Value + (float) beat1Numeric.Value / (float) beat2Numeric.Value;
 
         if (currentNoteType is NoteType.HoldJoint or NoteType.HoldEnd)
-        {
             insertButton.IsEnabled = !(lastNote.BeatInfo.MeasureDecimal >= skCircleView.CurrentMeasure);
-        }
         else if (endOfChartNote != null)
-        {
             insertButton.IsEnabled = !(endOfChartNote.BeatInfo.MeasureDecimal <= skCircleView.CurrentMeasure);
-        }
         else if (currentSong != null && !currentSong.Paused)
-        {
             insertButton.IsEnabled = false;
-        }
         else
-        {
             insertButton.IsEnabled = true;
-        }
     }
 
     private void tapButton_Click(object sender, RoutedEventArgs e)
@@ -965,14 +1110,18 @@ public partial class MainView : UserControl, IPassSetting
     private void redButton_Click(object sender, RoutedEventArgs e)
     {
         if (noBonusRadio.IsChecked.Value)
+        {
             SetSelectedObject(NoteType.SnapRedNoBonus);
+        }
         else if (bonusRadio.IsChecked.Value)
         {
             flairRadio.IsChecked = true;
             SetSelectedObject(NoteType.SnapRedBonusFlair);
         }
         else if (flairRadio.IsChecked.Value)
+        {
             SetSelectedObject(NoteType.SnapRedBonusFlair);
+        }
 
         currentGimmickType = GimmickType.NoGimmick;
     }
@@ -980,14 +1129,18 @@ public partial class MainView : UserControl, IPassSetting
     private void blueButton_Click(object sender, RoutedEventArgs e)
     {
         if (noBonusRadio.IsChecked.Value)
+        {
             SetSelectedObject(NoteType.SnapBlueNoBonus);
+        }
         else if (bonusRadio.IsChecked.Value)
         {
             flairRadio.IsChecked = true;
             SetSelectedObject(NoteType.SnapBlueBonusFlair);
         }
         else if (flairRadio.IsChecked.Value)
+        {
             SetSelectedObject(NoteType.SnapBlueBonusFlair);
+        }
 
         currentGimmickType = GimmickType.NoGimmick;
     }
@@ -995,14 +1148,18 @@ public partial class MainView : UserControl, IPassSetting
     private void chainButton_Click(object sender, RoutedEventArgs e)
     {
         if (noBonusRadio.IsChecked.Value)
+        {
             SetSelectedObject(NoteType.Chain);
+        }
         else if (bonusRadio.IsChecked.Value)
         {
             flairRadio.IsChecked = true;
             SetSelectedObject(NoteType.ChainBonusFlair);
         }
         else if (flairRadio.IsChecked.Value)
+        {
             SetSelectedObject(NoteType.ChainBonusFlair);
+        }
 
         currentGimmickType = GimmickType.NoGimmick;
     }
@@ -1019,14 +1176,18 @@ public partial class MainView : UserControl, IPassSetting
             return;
 
         if (noBonusRadio.IsChecked.Value)
+        {
             SetSelectedObject(NoteType.HoldStartNoBonus);
+        }
         else if (bonusRadio.IsChecked.Value)
         {
             flairRadio.IsChecked = true;
             SetSelectedObject(NoteType.HoldStartBonusFlair);
         }
         else if (flairRadio.IsChecked.Value)
+        {
             SetSelectedObject(NoteType.HoldStartBonusFlair);
+        }
 
         currentGimmickType = GimmickType.NoGimmick;
     }
@@ -1066,8 +1227,6 @@ public partial class MainView : UserControl, IPassSetting
                     case BonusType.Flair:
                         SetSelectedObject(NoteType.TouchBonusFlair);
                         break;
-                    default:
-                        break;
                 }
 
                 break;
@@ -1084,8 +1243,6 @@ public partial class MainView : UserControl, IPassSetting
                         break;
                     case BonusType.Flair:
                         SetSelectedObject(NoteType.SnapRedBonusFlair);
-                        break;
-                    default:
                         break;
                 }
 
@@ -1104,8 +1261,6 @@ public partial class MainView : UserControl, IPassSetting
                     case BonusType.Flair:
                         SetSelectedObject(NoteType.SnapBlueBonusFlair);
                         break;
-                    default:
-                        break;
                 }
 
                 break;
@@ -1122,8 +1277,6 @@ public partial class MainView : UserControl, IPassSetting
                         break;
                     case BonusType.Flair:
                         SetSelectedObject(NoteType.SlideOrangeBonusFlair);
-                        break;
-                    default:
                         break;
                 }
 
@@ -1142,8 +1295,6 @@ public partial class MainView : UserControl, IPassSetting
                     case BonusType.Flair:
                         SetSelectedObject(NoteType.SlideGreenBonusFlair);
                         break;
-                    default:
-                        break;
                 }
 
                 break;
@@ -1160,8 +1311,6 @@ public partial class MainView : UserControl, IPassSetting
                         break;
                     case BonusType.Flair:
                         SetSelectedObject(NoteType.HoldStartBonusFlair);
-                        break;
-                    default:
                         break;
                 }
 
@@ -1190,12 +1339,8 @@ public partial class MainView : UserControl, IPassSetting
                     case BonusType.Flair:
                         SetSelectedObject(NoteType.ChainBonusFlair);
                         break;
-                    default:
-                        break;
                 }
 
-                break;
-            default:
                 break;
         }
     }
@@ -1209,9 +1354,9 @@ public partial class MainView : UserControl, IPassSetting
     {
         if (positionNumeric != null && positionTrackBar != null && positionNumeric.Value != null)
         {
-            positionNumericFloat = (float)positionNumeric.Value;
-            if ((int)positionTrackBar.Value != (int)positionNumeric.Value)
-                positionTrackBar.Value = (int)positionNumeric.Value;
+            positionNumericFloat = (float) positionNumeric.Value;
+            if ((int) positionTrackBar.Value != (int) positionNumeric.Value)
+                positionTrackBar.Value = (int) positionNumeric.Value;
         }
     }
 
@@ -1220,9 +1365,9 @@ public partial class MainView : UserControl, IPassSetting
         // TODO: tighten property check
         if (positionNumeric != null && positionTrackBar != null && positionNumeric.Value != null)
         {
-            if ((int)positionNumeric.Value != (int)positionTrackBar.Value)
-                positionNumeric.Value = (int)positionTrackBar.Value;
-            positionNumericFloat = (float)positionNumeric.Value;
+            if ((int) positionNumeric.Value != (int) positionTrackBar.Value)
+                positionNumeric.Value = (int) positionTrackBar.Value;
+            positionNumericFloat = (float) positionNumeric.Value;
         }
     }
 
@@ -1231,9 +1376,9 @@ public partial class MainView : UserControl, IPassSetting
         // TODO: tighten property check
         if (sizeNumeric != null && sizeTrackBar != null && sizeNumeric.Value != null)
         {
-            sizeNumericFloat = (float)sizeNumeric.Value;
-            if ((int)sizeTrackBar.Value != (int)sizeNumeric.Value)
-                sizeTrackBar.Value = (int)sizeNumeric.Value;
+            sizeNumericFloat = (float) sizeNumeric.Value;
+            if ((int) sizeTrackBar.Value != (int) sizeNumeric.Value)
+                sizeTrackBar.Value = (int) sizeNumeric.Value;
         }
     }
 
@@ -1242,9 +1387,9 @@ public partial class MainView : UserControl, IPassSetting
         // TODO: tighten property check
         if (sizeNumeric != null && sizeTrackBar != null && sizeNumeric.Value != null)
         {
-            if ((int)sizeNumeric.Value != (int)sizeTrackBar.Value)
-                sizeNumeric.Value = (int)sizeTrackBar.Value;
-            sizeNumericFloat = (float)sizeNumeric.Value;
+            if ((int) sizeNumeric.Value != (int) sizeTrackBar.Value)
+                sizeNumeric.Value = (int) sizeTrackBar.Value;
+            sizeNumericFloat = (float) sizeNumeric.Value;
         }
     }
 
@@ -1263,7 +1408,7 @@ public partial class MainView : UserControl, IPassSetting
 
         if (currentGimmickType == GimmickType.NoGimmick)
         {
-            Note tempNote = new Note()
+            var tempNote = new Note
             {
                 BeatInfo = currentBeat,
                 NoteType = currentNoteType,
@@ -1292,7 +1437,9 @@ public partial class MainView : UserControl, IPassSetting
                         holdButtonClicked();
                     }
                     else
+                    {
                         lastNote = tempNote;
+                    }
 
                     break;
                 case NoteType.MaskAdd:
@@ -1308,7 +1455,8 @@ public partial class MainView : UserControl, IPassSetting
                     if (endOfChartNote != null)
                     {
                         Dispatcher.UIThread.Post(
-                            async () => await ShowBlockingMessageBox("Error", "Cannot place more than one 'End of Chart' Note."));
+                            async () => await ShowBlockingMessageBox("Error",
+                                "Cannot place more than one 'End of Chart' Note."));
                         return;
                     }
 
@@ -1319,13 +1467,12 @@ public partial class MainView : UserControl, IPassSetting
                         if (finalNote != null && finalNote.BeatInfo.MeasureDecimal >= currentBeat.MeasureDecimal)
                         {
                             Dispatcher.UIThread.Post(
-                                async () => await ShowBlockingMessageBox("Error", "Cannot place 'End of Chart' Note before another note."));
+                                async () => await ShowBlockingMessageBox("Error",
+                                    "Cannot place 'End of Chart' Note before another note."));
                             return;
                         }
                     }
 
-                    break;
-                default:
                     break;
             }
 
@@ -1373,15 +1520,9 @@ public partial class MainView : UserControl, IPassSetting
         if (endHoldCheck == null || e.Property.Name != "IsChecked")
             return;
 
-        if (endHoldCheck.IsChecked.Value && currentNoteType == NoteType.HoldJoint)
-        {
-            SetSelectedObject(NoteType.HoldEnd);
-        }
+        if (endHoldCheck.IsChecked.Value && currentNoteType == NoteType.HoldJoint) SetSelectedObject(NoteType.HoldEnd);
 
-        if (!endHoldCheck.IsChecked.Value && currentNoteType == NoteType.HoldEnd)
-        {
-            SetSelectedObject(NoteType.HoldJoint);
-        }
+        if (!endHoldCheck.IsChecked.Value && currentNoteType == NoteType.HoldEnd) SetSelectedObject(NoteType.HoldJoint);
     }
 
     private void OnResize()
@@ -1406,23 +1547,17 @@ public partial class MainView : UserControl, IPassSetting
 
     private void AvaloniaObject_OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
     {
-        if (e.Property == BoundsProperty)
-        {
-            Dispatcher.UIThread.Post(() => OnResize());
-        }
+        if (e.Property == BoundsProperty) Dispatcher.UIThread.Post(() => OnResize());
     }
 
     private void CircleControl_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         var point = e.GetCurrentPoint(CircleControl);
-        if (point.Properties.PointerUpdateKind != PointerUpdateKind.LeftButtonPressed)
-        {
-            return;
-        }
+        if (point.Properties.PointerUpdateKind != PointerUpdateKind.LeftButtonPressed) return;
 
         // X and Y are relative to the upper left of the panel
-        var xCen = point.Position.X - (CircleControl.DesiredSize.Width / 2);
-        var yCen = -(point.Position.Y - (CircleControl.DesiredSize.Height / 2));
+        var xCen = point.Position.X - CircleControl.DesiredSize.Width / 2;
+        var yCen = -(point.Position.Y - CircleControl.DesiredSize.Height / 2);
         // Update the location of mouse click inside the circle
         skCircleView.UpdateMouseDown((float) xCen, (float) yCen, point.Position.ToSystemDrawing());
         positionNumeric.Value = skCircleView.mouseDownPos;
@@ -1433,9 +1568,7 @@ public partial class MainView : UserControl, IPassSetting
         var point = e.GetCurrentPoint(CircleControl);
         if (point.Properties.PointerUpdateKind != PointerUpdateKind.LeftButtonReleased ||
             skCircleView.mouseDownPos <= -1)
-        {
             return;
-        }
 
         var dist = Utils.GetDist(point.Position.ToSystemDrawing(), skCircleView.mouseDownPt);
         if (dist > 5.0f)
@@ -1447,19 +1580,16 @@ public partial class MainView : UserControl, IPassSetting
     {
         var point = e.GetCurrentPoint(CircleControl);
         // Mouse down position wasn't within the window or wasn't a left click, do nothing.
-        if (!point.Properties.IsLeftButtonPressed || skCircleView.mouseDownPos <= -1)
-        {
-            return;
-        }
+        if (!point.Properties.IsLeftButtonPressed || skCircleView.mouseDownPos <= -1) return;
 
-        int initialSize = (int)sizeNumeric.Value;
+        var initialSize = (int) sizeNumeric.Value;
 
         {
             // X and Y are relative to the upper left of the panel
-            var xCen = point.Position.X - (CircleControl.DesiredSize.Width / 2);
-            var yCen = -(point.Position.Y - (CircleControl.DesiredSize.Height / 2));
+            var xCen = point.Position.X - CircleControl.DesiredSize.Width / 2;
+            var yCen = -(point.Position.Y - CircleControl.DesiredSize.Height / 2);
             // Update the location of mouse click inside the circle.
-            int theta = skCircleView.UpdateMouseMove((float) xCen, (float) yCen);
+            var theta = skCircleView.UpdateMouseMove((float) xCen, (float) yCen);
             // Left click will alter the note width and possibly position depending on which direction we move
             if (theta == skCircleView.mouseDownPos)
             {
@@ -1470,7 +1600,7 @@ public partial class MainView : UserControl, IPassSetting
             {
                 positionNumeric.Value = skCircleView.mouseDownPos;
                 if (skCircleView.rolloverPos)
-                    initialSize = (int)Math.Min(theta + 60 - skCircleView.mouseDownPos + 1, 60);
+                    initialSize = Math.Min(theta + 60 - skCircleView.mouseDownPos + 1, 60);
                 else
                     initialSize = theta - skCircleView.mouseDownPos + 1;
             }
@@ -1478,7 +1608,7 @@ public partial class MainView : UserControl, IPassSetting
             {
                 positionNumeric.Value = theta;
                 if (skCircleView.rolloverNeg)
-                    initialSize = (int)Math.Min(skCircleView.mouseDownPos + 60 - theta + 1, 60);
+                    initialSize = Math.Min(skCircleView.mouseDownPos + 60 - theta + 1, 60);
                 else
                     initialSize = skCircleView.mouseDownPos - theta + 1;
             }
@@ -1516,29 +1646,38 @@ public partial class MainView : UserControl, IPassSetting
 
                 chartSettingsViewModel.SaveSettings = false;
                 chartSettingsViewModel.Dialog = null;
-                var initBpm = chart.Gimmicks.FirstOrDefault(x => x.Measure == 0.0f && x.GimmickType == GimmickType.BpmChange);
+                var initBpm =
+                    chart.Gimmicks.FirstOrDefault(x => x.Measure == 0.0f && x.GimmickType == GimmickType.BpmChange);
                 if (initBpm != null)
                     initBpm.BPM = chartSettingsViewModel.Bpm;
                 else
-                    chart.Gimmicks.Add(new Gimmick()
-                        {BPM = chartSettingsViewModel.Bpm, BeatInfo = new BeatInfo(0, 0), GimmickType = GimmickType.BpmChange});
+                    chart.Gimmicks.Add(new Gimmick
+                    {
+                        BPM = chartSettingsViewModel.Bpm, BeatInfo = new BeatInfo(0, 0),
+                        GimmickType = GimmickType.BpmChange
+                    });
 
                 var initTimSig =
-                    chart.Gimmicks.FirstOrDefault(x => x.Measure == 0.0f && x.GimmickType == GimmickType.TimeSignatureChange);
+                    chart.Gimmicks.FirstOrDefault(x =>
+                        x.Measure == 0.0f && x.GimmickType == GimmickType.TimeSignatureChange);
                 if (initTimSig != null)
                 {
                     initTimSig.TimeSig.Upper = chartSettingsViewModel.TimeSigUpper;
                     initTimSig.TimeSig.Lower = chartSettingsViewModel.TimeSigLower;
                 }
                 else
+                {
                     chart.Gimmicks.Add(
-                        new Gimmick()
+                        new Gimmick
                         {
-                            TimeSig = new TimeSignature()
-                                {Upper = chartSettingsViewModel.TimeSigUpper, Lower = chartSettingsViewModel.TimeSigLower},
+                            TimeSig = new TimeSignature
+                            {
+                                Upper = chartSettingsViewModel.TimeSigUpper, Lower = chartSettingsViewModel.TimeSigLower
+                            },
                             BeatInfo = new BeatInfo(0, 0),
                             GimmickType = GimmickType.TimeSignatureChange
                         });
+                }
 
                 chart.Offset = chartSettingsViewModel.Offset;
                 chart.MovieOffset = chartSettingsViewModel.MovieOffset;
@@ -1550,49 +1689,13 @@ public partial class MainView : UserControl, IPassSetting
             });
     }
 
-    public async Task SaveMenuItem_OnClick()
-    {
-        await SaveFile(isNewFile || isRecoveredFile);
-    }
-
-    public async Task SaveAsMenuItem_OnClick()
-    {
-        await SaveFile(true);
-    }
-
-    public async Task ExitMenuItem_OnClick()
-    {
-        if (!await PromptSave())
-            return;
-
-        if (tempStatusPath != "")
-            File.Delete(tempStatusPath);
-        if (tempFilePath != "")
-            File.Delete(tempFilePath);
-
-        // Update user settings.toml
-        try
-        {
-            if (File.Exists("settings.toml"))
-                File.WriteAllText("settings.toml", Toml.FromModel(userSettings));
-        }
-        catch (Exception ex)
-        {
-            await ShowBlockingMessageBox("Warning",
-                $"Settings failed to save: {ex}", MessageBoxType.Ok);
-        }
-
-        CanShutdown = true;
-        (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.Shutdown();
-    }
-
     private async Task<bool> SaveFile(bool prompt = true)
     {
         var result = prompt;
 
         if (prompt || saveFilename.Length < 1)
         {
-            var file = await GetStorageProvider().SaveFilePickerAsync(new FilePickerSaveOptions()
+            var file = await GetStorageProvider().SaveFilePickerAsync(new FilePickerSaveOptions
             {
                 DefaultExtension = "mer",
                 FileTypeChoices = new[]
@@ -1640,7 +1743,7 @@ public partial class MainView : UserControl, IPassSetting
 
 
     /// <summary>
-    /// Prompts for a save if the chart is not currently saved.
+    ///     Prompts for a save if the chart is not currently saved.
     /// </summary>
     /// <returns>TRUE if the calling method should continue, or FALSE if the calling method should return</returns>
     private async Task<bool> PromptSave()
@@ -1663,60 +1766,10 @@ public partial class MainView : UserControl, IPassSetting
         return true;
     }
 
-    public async Task NewMenuItem_OnClick()
-    {
-        if (!await PromptSave())
-            return;
-
-        chart = new();
-        isNewFile = true;
-        isRecoveredFile = false;
-        ResetChartTime();
-        DeleteAutosaves();
-        UpdateNoteLabels(-1);
-        UpdateGimmickLabels(-1);
-        SetText();
-        opManager.Clear();
-    }
-
-    public async Task OpenChartSettings_OnClick()
-    {
-        await ShowInitialSettings();
-    }
-
-    public async Task OpenMenuItem_OnClick()
-    {
-        if (!await PromptSave())
-            return;
-
-        var result = await GetStorageProvider().OpenFilePickerAsync(new FilePickerOpenOptions()
-        {
-            AllowMultiple = false,
-            FileTypeFilter = new List<FilePickerFileType>
-            {
-                new("MER files")
-                {
-                    Patterns = new[] {"*.mer"},
-                    AppleUniformTypeIdentifiers = new[] {"public.item"}
-                }
-            },
-        });
-        if (result.Count < 1)
-        {
-            // await ShowBlockingMessageBox("Error", "No file selected.");
-            return;
-        }
-
-        openChartFileReadStream = await result[0].OpenReadAsync();
-        openFilename = result[0].Path.LocalPath;
-        if (OpenFile() && !IsDesktop)
-            openChartFileWriteStream = await result[0].OpenWriteAsync();
-    }
-
     private void maskRatio_CheckChanged(object? sender, RoutedEventArgs e)
     {
         if (currentNoteType is NoteType.MaskAdd or NoteType.MaskRemove)
-            maskButton_Click(this, new());
+            maskButton_Click(this, new RoutedEventArgs());
     }
 
     private void maskButton_Click(object sender, RoutedEventArgs e)
@@ -1733,9 +1786,10 @@ public partial class MainView : UserControl, IPassSetting
         var window = new GimmickView();
         var vm = new GimmicksViewModel();
         window.DataContext = vm;
-        window.SetGimmick(new()
+        window.SetGimmick(new Gimmick
         {
-            BeatInfo = new BeatInfo((int)measureNumeric.Value, (int)beat1Numeric.Value * 1920 / (int)beat2Numeric.Value),
+            BeatInfo = new BeatInfo((int) measureNumeric.Value,
+                (int) beat1Numeric.Value * 1920 / (int) beat2Numeric.Value),
             GimmickType = GimmickType.BpmChange
         }, GimmicksViewModel.FormReason.New);
 
@@ -1764,9 +1818,10 @@ public partial class MainView : UserControl, IPassSetting
         var vm = new GimmicksViewModel();
         window.DataContext = vm;
         window.SetGimmick(
-            new Gimmick()
+            new Gimmick
             {
-                BeatInfo = new BeatInfo((int)measureNumeric.Value, (int)beat1Numeric.Value * 1920 / (int)beat2Numeric.Value),
+                BeatInfo = new BeatInfo((int) measureNumeric.Value,
+                    (int) beat1Numeric.Value * 1920 / (int) beat2Numeric.Value),
                 GimmickType = GimmickType.TimeSignatureChange
             }, GimmicksViewModel.FormReason.New);
         var dialog = new ContentDialog
@@ -1793,9 +1848,10 @@ public partial class MainView : UserControl, IPassSetting
         var vm = new GimmicksViewModel();
         window.DataContext = vm;
         window.SetGimmick(
-            new Gimmick()
+            new Gimmick
             {
-                BeatInfo = new BeatInfo((int)measureNumeric.Value, (int)beat1Numeric.Value * 1920 / (int)beat2Numeric.Value),
+                BeatInfo = new BeatInfo((int) measureNumeric.Value,
+                    (int) beat1Numeric.Value * 1920 / (int) beat2Numeric.Value),
                 GimmickType = GimmickType.HiSpeedChange
             }, GimmicksViewModel.FormReason.New);
         var dialog = new ContentDialog
@@ -1822,9 +1878,10 @@ public partial class MainView : UserControl, IPassSetting
         var vm = new GimmicksViewModel();
         window.DataContext = vm;
         window.SetGimmick(
-            new Gimmick()
+            new Gimmick
             {
-                BeatInfo = new BeatInfo((int)measureNumeric.Value, (int)beat1Numeric.Value * 1920 / (int)beat2Numeric.Value),
+                BeatInfo = new BeatInfo((int) measureNumeric.Value,
+                    (int) beat1Numeric.Value * 1920 / (int) beat2Numeric.Value),
                 GimmickType = GimmickType.StopStart
             }, GimmicksViewModel.FormReason.New);
         var dialog = new ContentDialog
@@ -1851,9 +1908,10 @@ public partial class MainView : UserControl, IPassSetting
         var vm = new GimmicksViewModel();
         window.DataContext = vm;
         window.SetGimmick(
-            new Gimmick()
+            new Gimmick
             {
-                BeatInfo = new BeatInfo((int)measureNumeric.Value, (int)beat1Numeric.Value * 1920 / (int)beat2Numeric.Value),
+                BeatInfo = new BeatInfo((int) measureNumeric.Value,
+                    (int) beat1Numeric.Value * 1920 / (int) beat2Numeric.Value),
                 GimmickType = GimmickType.ReverseStart
             }, GimmicksViewModel.FormReason.New);
         var dialog = new ContentDialog
@@ -1880,7 +1938,7 @@ public partial class MainView : UserControl, IPassSetting
         foreach (var gim in gimmicks)
         {
             chart.Gimmicks.Add(gim);
-            operations.Add(new Operations.InsertGimmick(chart, gim));
+            operations.Add(new InsertGimmick(chart, gim));
         }
 
         chart.IsSaved = false;
@@ -1918,7 +1976,7 @@ public partial class MainView : UserControl, IPassSetting
         if (chart.Notes.Count == 0 || selectedNoteIndex >= chart.Notes.Count)
             return;
 
-        float currentMeasure = skCircleView.CurrentMeasure;
+        var currentMeasure = skCircleView.CurrentMeasure;
         var note = chart.Notes.FirstOrDefault(x => x.BeatInfo.MeasureDecimal >= currentMeasure);
         if (note != null)
         {
@@ -1927,10 +1985,7 @@ public partial class MainView : UserControl, IPassSetting
         else
         {
             note = chart.Notes.FirstOrDefault(x => x.BeatInfo.MeasureDecimal <= currentMeasure);
-            if (note != null)
-            {
-                selectedNoteIndex = chart.Notes.IndexOf(note);
-            }
+            if (note != null) selectedNoteIndex = chart.Notes.IndexOf(note);
         }
 
         UpdateNoteLabels();
@@ -1945,7 +2000,7 @@ public partial class MainView : UserControl, IPassSetting
         if (currentNote.NoteType == NoteType.EndOfChart)
             return;
 
-        var newNote = new Note()
+        var newNote = new Note
         {
             BeatInfo = currentNote.BeatInfo,
             Position = (int) positionNumeric.Value.Value,
@@ -1960,120 +2015,33 @@ public partial class MainView : UserControl, IPassSetting
         if (selectedNoteIndex == -1)
             return;
 
-        int delIndex = selectedNoteIndex;
+        var delIndex = selectedNoteIndex;
         NoteOperation op = chart.Notes[selectedNoteIndex].IsHold
             ? new RemoveHoldNote(chart, chart.Notes[selectedNoteIndex])
-            : new RemoveNote(chart, chart.Notes[selectedNoteIndex]);            NoteOperation op2 = null;
-        if (chart.Notes[selectedNoteIndex].NoteType == NoteType.HoldStartBonusFlair || chart.Notes[selectedNoteIndex].NoteType == NoteType.HoldStartNoBonus)
-        {
-            if(chart.Notes[selectedNoteIndex].NextNote != null)
-            {
+            : new RemoveNote(chart, chart.Notes[selectedNoteIndex]);
+        NoteOperation op2 = null;
+        if (chart.Notes[selectedNoteIndex].NoteType == NoteType.HoldStartBonusFlair ||
+            chart.Notes[selectedNoteIndex].NoteType == NoteType.HoldStartNoBonus)
+            if (chart.Notes[selectedNoteIndex].NextNote != null)
                 if (chart.Notes[selectedNoteIndex].NextNote.NoteType == NoteType.HoldEnd)
-                {
                     op2 = new RemoveHoldNote(chart, chart.Notes[selectedNoteIndex].NextNote);
-                }
-            }
-        }
         if (chart.Notes[selectedNoteIndex].NoteType == NoteType.HoldEnd)
-        {
-            if(chart.Notes[selectedNoteIndex].PrevNote != null)
-            {
-                if (chart.Notes[selectedNoteIndex].PrevNote.NoteType == NoteType.HoldStartBonusFlair || chart.Notes[selectedNoteIndex].PrevNote.NoteType == NoteType.HoldStartNoBonus)
-                {
+            if (chart.Notes[selectedNoteIndex].PrevNote != null)
+                if (chart.Notes[selectedNoteIndex].PrevNote.NoteType == NoteType.HoldStartBonusFlair ||
+                    chart.Notes[selectedNoteIndex].PrevNote.NoteType == NoteType.HoldStartNoBonus)
                     op2 = new RemoveHoldNote(chart, chart.Notes[selectedNoteIndex].PrevNote);
-                }
-            }
-        }
         opManager.InvokeAndPush(op);
-        if (op2 != null)
-        {
-            opManager.InvokeAndPush(op2);
-        }
+        if (op2 != null) opManager.InvokeAndPush(op2);
         UpdateControlsFromOperation(op, OperationDirection.Redo);
-        if (selectedNoteIndex == delIndex)
-        {
-            UpdateNoteLabels(delIndex - 1);
-        }
-    }
-
-    public void UndoMenuItem_OnClick()
-    {
-        if (opManager.CanUndo)
-        {
-            var op = opManager.Undo();
-            if (op != null)
-            {
-                UpdateControlsFromOperation(op, OperationDirection.Undo);
-                //check for if it's a segment hold, if so treat them as 1 object by doing everything twice
-                if (op.GetType() == typeof(RemoveHoldNote))
-                {
-                    foreach (var note in chart.Notes)
-                    {
-                        if (note.IsHold && note.NextNote == null && note.PrevNote == null)
-                        {
-                            if (opManager.CanUndo)
-                            {
-                                var op2 = opManager.Undo();
-                                if (op2 != null)
-                                {
-                                    UpdateControlsFromOperation(op2, OperationDirection.Undo);
-                                    //check for the edge case of someone placing a hold start then deleting it
-                                    if (op2.GetType() == typeof(InsertHoldNote))
-                                    {
-                                        RedoMenuItem_OnClick();
-                                    }
-                                }
-                            }
-                            return;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    public void RedoMenuItem_OnClick()
-    {
-        if (opManager.CanRedo)
-        {
-            var op = opManager.Redo();
-            if (op != null)
-            {
-                UpdateControlsFromOperation(op, OperationDirection.Redo);
-                //check for if it's a segment hold, if so treat them as 1 object by doing everything twice
-                if (op.GetType() == typeof(RemoveHoldNote))
-                {
-                    foreach (var note in chart.Notes)
-                    {
-                        if (note.IsHold && note.NextNote == null && note.PrevNote == null)
-                        {
-                            if (opManager.CanRedo)
-                            {
-                                var op2 = opManager.Redo();
-                                if (op2 != null)
-                                {
-                                    UpdateControlsFromOperation(op2, OperationDirection.Redo);
-                                    //check for the edge case of someone placing a hold start then deleting it
-                                    if (op2.GetType() == typeof(InsertHoldNote))
-                                    {
-                                        UndoMenuItem_OnClick();
-                                    }
-                                }
-                            }
-                            return;
-                        }
-                    }
-                }
-            }
-        }
+        if (selectedNoteIndex == delIndex) UpdateNoteLabels(delIndex - 1);
     }
 
     private void UpdateControlsFromOperation(IOperation op, OperationDirection dir)
     {
         if (dir == OperationDirection.Undo)
         {
-            bool isInsertHold = op.GetType() == typeof(InsertHoldNote);
-            bool isRemoveHold = op.GetType() == typeof(RemoveHoldNote);
+            var isInsertHold = op.GetType() == typeof(InsertHoldNote);
+            var isRemoveHold = op.GetType() == typeof(RemoveHoldNote);
             var note = op.GetType().IsSubclassOf(typeof(NoteOperation)) ? (op as NoteOperation).Note : null;
             if (note != null)
             {
@@ -2086,20 +2054,15 @@ public partial class MainView : UserControl, IPassSetting
                     }
 
                     if (isRemoveHold)
-                    {
                         if (note.NextNote == null)
                         {
                             SetNonHoldButtonState(true);
                             SetSelectedObject(note.NoteType);
                         }
-                    }
                 }
                 else if (note.NoteType == NoteType.HoldJoint)
                 {
-                    if (isInsertHold)
-                    {
-                        lastNote = note.PrevNote;
-                    }
+                    if (isInsertHold) lastNote = note.PrevNote;
                 }
                 else if (note.NoteType == NoteType.HoldEnd)
                 {
@@ -2116,8 +2079,8 @@ public partial class MainView : UserControl, IPassSetting
         }
         else
         {
-            bool isInsertHold = op.GetType() == typeof(InsertHoldNote);
-            bool isRemoveHold = op.GetType() == typeof(RemoveHoldNote);
+            var isInsertHold = op.GetType() == typeof(InsertHoldNote);
+            var isRemoveHold = op.GetType() == typeof(RemoveHoldNote);
             var note = op.GetType().IsSubclassOf(typeof(NoteOperation)) ? (op as NoteOperation).Note : null;
             if (note != null)
             {
@@ -2137,10 +2100,7 @@ public partial class MainView : UserControl, IPassSetting
                 }
                 else if (note.NoteType == NoteType.HoldJoint)
                 {
-                    if (isInsertHold)
-                    {
-                        lastNote = note;
-                    }
+                    if (isInsertHold) lastNote = note;
                 }
                 else if (note.NoteType == NoteType.HoldEnd)
                 {
@@ -2195,7 +2155,9 @@ public partial class MainView : UserControl, IPassSetting
         Gimmick? gim2 = null;
         if (gimmick.Measure == 0 && (gimmick.GimmickType == GimmickType.BpmChange ||
                                      gimmick.GimmickType == GimmickType.TimeSignatureChange))
+        {
             Dispatcher.UIThread.Post(async () => await ShowInitialSettings(), DispatcherPriority.Background);
+        }
         else
         {
             switch (gimmick.GimmickType)
@@ -2225,8 +2187,6 @@ public partial class MainView : UserControl, IPassSetting
                 case GimmickType.StopEnd:
                     gim1 = chart.Gimmicks.LastOrDefault(x =>
                         x.Measure < gimmick.Measure && x.GimmickType == GimmickType.StopStart);
-                    break;
-                default:
                     break;
             }
 
@@ -2280,8 +2240,6 @@ public partial class MainView : UserControl, IPassSetting
                             opList.Add(new EditGimmick(gim1, vm.OutGimmicks[0], chart));
                             opList.Add(new EditGimmick(gimmick, vm.OutGimmicks[1], chart));
                             break;
-                        default:
-                            break;
                     }
 
                     opManager.InvokeAndPush(new CompositeOperation(opList[0].Description, opList));
@@ -2295,7 +2253,7 @@ public partial class MainView : UserControl, IPassSetting
         if (selectedGimmickIndex == -1)
             return;
 
-        float measure = chart.Gimmicks[selectedGimmickIndex].Measure;
+        var measure = chart.Gimmicks[selectedGimmickIndex].Measure;
         var type = chart.Gimmicks[selectedGimmickIndex].GimmickType;
         var gimmicks = new List<Gimmick>();
         gimmicks.Add(chart.Gimmicks[selectedGimmickIndex]);
@@ -2324,8 +2282,6 @@ public partial class MainView : UserControl, IPassSetting
             case GimmickType.StopEnd:
                 gimmicks.Add(chart.Gimmicks.Last(x => x.Measure < measure && x.GimmickType == GimmickType.StopStart));
                 break;
-            default:
-                break;
         }
 
         var ops = new List<RemoveGimmick>();
@@ -2337,14 +2293,17 @@ public partial class MainView : UserControl, IPassSetting
         UpdateGimmickLabels();
     }
 
-    private async Task<ContentDialogResult> ShowBlockingMessageBox(string title, string text, MessageBoxType type = MessageBoxType.Ok)
+    private async Task<ContentDialogResult> ShowBlockingMessageBox(string title, string text,
+        MessageBoxType type = MessageBoxType.Ok)
     {
         string? primaryText = null;
         string? secondaryText = null;
         string? closeText = null;
 
         if (type == MessageBoxType.Ok)
+        {
             closeText = "OK";
+        }
         else if (type == MessageBoxType.YesNo)
         {
             primaryText = "Yes";
@@ -2400,7 +2359,8 @@ public partial class MainView : UserControl, IPassSetting
             if (!chart.HasInitEvents)
             {
                 Dispatcher.UIThread.Post(
-                    async () => await ShowBlockingMessageBox("Warning!", "Set Initial Chart Settings (from Chart Menu)."));
+                    async () => await ShowBlockingMessageBox("Warning!",
+                        "Set Initial Chart Settings (from Chart Menu)."));
                 return;
             }
 
@@ -2408,13 +2368,9 @@ public partial class MainView : UserControl, IPassSetting
             currentSong.PlayPosition = (uint) songTrackBar.Value;
             currentSong.Paused = !currentSong.Paused;
             if (currentSong.Paused)
-            {
                 OnPauseSong();
-            }
             else
-            {
                 OnPlaySong();
-            }
 
             // AV(fps): Round down so we can properly see newly added notes after pausing
             measureNumeric.Value = (int) measureNumeric.Value!;
@@ -2432,12 +2388,13 @@ public partial class MainView : UserControl, IPassSetting
             currentSong.Volume = (float) trackBarVolume.Value / (float) trackBarVolume.Maximum;
 
         // just in case, we'll set the hitsound volume too
-        hitsoundChannel?.SetVolume(Math.Clamp((float) trackBarHitsoundVolume.Value / (float) trackBarHitsoundVolume.Maximum, 0.0f, 1.0f));
+        hitsoundChannel?.SetVolume(
+            Math.Clamp((float) trackBarHitsoundVolume.Value / (float) trackBarHitsoundVolume.Maximum, 0.0f, 1.0f));
     }
 
     private async Task ShowOpenSongDialog()
     {
-        var result = await GetStorageProvider().OpenFilePickerAsync(new FilePickerOpenOptions()
+        var result = await GetStorageProvider().OpenFilePickerAsync(new FilePickerOpenOptions
         {
             AllowMultiple = false,
             FileTypeFilter = new List<FilePickerFileType>
@@ -2471,7 +2428,7 @@ public partial class MainView : UserControl, IPassSetting
                     Patterns = new[] {"*.*"},
                     AppleUniformTypeIdentifiers = new[] {"public.item", "public.audio"}
                 }
-            },
+            }
         });
 
         if (result.Count < 1)
@@ -2480,10 +2437,7 @@ public partial class MainView : UserControl, IPassSetting
         songFilePath = result[0].Path.LocalPath;
         songFileLabel.Text = Path.GetFileName(songFilePath);
 
-        if (currentSong != null)
-        {
-            currentSong.Paused = true;
-        }
+        if (currentSong != null) currentSong.Paused = true;
 
         try
         {
@@ -2517,7 +2471,7 @@ public partial class MainView : UserControl, IPassSetting
 
     private void SelectSongButton_OnClick(object? sender, RoutedEventArgs e)
     {
-        Dispatcher.UIThread.Post( async () => await ShowOpenSongDialog(), DispatcherPriority.Background);
+        Dispatcher.UIThread.Post(async () => await ShowOpenSongDialog(), DispatcherPriority.Background);
     }
 
     private void SongTrackBar_OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
@@ -2538,7 +2492,7 @@ public partial class MainView : UserControl, IPassSetting
                 valueTriggerEvent = EventSource.TrackBar;
                 if (info.Measure < 0) measureNumeric.Value = 0;
                 else measureNumeric.Value = info.Measure;
-                beat1Numeric.Value = (int) ((float) info.Beat / 1920.0f * (float) beat2Numeric.Value);
+                beat1Numeric.Value = (int) (info.Beat / 1920.0f * (float) beat2Numeric.Value);
             }
 
             skCircleView.CurrentMeasure = info.MeasureDecimal;
@@ -2552,7 +2506,7 @@ public partial class MainView : UserControl, IPassSetting
     {
         if (trackBarVolume == null)
             return;
-        userSettings.ViewSettings.Volume = (int)trackBarVolume.Value;
+        userSettings.ViewSettings.Volume = (int) trackBarVolume.Value;
         if (currentSong != null && e.Property.Name == "Value")
             UpdateSongVolume();
     }
@@ -2598,7 +2552,7 @@ public partial class MainView : UserControl, IPassSetting
                 e.Handled = true;
                 return;
             default:
-                var key = (int)e.Key;
+                var key = (int) e.Key;
                 if (key == userSettings.HotkeySettings.TouchHotkey)
                 {
                     if (tapButton.IsEnabled)
@@ -2659,6 +2613,7 @@ public partial class MainView : UserControl, IPassSetting
                 {
                     base.OnKeyDown(e);
                 }
+
                 return;
         }
     }
@@ -2667,19 +2622,12 @@ public partial class MainView : UserControl, IPassSetting
     {
         var val = (int) trackBarVolume.LargeChange;
         /* Bounds check. */
-        if (increase && (trackBarVolume.Value + val > trackBarVolume.Maximum))
-        {
+        if (increase && trackBarVolume.Value + val > trackBarVolume.Maximum)
             val = (int) (trackBarVolume.Maximum - trackBarVolume.Value);
-        }
-        else if (!increase && (trackBarVolume.Value - val < trackBarVolume.Minimum))
-        {
+        else if (!increase && trackBarVolume.Value - val < trackBarVolume.Minimum)
             val = (int) (trackBarVolume.Value - trackBarVolume.Minimum);
-        }
 
-        if (!increase)
-        {
-            val *= -1;
-        }
+        if (!increase) val *= -1;
 
         /*
          * Updating the trackbar volume will call the trackBarVolume_Changed
@@ -2687,45 +2635,6 @@ public partial class MainView : UserControl, IPassSetting
          */
         trackBarVolume.Value += val;
         trackBarVolume.Focus();
-    }
-
-    public void SetShowCursor(bool value)
-    {
-        userSettings.ViewSettings.ShowCursor = value;
-    }
-
-    public void SetShowCursorDuringPlayback(bool value)
-    {
-        userSettings.ViewSettings.ShowCursorDuringPlayback = value;
-    }
-
-    public void SetHighlightViewedNote(bool value)
-    {
-        userSettings.ViewSettings.HighlightViewedNote = value;
-    }
-
-    public void SetSelectLastInsertedNote(bool value)
-    {
-        userSettings.ViewSettings.SelectLastInsertedNote = value;
-    }
-
-    public void SetShowGimmicksInCircleView(bool value)
-    {
-        userSettings.ViewSettings.ShowGimmicks = value;
-    }
-
-    public void SetShowGimmicksDuringPlaybackInCircleView(bool value)
-    {
-        userSettings.ViewSettings.ShowGimmicksDuringPlayback = value;
-    }
-
-    public void SetDarkMode(bool value)
-    {
-        userSettings.ViewSettings.DarkMode = value;
-        if (Application.Current != null)
-            Application.Current.RequestedThemeVariant = value ? ThemeVariant.Dark : ThemeVariant.Light;
-        BackColor = SKColor.Parse(value ? "#ff444444" : "#FFF3F3F3");
-        ResetBackColor = true;
     }
 
     private void Window_OnClosing(object? sender, CancelEventArgs e)
@@ -2740,7 +2649,7 @@ public partial class MainView : UserControl, IPassSetting
         if (chart.Gimmicks.Count == 0)
             return;
 
-        float currentMeasure = skCircleView.CurrentMeasure;
+        var currentMeasure = skCircleView.CurrentMeasure;
         var gimmick = chart.Gimmicks.FirstOrDefault(x => x.BeatInfo.MeasureDecimal >= currentMeasure);
         if (gimmick != null)
         {
@@ -2749,11 +2658,9 @@ public partial class MainView : UserControl, IPassSetting
         else
         {
             gimmick = chart.Gimmicks.FirstOrDefault(x => x.BeatInfo.MeasureDecimal <= currentMeasure);
-            if (gimmick != null)
-            {
-                selectedGimmickIndex = chart.Gimmicks.IndexOf(gimmick);
-            }
+            if (gimmick != null) selectedGimmickIndex = chart.Gimmicks.IndexOf(gimmick);
         }
+
         UpdateGimmickLabels();
     }
 
@@ -2761,7 +2668,7 @@ public partial class MainView : UserControl, IPassSetting
     {
         if (trackBarHitsoundVolume == null || hitsoundChannel == null || e.Property.Name != "Value")
             return;
-        userSettings.SoundSettings.HitsoundVolume = (int)trackBarHitsoundVolume.Value;
+        userSettings.SoundSettings.HitsoundVolume = (int) trackBarHitsoundVolume.Value;
         var volume = (float) trackBarHitsoundVolume.Value / (float) trackBarHitsoundVolume.Maximum;
         hitsoundChannel?.SetVolume(Math.Clamp(volume, 0.0f, 1.0f));
     }
@@ -2780,11 +2687,9 @@ public partial class MainView : UserControl, IPassSetting
         else
         {
             note = chart.Notes.LastOrDefault(x => x.BeatInfo.Measure > last);
-            if (note != null)
-            {
-                selectedNoteIndex = chart.Notes.IndexOf(note);
-            }
+            if (note != null) selectedNoteIndex = chart.Notes.IndexOf(note);
         }
+
         UpdateNoteLabels();
     }
 
@@ -2802,16 +2707,20 @@ public partial class MainView : UserControl, IPassSetting
         else
         {
             note = chart.Notes.FirstOrDefault(x => x.BeatInfo.Measure < last);
-            if (note != null)
-            {
-                selectedNoteIndex = chart.Notes.IndexOf(note);
-            }
+            if (note != null) selectedNoteIndex = chart.Notes.IndexOf(note);
         }
+
         UpdateNoteLabels();
     }
 
-    public void SetShowMeasureButtons(bool value)
+    // Control updates
+    private enum EventSource
     {
-        userSettings.ViewSettings.ShowMeasureButtons = value;
+        None,
+        MouseWheel,
+        SongPlaying,
+        TrackBar,
+        ManualMeasureSet,
+        UpdateTick
     }
 }

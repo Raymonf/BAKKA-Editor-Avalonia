@@ -4,311 +4,311 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace BAKKA_Editor
+namespace BAKKA_Editor;
+
+internal class Chart
 {
-    internal class Chart
+    private static readonly CultureInfo _defaultParsingCulture = CultureInfo.InvariantCulture;
+
+    public Chart()
     {
-        private static readonly CultureInfo _defaultParsingCulture = CultureInfo.InvariantCulture;
-        public List<Note> Notes { get; set; }
-        public List<Gimmick> Gimmicks { get; set; }
-        /// <summary>
-        /// Offset in seconds.
-        /// </summary>
-        public double Offset { get; set; }
-        /// <summary>
-        /// Movie offset in seconds
-        /// </summary>
-        public double MovieOffset { get; set; }
-        string SongFileName { get; set; }
-        List<Gimmick> TimeEvents { get; set; }
-        public bool HasInitEvents
+        Notes = new List<Note>();
+        Gimmicks = new List<Gimmick>();
+        Offset = 0;
+        MovieOffset = 0;
+        SongFileName = "";
+        IsSaved = true;
+    }
+
+    public List<Note> Notes { get; set; }
+    public List<Gimmick> Gimmicks { get; set; }
+
+    /// <summary>
+    ///     Offset in seconds.
+    /// </summary>
+    public double Offset { get; set; }
+
+    /// <summary>
+    ///     Movie offset in seconds
+    /// </summary>
+    public double MovieOffset { get; set; }
+
+    private string SongFileName { get; set; }
+    private List<Gimmick> TimeEvents { get; set; }
+
+    public bool HasInitEvents
+    {
+        get
         {
-            get
-            {
-                return TimeEvents != null &&
-                    TimeEvents.Count > 0 &&
-                    Gimmicks.Any(x => x.Measure == 0 && x.GimmickType == GimmickType.BpmChange) &&
-                    Gimmicks.Any(x => x.Measure == 0 && x.GimmickType == GimmickType.TimeSignatureChange);
-            }
+            return TimeEvents != null &&
+                   TimeEvents.Count > 0 &&
+                   Gimmicks.Any(x => x.Measure == 0 && x.GimmickType == GimmickType.BpmChange) &&
+                   Gimmicks.Any(x => x.Measure == 0 && x.GimmickType == GimmickType.TimeSignatureChange);
         }
-        public bool IsSaved { get; set; }
+    }
 
-        public Chart()
+    public bool IsSaved { get; set; }
+
+    public bool ParseFile(Stream stream)
+    {
+        var file = PlatformUtils.ReadAllStreamLines(stream);
+
+        if (file.Count < 1) return false;
+
+        var index = 0;
+
+        do
         {
-            Notes = new();
-            Gimmicks = new();
-            Offset = 0;
-            MovieOffset = 0;
-            SongFileName = "";
-            IsSaved = true;
-        }
+            var line = file[index];
 
-        public bool ParseFile(Stream stream)
-        {
-            var file = PlatformUtils.ReadAllStreamLines(stream);
+            var path = Utils.GetTag(line, "#MUSIC_FILE_PATH ");
+            if (path != null)
+                SongFileName = path;
 
-            if (file.Count < 1)
+            var offset = Utils.GetTag(line, "#OFFSET");
+            if (offset != null)
+                Offset = Convert.ToDouble(offset, _defaultParsingCulture);
+
+            offset = Utils.GetTag(line, "#MOVIEOFFSET");
+            if (offset != null)
+                MovieOffset = Convert.ToDouble(offset, _defaultParsingCulture);
+
+            if (line.Contains("#BODY"))
             {
-                return false;
+                index++;
+                break;
             }
+        } while (++index < file.Count);
 
-            int index = 0;
+        int lineNum;
+        Gimmick gimmickTemp;
+        Note noteTemp;
+        Dictionary<int, Note> notesByLine = new();
+        Dictionary<int, int> refByLine = new();
+        for (var i = index; i < file.Count; i++)
+        {
+            if (string.IsNullOrWhiteSpace(file[i]))
+                continue;
 
-            do
+            var parsed = file[i].Split(new[] {" "},
+                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            NoteBase temp = new();
+            temp.BeatInfo = new BeatInfo(Convert.ToInt32(parsed[0], _defaultParsingCulture),
+                Convert.ToInt32(parsed[1], _defaultParsingCulture));
+            temp.GimmickType = (GimmickType) Convert.ToInt32(parsed[2], _defaultParsingCulture);
+
+            switch (temp.GimmickType)
             {
-                var line = file[index];
-
-                var path = Utils.GetTag(line, "#MUSIC_FILE_PATH ");
-                if (path != null)
-                    SongFileName = path;
-
-                var offset = Utils.GetTag(line, "#OFFSET");
-                if (offset != null)
-                    Offset = Convert.ToDouble(offset, _defaultParsingCulture);
-
-                offset = Utils.GetTag(line, "#MOVIEOFFSET");
-                if (offset != null)
-                    MovieOffset = Convert.ToDouble(offset, _defaultParsingCulture);
-
-                if (line.Contains("#BODY"))
-                {
-                    index++;
+                case GimmickType.NoGimmick:
+                    noteTemp = new Note(temp.BeatInfo);
+                    noteTemp.NoteType = (NoteType) Convert.ToInt32(parsed[3], _defaultParsingCulture);
+                    lineNum = Convert.ToInt32(parsed[4], _defaultParsingCulture);
+                    noteTemp.Position = Convert.ToInt32(parsed[5], _defaultParsingCulture);
+                    noteTemp.Size = Convert.ToInt32(parsed[6], _defaultParsingCulture);
+                    noteTemp.HoldChange = Convert.ToBoolean(Convert.ToInt32(parsed[7], _defaultParsingCulture));
+                    if (noteTemp.NoteType == NoteType.MaskAdd || noteTemp.NoteType == NoteType.MaskRemove)
+                        noteTemp.MaskFill = (MaskType) Convert.ToInt32(parsed[8], _defaultParsingCulture);
+                    else if (noteTemp.NoteType == NoteType.HoldStartNoBonus ||
+                             noteTemp.NoteType == NoteType.HoldJoint ||
+                             noteTemp.NoteType == NoteType.HoldStartBonusFlair)
+                        refByLine[lineNum] = Convert.ToInt32(parsed[8], _defaultParsingCulture);
+                    Notes.Add(noteTemp);
+                    notesByLine[lineNum] = Notes.Last();
                     break;
-                }
+                case GimmickType.BpmChange:
+                    gimmickTemp = new Gimmick(temp.BeatInfo, temp.GimmickType);
+                    gimmickTemp.BPM = Convert.ToDouble(parsed[3], _defaultParsingCulture);
+                    Gimmicks.Add(gimmickTemp);
+                    break;
+                case GimmickType.TimeSignatureChange:
+                    gimmickTemp = new Gimmick(temp.BeatInfo, temp.GimmickType);
+                    gimmickTemp.TimeSig = new TimeSignature
+                    {
+                        Upper = Convert.ToInt32(parsed[3], _defaultParsingCulture),
+                        Lower = parsed.Length == 5 ? Convert.ToInt32(parsed[4], _defaultParsingCulture) : 4
+                    };
+                    Gimmicks.Add(gimmickTemp);
+                    break;
+                case GimmickType.HiSpeedChange:
+                    gimmickTemp = new Gimmick(temp.BeatInfo, temp.GimmickType);
+                    gimmickTemp.HiSpeed = Convert.ToDouble(parsed[3], _defaultParsingCulture);
+                    Gimmicks.Add(gimmickTemp);
+                    break;
+                case GimmickType.ReverseStart:
+                case GimmickType.ReverseMiddle:
+                case GimmickType.ReverseEnd:
+                case GimmickType.StopStart:
+                case GimmickType.StopEnd:
+                default:
+                    Gimmicks.Add(new Gimmick(temp.BeatInfo, temp.GimmickType));
+                    break;
+            }
+        }
 
-            } while (++index < file.Count);
-
-            int lineNum;
-            Gimmick gimmickTemp;
-            Note noteTemp;
-            Dictionary<int, Note> notesByLine = new();
-            Dictionary<int, int> refByLine = new();
-            for (int i = index; i < file.Count; i++)
+        // Generate hold references
+        for (var i = 0; i < Notes.Count; i++)
+            if (refByLine.ContainsKey(i))
             {
-                if (string.IsNullOrWhiteSpace(file[i]))
-                    continue;
-                
-                var parsed = file[i].Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                NoteBase temp = new();
-                temp.BeatInfo = new BeatInfo(Convert.ToInt32(parsed[0], _defaultParsingCulture), Convert.ToInt32(parsed[1], _defaultParsingCulture));
-                temp.GimmickType = (GimmickType)Convert.ToInt32(parsed[2], _defaultParsingCulture);
+                if (!notesByLine.ContainsKey(refByLine[i]))
+                    throw new Exception(
+                        $"Broken hold found: {refByLine[i]} was not found in notesByLine (max indices = {notesByLine.Count - 1})");
 
-                switch (temp.GimmickType)
+                Notes[i].NextNote = notesByLine[refByLine[i]];
+                Notes[i].NextNote.PrevNote = Notes[i];
+            }
+
+        RecalcTime();
+
+        IsSaved = true;
+        return true;
+    }
+
+    public bool WriteFile(string path, bool setSave = true)
+    {
+        return WriteFile(File.OpenWrite(path), setSave);
+    }
+
+    public bool WriteFile(Stream stream, bool setSave = true)
+    {
+        stream.SetLength(0);
+        using (var sw = new StreamWriter(stream, new UTF8Encoding(false)))
+        {
+            // LF line ending
+            sw.NewLine = "\n";
+
+            sw.WriteLine("#MUSIC_SCORE_ID 0");
+            sw.WriteLine("#MUSIC_SCORE_VERSION 0");
+            sw.WriteLine("#GAME_VERSION ");
+            sw.WriteLine($"#MUSIC_FILE_PATH {SongFileName}");
+            sw.WriteLine($"#OFFSET {Offset:F6}");
+            sw.WriteLine($"#MOVIEOFFSET {MovieOffset:F6}");
+            sw.WriteLine("#BODY");
+
+            foreach (var gimmick in Gimmicks)
+            {
+                sw.Write(
+                    $"{gimmick.BeatInfo.Measure,4:F0}{gimmick.BeatInfo.Beat,5:F0}{(int) gimmick.GimmickType,5:F0}");
+                switch (gimmick.GimmickType)
                 {
-                    case GimmickType.NoGimmick:
-                        noteTemp = new Note(temp.BeatInfo);
-                        noteTemp.NoteType = (NoteType)Convert.ToInt32(parsed[3], _defaultParsingCulture);
-                        lineNum = Convert.ToInt32(parsed[4], _defaultParsingCulture);
-                        noteTemp.Position = Convert.ToInt32(parsed[5], _defaultParsingCulture);
-                        noteTemp.Size = Convert.ToInt32(parsed[6], _defaultParsingCulture);
-                        noteTemp.HoldChange = Convert.ToBoolean(Convert.ToInt32(parsed[7], _defaultParsingCulture));
-                        if (noteTemp.NoteType == NoteType.MaskAdd || noteTemp.NoteType == NoteType.MaskRemove)
-                        {
-                            noteTemp.MaskFill = (MaskType)Convert.ToInt32(parsed[8], _defaultParsingCulture);
-                        }
-                        else if (noteTemp.NoteType == NoteType.HoldStartNoBonus ||
-                            noteTemp.NoteType == NoteType.HoldJoint ||
-                            noteTemp.NoteType == NoteType.HoldStartBonusFlair)
-                        {
-                            refByLine[lineNum] = Convert.ToInt32(parsed[8], _defaultParsingCulture);
-                        }
-                        Notes.Add(noteTemp);
-                        notesByLine[lineNum] = Notes.Last();
-                        break;
                     case GimmickType.BpmChange:
-                        gimmickTemp = new Gimmick(temp.BeatInfo, temp.GimmickType);
-                        gimmickTemp.BPM = Convert.ToDouble(parsed[3], _defaultParsingCulture);
-                        Gimmicks.Add(gimmickTemp);
+                        sw.WriteLine($" {gimmick.BPM:F6}");
                         break;
                     case GimmickType.TimeSignatureChange:
-                        gimmickTemp = new Gimmick(temp.BeatInfo, temp.GimmickType);
-                        gimmickTemp.TimeSig = new TimeSignature() { Upper = Convert.ToInt32(parsed[3], _defaultParsingCulture), Lower = parsed.Length == 5 ? Convert.ToInt32(parsed[4], _defaultParsingCulture) : 4 };
-                        Gimmicks.Add(gimmickTemp);
+                        sw.WriteLine($"{gimmick.TimeSig.Upper,5:F0}{gimmick.TimeSig.Lower,5:F0}");
                         break;
                     case GimmickType.HiSpeedChange:
-                        gimmickTemp = new Gimmick(temp.BeatInfo, temp.GimmickType);
-                        gimmickTemp.HiSpeed = Convert.ToDouble(parsed[3], _defaultParsingCulture);
-                        Gimmicks.Add(gimmickTemp);
+                        sw.WriteLine($" {gimmick.HiSpeed:F6}");
                         break;
-                    case GimmickType.ReverseStart:
-                    case GimmickType.ReverseMiddle:
-                    case GimmickType.ReverseEnd:
-                    case GimmickType.StopStart:
-                    case GimmickType.StopEnd:
                     default:
-                        Gimmicks.Add(new Gimmick(temp.BeatInfo, temp.GimmickType));
+                        sw.WriteLine("");
                         break;
                 }
-
             }
 
-            // Generate hold references
-            for (int i = 0; i < Notes.Count; i++)
+            foreach (var note in Notes)
             {
-                if (refByLine.ContainsKey(i))
-                {
-                    if (!notesByLine.ContainsKey(refByLine[i]))
-                        throw new Exception($"Broken hold found: {refByLine[i]} was not found in notesByLine (max indices = {notesByLine.Count - 1})");
-                    
-                    Notes[i].NextNote = notesByLine[refByLine[i]];
-                    Notes[i].NextNote.PrevNote = Notes[i];
-                }
+                sw.Write(
+                    $"{note.BeatInfo.Measure,4:F0}{note.BeatInfo.Beat,5:F0}{(int) note.GimmickType,5:F0}{(int) note.NoteType,5:F0}");
+                sw.Write(
+                    $"{Notes.IndexOf(note),5:F0}{note.Position,5:F0}{note.Size,5:F0}{Convert.ToInt32(note.HoldChange, _defaultParsingCulture),5:F0}");
+                if (note.IsMask)
+                    sw.Write($"{(int) note.MaskFill,5:F0}");
+                if (note.NextNote != null)
+                    sw.Write($"{Notes.IndexOf(note.NextNote),5:F0}");
+                sw.WriteLine("");
             }
-
-            RecalcTime();
-
-            IsSaved = true;
-            return true;
         }
 
-        public bool WriteFile(string path, bool setSave = true)
-        {
-            return WriteFile(File.OpenWrite(path), setSave);
-        }
+        IsSaved = setSave;
+        return true;
+    }
 
-        public bool WriteFile(Stream stream, bool setSave = true)
+    public void RecalcTime()
+    {
+        Gimmicks = Gimmicks.OrderBy(x => x.Measure).ToList();
+        var timeSig =
+            Gimmicks.FirstOrDefault(x => x.GimmickType == GimmickType.TimeSignatureChange && x.Measure == 0.0f);
+        var bpm = Gimmicks.FirstOrDefault(x => x.GimmickType == GimmickType.BpmChange && x.Measure == 0.0f);
+        if (timeSig == null || bpm == null)
+            return; // Cannot calculate times without either starting value
+
+        TimeEvents = new List<Gimmick>();
+        for (var i = 0; i < Gimmicks.Count; i++)
         {
-            stream.SetLength(0);
-            using (StreamWriter sw = new StreamWriter(stream, new UTF8Encoding(false)))
+            var evt = TimeEvents.FirstOrDefault(x => x.BeatInfo.MeasureDecimal == Gimmicks[i].BeatInfo.MeasureDecimal);
+
+            if (Gimmicks[i].GimmickType == GimmickType.BpmChange)
             {
-                // LF line ending
-                sw.NewLine = "\n";
-
-                sw.WriteLine("#MUSIC_SCORE_ID 0");
-                sw.WriteLine("#MUSIC_SCORE_VERSION 0");
-                sw.WriteLine("#GAME_VERSION ");
-                sw.WriteLine($"#MUSIC_FILE_PATH {SongFileName}");
-                sw.WriteLine($"#OFFSET {Offset:F6}");
-                sw.WriteLine($"#MOVIEOFFSET {MovieOffset:F6}");
-                sw.WriteLine("#BODY");
-
-                foreach (var gimmick in Gimmicks)
-                {
-                    sw.Write($"{gimmick.BeatInfo.Measure,4:F0}{gimmick.BeatInfo.Beat,5:F0}{((int)gimmick.GimmickType),5:F0}");
-                    switch (gimmick.GimmickType)
+                if (evt == null)
+                    TimeEvents.Add(new Gimmick
                     {
-                        case GimmickType.BpmChange:
-                            sw.WriteLine($" {gimmick.BPM:F6}");
-                            break;
-                        case GimmickType.TimeSignatureChange:
-                            sw.WriteLine($"{gimmick.TimeSig.Upper,5:F0}{gimmick.TimeSig.Lower,5:F0}");
-                            break;
-                        case GimmickType.HiSpeedChange:
-                            sw.WriteLine($" {gimmick.HiSpeed:F6}");
-                            break;
-                        default:
-                            sw.WriteLine("");
-                            break;
-                    }
-                }
-
-                foreach (var note in Notes)
-                {
-                    sw.Write($"{note.BeatInfo.Measure,4:F0}{note.BeatInfo.Beat,5:F0}{((int)note.GimmickType),5:F0}{(int)note.NoteType,5:F0}");
-                    sw.Write($"{Notes.IndexOf(note),5:F0}{note.Position,5:F0}{note.Size,5:F0}{Convert.ToInt32(note.HoldChange, _defaultParsingCulture),5:F0}");
-                    if (note.IsMask)
-                        sw.Write($"{(int)note.MaskFill,5:F0}");
-                    if (note.NextNote != null)
-                        sw.Write($"{Notes.IndexOf(note.NextNote),5:F0}");
-                    sw.WriteLine("");
-                }
+                        BeatInfo = new BeatInfo(Gimmicks[i].BeatInfo),
+                        BPM = Gimmicks[i].BPM,
+                        TimeSig = new TimeSignature(timeSig.TimeSig)
+                    });
+                else
+                    evt.BPM = Gimmicks[i].BPM;
+                bpm = Gimmicks[i];
             }
 
-            IsSaved = setSave;
-            return true;
-        }
-
-        public void RecalcTime()
-        {
-            Gimmicks = Gimmicks.OrderBy(x => x.Measure).ToList();
-            var timeSig = Gimmicks.FirstOrDefault(x => x.GimmickType == GimmickType.TimeSignatureChange && x.Measure == 0.0f);
-            var bpm = Gimmicks.FirstOrDefault(x => x.GimmickType == GimmickType.BpmChange && x.Measure == 0.0f);
-            if (timeSig == null || bpm == null)
-                return;     // Cannot calculate times without either starting value
-
-            TimeEvents = new();
-            for (int i = 0; i < Gimmicks.Count; i++)
+            if (Gimmicks[i].GimmickType == GimmickType.TimeSignatureChange)
             {
-                var evt = TimeEvents.FirstOrDefault(x => x.BeatInfo.MeasureDecimal == Gimmicks[i].BeatInfo.MeasureDecimal);
-
-                if (Gimmicks[i].GimmickType == GimmickType.BpmChange)
-                {
-                    if (evt == null)
+                if (evt == null)
+                    TimeEvents.Add(new Gimmick
                     {
-                        TimeEvents.Add(new Gimmick()
-                        {
-                            BeatInfo = new BeatInfo(Gimmicks[i].BeatInfo),
-                            BPM = Gimmicks[i].BPM,
-                            TimeSig = new TimeSignature(timeSig.TimeSig)
-                        });
-                    }
-                    else
-                    {
-                        evt.BPM = Gimmicks[i].BPM;
-                    }
-                    bpm = Gimmicks[i];
-                }
-                if (Gimmicks[i].GimmickType == GimmickType.TimeSignatureChange)
-                {
-                    if (evt == null)
-                    {
-                        TimeEvents.Add(new Gimmick()
-                        {
-                            BeatInfo = new BeatInfo(Gimmicks[i].BeatInfo),
-                            BPM = bpm.BPM,
-                            TimeSig = new TimeSignature(Gimmicks[i].TimeSig)
-                        });
-                    }
-                    else
-                    {
-                        evt.TimeSig = new TimeSignature(Gimmicks[i].TimeSig);
-                    }
-                    timeSig = Gimmicks[i];
-                }
-            }
-
-            // Run through all time events and generate valid start times
-            TimeEvents[0].StartTime = Offset * 1000.0;
-            for (int i = 1; i < TimeEvents.Count; i++)
-            {
-                TimeEvents[i].StartTime = ((TimeEvents[i].Measure - TimeEvents[i - 1].Measure) * (4.0f * TimeEvents[i - 1].TimeSig.Ratio * (60000.0 / TimeEvents[i - 1].BPM))) + TimeEvents[i - 1].StartTime;
+                        BeatInfo = new BeatInfo(Gimmicks[i].BeatInfo),
+                        BPM = bpm.BPM,
+                        TimeSig = new TimeSignature(Gimmicks[i].TimeSig)
+                    });
+                else
+                    evt.TimeSig = new TimeSignature(Gimmicks[i].TimeSig);
+                timeSig = Gimmicks[i];
             }
         }
-        /*
-        ((60000.0 / evt.BPM) * 4.0 * evt.TimeSig.Ratio) * measure = time
-        time / ((60000.0 / evt.BPM) * 4.0 * evt.TimeSig.Ratio) = measure
-        */
 
-        /// <summary>
-        /// Translate clock time to beats
-        /// </summary>
-        /// <param name="time">Current timestamp in ms</param>
-        /// <returns></returns>
-        public BeatInfo GetBeat(double time)
-        {
-            if (TimeEvents == null || TimeEvents.Count == 0)
-                return new BeatInfo(-1, 0);
+        // Run through all time events and generate valid start times
+        TimeEvents[0].StartTime = Offset * 1000.0;
+        for (var i = 1; i < TimeEvents.Count; i++)
+            TimeEvents[i].StartTime =
+                (TimeEvents[i].Measure - TimeEvents[i - 1].Measure) *
+                (4.0f * TimeEvents[i - 1].TimeSig.Ratio * (60000.0 / TimeEvents[i - 1].BPM)) +
+                TimeEvents[i - 1].StartTime;
+    }
+    /*
+    ((60000.0 / evt.BPM) * 4.0 * evt.TimeSig.Ratio) * measure = time
+    time / ((60000.0 / evt.BPM) * 4.0 * evt.TimeSig.Ratio) = measure
+    */
 
-            var evt = TimeEvents.LastOrDefault(x => time >= x.StartTime) ?? TimeEvents[0];
-            return new BeatInfo((float)((time - evt.StartTime) / ((60000.0 / evt.BPM) * 4.0f * evt.TimeSig.Ratio) + evt.Measure));
-        }
+    /// <summary>
+    ///     Translate clock time to beats
+    /// </summary>
+    /// <param name="time">Current timestamp in ms</param>
+    /// <returns></returns>
+    public BeatInfo GetBeat(double time)
+    {
+        if (TimeEvents == null || TimeEvents.Count == 0)
+            return new BeatInfo(-1, 0);
 
-        /// <summary>
-        /// Translate measures into clock time
-        /// </summary>
-        /// <param name="beat"></param>
-        /// <returns></returns>
-        public int GetTime(BeatInfo beat)
-        {
-            if (TimeEvents == null || TimeEvents.Count == 0)
-                return 0;
+        var evt = TimeEvents.LastOrDefault(x => time >= x.StartTime) ?? TimeEvents[0];
+        return new BeatInfo((float) ((time - evt.StartTime) / (60000.0 / evt.BPM * 4.0f * evt.TimeSig.Ratio) +
+                                     evt.Measure));
+    }
 
-            var evt = TimeEvents.LastOrDefault(x => beat.MeasureDecimal >= x.Measure);
-            if (evt == null)
-                evt = TimeEvents[0];
-            return (int)(((60000.0 / evt.BPM) * 4.0f * evt.TimeSig.Ratio) * (beat.MeasureDecimal - evt.Measure) + evt.StartTime);
-        }
+    /// <summary>
+    ///     Translate measures into clock time
+    /// </summary>
+    /// <param name="beat"></param>
+    /// <returns></returns>
+    public int GetTime(BeatInfo beat)
+    {
+        if (TimeEvents == null || TimeEvents.Count == 0)
+            return 0;
+
+        var evt = TimeEvents.LastOrDefault(x => beat.MeasureDecimal >= x.Measure);
+        if (evt == null)
+            evt = TimeEvents[0];
+        return (int) (60000.0 / evt.BPM * 4.0f * evt.TimeSig.Ratio * (beat.MeasureDecimal - evt.Measure) +
+                      evt.StartTime);
     }
 }

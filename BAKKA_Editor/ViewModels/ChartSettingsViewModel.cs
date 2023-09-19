@@ -1,15 +1,20 @@
 ﻿using System.Reactive;
-using System.Windows.Input;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
-using ReactiveUI;
 
 namespace BAKKA_Editor.ViewModels;
 
 public partial class ChartSettingsViewModel : ObservableObject
 {
+    [ObservableProperty] private double bpm;
+    [ObservableProperty] private double movieOffset;
+    [ObservableProperty] private double offset;
+    [ObservableProperty] private bool saveSettings;
+    [ObservableProperty] private int timeSigLower;
+    [ObservableProperty] private int timeSigUpper;
+
     public ChartSettingsViewModel()
     {
         Bpm = 120.0;
@@ -19,16 +24,9 @@ public partial class ChartSettingsViewModel : ObservableObject
         MovieOffset = 0.0;
         SaveSettings = false;
         SaveSettingsCommand = new RelayCommand<UserControl>(OnSaveSettings);
-        CloseSettingsCommand = new(OnCloseSettings);
+        CloseSettingsCommand = new RelayCommand<Unit>(OnCloseSettings);
     }
-    
-    [ObservableProperty] private double bpm;
-    [ObservableProperty] private int timeSigUpper;
-    [ObservableProperty] private int timeSigLower;
-    [ObservableProperty] private double offset;
-    [ObservableProperty] private double movieOffset;
-    [ObservableProperty] private bool saveSettings;
-    
+
     public RelayCommand<UserControl> SaveSettingsCommand { get; }
 
     public ContentDialog? Dialog { get; set; }
@@ -37,7 +35,7 @@ public partial class ChartSettingsViewModel : ObservableObject
     private void OnSaveSettings(UserControl? userControl)
     {
         SaveSettings = true;
-        
+
         if (Dialog != null)
             Dialog.Hide();
     }
@@ -45,7 +43,7 @@ public partial class ChartSettingsViewModel : ObservableObject
     private void OnCloseSettings(Unit unit)
     {
         SaveSettings = false;
-        
+
         if (Dialog != null)
             Dialog.Hide();
     }

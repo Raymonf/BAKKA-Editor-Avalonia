@@ -1,18 +1,9 @@
-using System.ComponentModel;
-using System.Diagnostics.Tracing;
-using System.IO;
 using System.Reactive;
-using System.Reflection;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Input;
-using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using ReactiveUI;
-using SkiaSharp;
-using Tomlyn;
 
 namespace BAKKA_Editor.Views;
 
@@ -24,16 +15,16 @@ public partial class MainWindow : Window, IPassSetting
 #if DEBUG
         this.AttachDevTools();
 #endif
-        
+
         NewCommand = ReactiveCommand.CreateFromTask(NewMenuItem_OnClick);
         OpenCommand = ReactiveCommand.CreateFromTask(OpenMenuItem_OnClick);
         SaveCommand = ReactiveCommand.CreateFromTask(SaveMenuItem_OnClick);
         SaveAsCommand = ReactiveCommand.CreateFromTask(SaveAsMenuItem_OnClick);
         ExitCommand = ReactiveCommand.CreateFromTask(ExitMenuItem_OnClick);
         UndoCommand = ReactiveCommand.Create(UndoMenuItem_OnClick);
-        RedoCommand = ReactiveCommand.Create(RedoMenuItem_OnClick);   
+        RedoCommand = ReactiveCommand.Create(RedoMenuItem_OnClick);
     }
-    
+
     // Commands
     public ReactiveCommand<Unit, Unit> NewCommand { get; set; }
     public ReactiveCommand<Unit, Unit> ExitCommand { get; }
@@ -42,18 +33,6 @@ public partial class MainWindow : Window, IPassSetting
     public ReactiveCommand<Unit, Unit> SaveAsCommand { get; }
     public ReactiveCommand<Unit, Unit> UndoCommand { get; set; }
     public ReactiveCommand<Unit, Unit> RedoCommand { get; set; }
-    
-    private MainView? GetMainView() => this.FindControl<MainView>("View");
-    
-    private void Window_OnClosing(object? sender, WindowClosingEventArgs e)
-    {
-        // we need this condition because Shutdown() calls Close()
-        var view = GetMainView();
-        if (view == null || view.CanShutdown)
-            return;
-        e.Cancel = true;
-        Dispatcher.UIThread.Post(async () => await view.ExitMenuItem_OnClick(), DispatcherPriority.Background);
-    }
 
     public async Task OpenChartSettings_OnClick()
     {
@@ -164,7 +143,8 @@ public partial class MainWindow : Window, IPassSetting
         var view = GetMainView();
         if (view == null)
             return;
-        Dispatcher.UIThread.Post(() => view.SetShowGimmicksDuringPlaybackInCircleView(value), DispatcherPriority.Background);
+        Dispatcher.UIThread.Post(() => view.SetShowGimmicksDuringPlaybackInCircleView(value),
+            DispatcherPriority.Background);
     }
 
     public void SetDarkMode(bool value)
@@ -181,5 +161,20 @@ public partial class MainWindow : Window, IPassSetting
         if (view == null)
             return;
         Dispatcher.UIThread.Post(() => view.SetShowMeasureButtons(value), DispatcherPriority.Background);
+    }
+
+    private MainView? GetMainView()
+    {
+        return this.FindControl<MainView>("View");
+    }
+
+    private void Window_OnClosing(object? sender, WindowClosingEventArgs e)
+    {
+        // we need this condition because Shutdown() calls Close()
+        var view = GetMainView();
+        if (view == null || view.CanShutdown)
+            return;
+        e.Cancel = true;
+        Dispatcher.UIThread.Post(async () => await view.ExitMenuItem_OnClick(), DispatcherPriority.Background);
     }
 }

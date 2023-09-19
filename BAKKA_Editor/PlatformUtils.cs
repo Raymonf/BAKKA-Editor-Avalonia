@@ -1,15 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
-using Avalonia;
 using Avalonia.Platform;
 
 namespace BAKKA_Editor;
 
-class PlatformUtils
+internal class PlatformUtils
 {
     private static FormFactorType? _formFactorType;
+
     public static FormFactorType FormFactorType
     {
         get
@@ -22,6 +21,7 @@ class PlatformUtils
                 else
                     _formFactorType = FormFactorType.Desktop;
             }
+
             if (_formFactorType == null)
                 return FormFactorType.Unknown;
             return _formFactorType.Value;
@@ -35,10 +35,10 @@ class PlatformUtils
             var documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             return Path.Combine(documents, "..", "tmp");
         }
-        
+
         return Path.GetTempPath();
     }
-    
+
     public static string GetTempFileName()
     {
         var file = Path.GetTempFileName();

@@ -4,7 +4,7 @@ namespace BAKKA_Editor.SoundEngines;
 
 public class BassBakkaSampleChannel : IBakkaSampleChannel
 {
-    private int bassChannel = 0;
+    private int bassChannel;
 
     internal BassBakkaSampleChannel(int channel)
     {

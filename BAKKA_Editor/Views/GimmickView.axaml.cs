@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using BAKKA_Editor.ViewModels;
 
 namespace BAKKA_Editor.Views;
@@ -33,15 +30,15 @@ public partial class GimmickView : UserControl
         {
             case GimmickType.BpmChange:
                 vm.StartMeasureInfo.Measure = gimmick.BeatInfo.Measure;
-                vm.StartMeasureInfo.Beat2 = (decimal)quant.Item2;
-                vm.StartMeasureInfo.Beat1 = (decimal)quant.Item1;
+                vm.StartMeasureInfo.Beat2 = quant.Item2;
+                vm.StartMeasureInfo.Beat1 = quant.Item1;
                 if (reason == GimmicksViewModel.FormReason.Edit)
                     vm.Bpm = (decimal) baseGimmick.BPM;
                 break;
             case GimmickType.TimeSignatureChange:
                 vm.StartMeasureInfo.Measure = gimmick.BeatInfo.Measure;
-                vm.StartMeasureInfo.Beat2 = (decimal)quant.Item2;
-                vm.StartMeasureInfo.Beat1 = (decimal)quant.Item1;
+                vm.StartMeasureInfo.Beat2 = quant.Item2;
+                vm.StartMeasureInfo.Beat1 = quant.Item1;
                 if (reason == GimmicksViewModel.FormReason.Edit)
                 {
                     vm.TimeSig1 = baseGimmick.TimeSig.Upper;
@@ -51,25 +48,25 @@ public partial class GimmickView : UserControl
                 break;
             case GimmickType.HiSpeedChange:
                 vm.StartMeasureInfo.Measure = gimmick.BeatInfo.Measure;
-                vm.StartMeasureInfo.Beat2 = (decimal)quant.Item2;
-                vm.StartMeasureInfo.Beat1 = (decimal)quant.Item1;
+                vm.StartMeasureInfo.Beat2 = quant.Item2;
+                vm.StartMeasureInfo.Beat1 = quant.Item1;
                 if (reason == GimmicksViewModel.FormReason.Edit)
                     vm.HiSpeed = (decimal) baseGimmick.HiSpeed;
                 break;
             case GimmickType.ReverseStart:
                 vm.StartMeasureInfo.Measure = gimmick.BeatInfo.Measure;
-                vm.StartMeasureInfo.Beat2 = (decimal)quant.Item2;
-                vm.StartMeasureInfo.Beat1 = (decimal)quant.Item1;
+                vm.StartMeasureInfo.Beat2 = quant.Item2;
+                vm.StartMeasureInfo.Beat1 = quant.Item1;
                 if (reason == GimmicksViewModel.FormReason.Edit && gim1 != null && gim2 != null)
                 {
                     var quantMid1 = Utils.GetQuantization(gim1.BeatInfo.Beat, 12);
                     var quantEnd1 = Utils.GetQuantization(gim2.BeatInfo.Beat, 12);
                     vm.RevEnd1MeasureInfo.Measure = gim1.BeatInfo.Measure;
-                    vm.RevEnd1MeasureInfo.Beat2 = (decimal)quantMid1.Item2;
-                    vm.RevEnd1MeasureInfo.Beat1 = (decimal)quantMid1.Item1;
+                    vm.RevEnd1MeasureInfo.Beat2 = quantMid1.Item2;
+                    vm.RevEnd1MeasureInfo.Beat1 = quantMid1.Item1;
                     vm.RevEnd2MeasureInfo.Measure = gim2.BeatInfo.Measure;
-                    vm.RevEnd2MeasureInfo.Beat2 = (decimal)quantEnd1.Item2;
-                    vm.RevEnd2MeasureInfo.Beat1 = (decimal)quantEnd1.Item1;
+                    vm.RevEnd2MeasureInfo.Beat2 = quantEnd1.Item2;
+                    vm.RevEnd2MeasureInfo.Beat1 = quantEnd1.Item1;
                 }
 
                 break;
@@ -77,51 +74,49 @@ public partial class GimmickView : UserControl
                 var quantStart2 = Utils.GetQuantization(gim1.BeatInfo.Beat, 12);
                 var quantEnd2 = Utils.GetQuantization(gim2.BeatInfo.Beat, 12);
                 vm.StartMeasureInfo.Measure = gim1.BeatInfo.Measure;
-                vm.StartMeasureInfo.Beat2 = (decimal)quantStart2.Item2;
-                vm.StartMeasureInfo.Beat1 = (decimal)quantStart2.Item1;
+                vm.StartMeasureInfo.Beat2 = quantStart2.Item2;
+                vm.StartMeasureInfo.Beat1 = quantStart2.Item1;
                 vm.RevEnd1MeasureInfo.Measure = gimmick.BeatInfo.Measure;
-                vm.RevEnd1MeasureInfo.Beat2 = (decimal)quant.Item2;
-                vm.RevEnd1MeasureInfo.Beat1 = (decimal)quant.Item1;
+                vm.RevEnd1MeasureInfo.Beat2 = quant.Item2;
+                vm.RevEnd1MeasureInfo.Beat1 = quant.Item1;
                 vm.RevEnd2MeasureInfo.Measure = gim2.BeatInfo.Measure;
-                vm.RevEnd2MeasureInfo.Beat2 = (decimal)quantEnd2.Item2;
-                vm.RevEnd2MeasureInfo.Beat1 = (decimal)quantEnd2.Item1;
+                vm.RevEnd2MeasureInfo.Beat2 = quantEnd2.Item2;
+                vm.RevEnd2MeasureInfo.Beat1 = quantEnd2.Item1;
                 break;
             case GimmickType.ReverseEnd:
                 var quantStart3 = Utils.GetQuantization(gim1.BeatInfo.Beat, 12);
                 var quantMid3 = Utils.GetQuantization(gim2.BeatInfo.Beat, 12);
                 vm.StartMeasureInfo.Measure = gim1.BeatInfo.Measure;
-                vm.StartMeasureInfo.Beat2 = (decimal)quantStart3.Item2;
-                vm.StartMeasureInfo.Beat1 = (decimal)quantStart3.Item1;
+                vm.StartMeasureInfo.Beat2 = quantStart3.Item2;
+                vm.StartMeasureInfo.Beat1 = quantStart3.Item1;
                 vm.RevEnd1MeasureInfo.Measure = gim2.BeatInfo.Measure;
-                vm.RevEnd1MeasureInfo.Beat2 = (decimal)quantMid3.Item2;
-                vm.RevEnd1MeasureInfo.Beat1 = (decimal)quantMid3.Item1;
+                vm.RevEnd1MeasureInfo.Beat2 = quantMid3.Item2;
+                vm.RevEnd1MeasureInfo.Beat1 = quantMid3.Item1;
                 vm.RevEnd2MeasureInfo.Measure = gimmick.BeatInfo.Measure;
-                vm.RevEnd2MeasureInfo.Beat2 = (decimal)quant.Item2;
-                vm.RevEnd2MeasureInfo.Beat1 = (decimal)quant.Item1;
+                vm.RevEnd2MeasureInfo.Beat2 = quant.Item2;
+                vm.RevEnd2MeasureInfo.Beat1 = quant.Item1;
                 break;
             case GimmickType.StopStart:
                 vm.StartMeasureInfo.Measure = gimmick.BeatInfo.Measure;
-                vm.StartMeasureInfo.Beat2 = (decimal)quant.Item2;
-                vm.StartMeasureInfo.Beat1 = (decimal)quant.Item1;
+                vm.StartMeasureInfo.Beat2 = quant.Item2;
+                vm.StartMeasureInfo.Beat1 = quant.Item1;
                 if (reason == GimmicksViewModel.FormReason.Edit)
                 {
                     var stopEnd = Utils.GetQuantization(gim1.BeatInfo.Beat, 12);
                     vm.StopEndMeasureInfo.Measure = gim1.BeatInfo.Measure;
-                    vm.StopEndMeasureInfo.Beat2 = (decimal)stopEnd.Item2;
-                    vm.StopEndMeasureInfo.Beat1 = (decimal)stopEnd.Item1;
+                    vm.StopEndMeasureInfo.Beat2 = stopEnd.Item2;
+                    vm.StopEndMeasureInfo.Beat1 = stopEnd.Item1;
                 }
 
                 break;
             case GimmickType.StopEnd:
                 var stopStart = Utils.GetQuantization(gim1.BeatInfo.Beat, 12);
                 vm.StartMeasureInfo.Measure = gim1.BeatInfo.Measure;
-                vm.StartMeasureInfo.Beat2 = (decimal)stopStart.Item2;
-                vm.StartMeasureInfo.Beat1 = (decimal)stopStart.Item1;
+                vm.StartMeasureInfo.Beat2 = stopStart.Item2;
+                vm.StartMeasureInfo.Beat1 = stopStart.Item1;
                 vm.StopEndMeasureInfo.Measure = gimmick.BeatInfo.Measure;
-                vm.StopEndMeasureInfo.Beat2 = (decimal)quant.Item2;
-                vm.StopEndMeasureInfo.Beat1 = (decimal)quant.Item1;
-                break;
-            default:
+                vm.StopEndMeasureInfo.Beat2 = quant.Item2;
+                vm.StopEndMeasureInfo.Beat1 = quant.Item1;
                 break;
         }
 
@@ -152,20 +147,16 @@ public partial class GimmickView : UserControl
             GimmicksViewModel.FormReason.Edit => "Edit Gimmick"
         };
     }
-    
+
     private void startMeasureNumeric_ValueChanged(object sender, NumericUpDownValueChangedEventArgs e)
     {
         var vm = (GimmicksViewModel?) DataContext;
         if (vm == null)
             throw new NullReferenceException(nameof(vm));
         if (vm.StopEndMeasureEnabled && vm.StopEndMeasure < vm.StartMeasure)
-        {
             vm.StopEndMeasureInfo.Measure = vm.StartMeasureInfo.Measure + 1;
-        }
         if (vm.RevEnd1MeasureEnabled && vm.RevEnd1Measure < vm.StartMeasure)
-        {
             vm.RevEnd1MeasureInfo.Measure = vm.StartMeasureInfo.Measure + 1;
-        }
     }
 
     private void startBeat1Numeric_ValueChanged(object sender, NumericUpDownValueChangedEventArgs e)
@@ -202,7 +193,6 @@ public partial class GimmickView : UserControl
             vm.StopEndMeasureInfo.Measure = vm.StartMeasureInfo.Measure;
             vm.StopEndMeasureInfo.Beat1 = vm.StartMeasureInfo.Beat1;
             vm.StopEndMeasureInfo.Beat2 = vm.StartMeasureInfo.Beat2;
-            return;
         }
     }
 
@@ -249,13 +239,14 @@ public partial class GimmickView : UserControl
             vm.RevEnd1MeasureInfo.Beat1 = vm.StartMeasureInfo.Beat1;
             vm.RevEnd1MeasureInfo.Beat2 = vm.StartMeasureInfo.Beat2;
         }
+
         if (vm.RevEnd2Measure < vm.RevEnd1Measure)
         {
             vm.RevEnd2MeasureInfo.Measure = vm.RevEnd1MeasureInfo.Measure;
             vm.RevEnd2MeasureInfo.Beat1 = vm.RevEnd1MeasureInfo.Beat1;
             vm.RevEnd2MeasureInfo.Beat2 = vm.RevEnd1MeasureInfo.Beat2;
         }
-    }        
+    }
 
     private void revEnd1Beat1Numeric_ValueChanged(object sender, NumericUpDownValueChangedEventArgs e)
     {
@@ -299,7 +290,6 @@ public partial class GimmickView : UserControl
             vm.RevEnd2MeasureInfo.Measure = vm.RevEnd1MeasureInfo.Measure;
             vm.RevEnd2MeasureInfo.Beat1 = vm.RevEnd1MeasureInfo.Beat1;
             vm.RevEnd2MeasureInfo.Beat2 = vm.RevEnd1MeasureInfo.Beat2;
-            return;
         }
     }
 

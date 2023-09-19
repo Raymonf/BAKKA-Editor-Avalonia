@@ -457,11 +457,13 @@
                                 Next Note &gt;
                             </Button>
                             <Button Grid.Row="1" Grid.Column="0" Name="measurePrevButton" Margin="0,0,2,4"
-                                    Classes="center-text stretch" Click="MeasurePrevButton_OnClick" IsVisible="{Binding AreMeasureButtonsVisible}">
+                                    Classes="center-text stretch" Click="MeasurePrevButton_OnClick"
+                                    IsVisible="{Binding AreMeasureButtonsVisible}">
                                 &lt; Measure
                             </Button>
                             <Button Grid.Row="1" Grid.Column="1" Name="measureNextButton" Margin="0,0,0,4"
-                                    Classes="center-text stretch" Click="MeasureNextButton_OnClick" IsVisible="{Binding AreMeasureButtonsVisible}">
+                                    Classes="center-text stretch" Click="MeasureNextButton_OnClick"
+                                    IsVisible="{Binding AreMeasureButtonsVisible}">
                                 Measure &gt;
                             </Button>
                             <Button Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Name="notePrevMeasureButton"
@@ -473,30 +475,31 @@
                         <Grid RowDefinitions="*,*,*" ColumnDefinitions="*,*">
                             <Grid Grid.Row="0" Grid.Column="0" RowDefinitions="*" ColumnDefinitions="*,*"
                                   Margin="0,0,0,4">
-                                <TextBlock Text="Measure:" FontWeight="Bold"></TextBlock>
+                                <TextBlock Text="Measure:" FontWeight="Bold" />
                                 <TextBlock Grid.Column="1" Name="noteMeasureLabel" Text="None" />
                             </Grid>
 
                             <Grid Grid.Row="0" Grid.Column="1" RowDefinitions="*" ColumnDefinitions="*,*"
                                   Margin="0,0,0,4">
-                                <TextBlock Text="Beat:" FontWeight="Bold"></TextBlock>
+                                <TextBlock Text="Beat:" FontWeight="Bold" />
                                 <TextBlock Grid.Column="1" Name="noteBeatLabel" Text="None" />
                             </Grid>
 
                             <Grid Grid.Row="1" Grid.Column="0" RowDefinitions="*" ColumnDefinitions="*,*"
                                   Margin="0,0,0,4">
-                                <TextBlock Text="Type:" FontWeight="Bold"></TextBlock>
-                                <TextBlock Grid.Column="1" Name="noteTypeLabel" Width="170" HorizontalAlignment="Left" Text="None" />
+                                <TextBlock Text="Type:" FontWeight="Bold" />
+                                <TextBlock Grid.Column="1" Name="noteTypeLabel" Width="170" HorizontalAlignment="Left"
+                                           Text="None" />
                             </Grid>
 
                             <Grid Grid.Row="2" Grid.Column="0" RowDefinitions="*" ColumnDefinitions="*,*"
                                   Margin="0,0,0,4">
-                                <TextBlock Text="Position:" FontWeight="Bold"></TextBlock>
+                                <TextBlock Text="Position:" FontWeight="Bold" />
                                 <TextBlock Grid.Column="1" Name="notePositionLabel" Text="None" />
                             </Grid>
 
                             <Grid Grid.Row="2" Grid.Column="1" RowDefinitions="*" ColumnDefinitions="*,*">
-                                <TextBlock Text="Size:" FontWeight="Bold"></TextBlock>
+                                <TextBlock Text="Size:" FontWeight="Bold" />
                                 <TextBlock Grid.Column="1" Name="noteSizeLabel" Text="None" />
                             </Grid>
                         </Grid>
@@ -554,26 +557,26 @@
 
                             <Grid Grid.Row="2" Grid.Column="0" RowDefinitions="*" ColumnDefinitions="*,*"
                                   Margin="0,0,0,4">
-                                <TextBlock Text="Measure:" FontWeight="Bold"></TextBlock>
-                                <TextBlock Grid.Column="1" Name="gimmickMeasureLabel" Text="None"></TextBlock>
+                                <TextBlock Text="Measure:" FontWeight="Bold" />
+                                <TextBlock Grid.Column="1" Name="gimmickMeasureLabel" Text="None" />
                             </Grid>
 
                             <Grid Grid.Row="2" Grid.Column="1" RowDefinitions="*" ColumnDefinitions="*,*">
-                                <TextBlock Text="Beat:" FontWeight="Bold"></TextBlock>
-                                <TextBlock Grid.Column="1" Name="gimmickBeatLabel" Text="None"></TextBlock>
+                                <TextBlock Text="Beat:" FontWeight="Bold" />
+                                <TextBlock Grid.Column="1" Name="gimmickBeatLabel" Text="None" />
                             </Grid>
                         </Grid>
 
                         <Grid RowDefinitions="*,*" ColumnDefinitions="*">
                             <Grid Grid.Row="0" Grid.Column="0" RowDefinitions="*" ColumnDefinitions="*,3*"
                                   Margin="0,0,0,4">
-                                <TextBlock Text="Type:" FontWeight="Bold"></TextBlock>
-                                <TextBlock Grid.Column="1" Name="gimmickTypeLabel" Text="None"></TextBlock>
+                                <TextBlock Text="Type:" FontWeight="Bold" />
+                                <TextBlock Grid.Column="1" Name="gimmickTypeLabel" Text="None" />
                             </Grid>
 
                             <Grid Grid.Row="1" Grid.Column="0" RowDefinitions="*" ColumnDefinitions="*,3*">
-                                <TextBlock Text="Value:" FontWeight="Bold"></TextBlock>
-                                <TextBlock Grid.Column="1" Name="gimmickValueLabel" Text="None"></TextBlock>
+                                <TextBlock Text="Value:" FontWeight="Bold" />
+                                <TextBlock Grid.Column="1" Name="gimmickValueLabel" Text="None" />
                             </Grid>
                         </Grid>
 

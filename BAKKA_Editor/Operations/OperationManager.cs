@@ -1,73 +1,69 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace BAKKA_Editor.Operations
+namespace BAKKA_Editor.Operations;
+
+internal class OperationManager
 {
-    internal class OperationManager
+    protected Stack<IOperation> UndoStack { get; } = new();
+    protected Stack<IOperation> RedoStack { get; } = new();
+
+    private IOperation? LastCommittedOperation { get; set; }
+
+    public IEnumerable<string> UndoOperationsDescription
     {
-        public event EventHandler? OperationHistoryChanged;
-        public event EventHandler? ChangesCommitted;
+        get { return UndoStack.Select(p => p.Description); }
+    }
 
-        protected Stack<IOperation> UndoStack { get; } = new Stack<IOperation>();
-        protected Stack<IOperation> RedoStack { get; } = new Stack<IOperation>();
+    public IEnumerable<string> RedoOperationsDescription
+    {
+        get { return RedoStack.Select(p => p.Description); }
+    }
 
-        private IOperation? LastCommittedOperation { get; set; } = null;
+    public bool CanUndo => UndoStack.Count > 0;
 
-        public IEnumerable<string> UndoOperationsDescription
-        {
-            get { return UndoStack.Select(p => p.Description); }
-        }
+    public bool CanRedo => RedoStack.Count > 0;
+    public event EventHandler? OperationHistoryChanged;
+    public event EventHandler? ChangesCommitted;
 
-        public IEnumerable<string> RedoOperationsDescription
-        {
-            get { return RedoStack.Select(p => p.Description); }
-        }
+    public void Push(IOperation op)
+    {
+        UndoStack.Push(op);
+        RedoStack.Clear();
+        OperationHistoryChanged?.Invoke(this, EventArgs.Empty);
+    }
 
-        public bool CanUndo { get { return UndoStack.Count > 0; } }
+    public void InvokeAndPush(IOperation op)
+    {
+        op.Redo();
+        Push(op);
+    }
 
-        public bool CanRedo { get { return RedoStack.Count > 0; } }
+    public IOperation Undo()
+    {
+        var op = UndoStack.Pop();
+        op.Undo();
+        var type = op.GetType();
+        RedoStack.Push(op);
+        OperationHistoryChanged?.Invoke(this, EventArgs.Empty);
+        return op;
+    }
 
-        public void Push(IOperation op)
-        {
-            UndoStack.Push(op);
-            RedoStack.Clear();
-            OperationHistoryChanged?.Invoke(this, EventArgs.Empty);
-        }
+    public IOperation Redo()
+    {
+        var op = RedoStack.Pop();
+        op.Redo();
+        UndoStack.Push(op);
+        OperationHistoryChanged?.Invoke(this, EventArgs.Empty);
+        return op;
+    }
 
-        public void InvokeAndPush(IOperation op)
-        {
-            op.Redo();
-            Push(op);
-        }
-
-        public IOperation Undo()
-        {
-            IOperation op = UndoStack.Pop();
-            op.Undo();
-            var type = op.GetType();
-            RedoStack.Push(op);
-            OperationHistoryChanged?.Invoke(this, EventArgs.Empty);
-            return op;
-        }
-
-        public IOperation Redo()
-        {
-            IOperation op = RedoStack.Pop();
-            op.Redo();
-            UndoStack.Push(op);
-            OperationHistoryChanged?.Invoke(this, EventArgs.Empty);
-            return op;
-        }
-
-        public void Clear()
-        {
-            UndoStack.Clear();
-            RedoStack.Clear();
-            LastCommittedOperation = null;
-            OperationHistoryChanged?.Invoke(this, EventArgs.Empty);
-        }
+    public void Clear()
+    {
+        UndoStack.Clear();
+        RedoStack.Clear();
+        LastCommittedOperation = null;
+        OperationHistoryChanged?.Invoke(this, EventArgs.Empty);
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System.Reactive;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Styling;
 using BAKKA_Editor.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ReactiveUI;
@@ -10,18 +9,21 @@ namespace BAKKA_Editor.ViewModels;
 
 public partial class MainViewModel : ObservableObject
 {
-    private static IPassSetting? Target()
-    {
-        var lifetime = Application.Current?.ApplicationLifetime;
-        if (lifetime is IClassicDesktopStyleApplicationLifetime)
-            return (IPassSetting?)
-                (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)
-                ?.MainWindow;
+    [ObservableProperty] private bool areMeasureButtonsVisible;
 
-        return (IPassSetting?)
-            (Application.Current?.ApplicationLifetime as ISingleViewApplicationLifetime)
-            ?.MainView;
-    }
+    [ObservableProperty] private bool darkMode;
+    [ObservableProperty] private bool highlightViewedNote = true;
+
+    // Button Text
+    [ObservableProperty] private string insertButtonText = "Insert Object (I)";
+    [ObservableProperty] private bool selectLastInsertedNote = true;
+
+    // View Model Settings State
+    [ObservableProperty] private bool showCursor = true;
+    [ObservableProperty] private bool showCursorDuringPlayback;
+    [ObservableProperty] private bool showGimmicksDuringPlaybackInCircleView = true;
+    [ObservableProperty] private bool showGimmicksInCircleView = true;
+
     public MainViewModel()
     {
         OpenInitialChartSettings = ReactiveCommand.CreateFromTask(async () =>
@@ -73,35 +75,35 @@ public partial class MainViewModel : ObservableObject
         ToggleShowCursorCommand = ReactiveCommand.Create(() =>
         {
             ShowCursor = !ShowCursor;
-            
+
             var mainWindow = Target();
             mainWindow?.SetShowCursor(ShowCursor);
         });
         ToggleShowCursorDuringPlaybackCommand = ReactiveCommand.Create(() =>
         {
             ShowCursorDuringPlayback = !ShowCursorDuringPlayback;
-            
+
             var mainWindow = Target();
             mainWindow?.SetShowCursorDuringPlayback(ShowCursorDuringPlayback);
         });
         ToggleHighlightViewedNoteCommand = ReactiveCommand.Create(() =>
         {
             HighlightViewedNote = !HighlightViewedNote;
-            
+
             var mainWindow = Target();
             mainWindow?.SetHighlightViewedNote(HighlightViewedNote);
         });
         ToggleSelectLastInsertedNoteCommand = ReactiveCommand.Create(() =>
         {
             SelectLastInsertedNote = !SelectLastInsertedNote;
-            
+
             var mainWindow = Target();
             mainWindow?.SetSelectLastInsertedNote(SelectLastInsertedNote);
         });
         ToggleGimmicksInCircleViewCommand = ReactiveCommand.Create(() =>
         {
             ShowGimmicksInCircleView = !ShowGimmicksInCircleView;
-            
+
             var mainWindow = Target();
             mainWindow?.SetShowGimmicksInCircleView(ShowGimmicksInCircleView);
         });
@@ -128,20 +130,6 @@ public partial class MainViewModel : ObservableObject
         });
     }
 
-    // View Model Settings State
-    [ObservableProperty] private bool showCursor = true;
-    [ObservableProperty] private bool showCursorDuringPlayback = false;
-    [ObservableProperty] private bool highlightViewedNote = true;
-    [ObservableProperty] private bool selectLastInsertedNote = true;
-    [ObservableProperty] private bool showGimmicksInCircleView = true;
-    [ObservableProperty] private bool showGimmicksDuringPlaybackInCircleView = true;
-    
-    [ObservableProperty] private bool darkMode = false;
-    [ObservableProperty] private bool areMeasureButtonsVisible = false;
-    
-    // Button Text
-    [ObservableProperty] private string insertButtonText = "Insert Object (I)";
-
     // Commands
     public ReactiveCommand<Unit, Unit> NewCommand { get; set; }
     public ReactiveCommand<Unit, Unit> ExitCommand { get; }
@@ -159,4 +147,17 @@ public partial class MainViewModel : ObservableObject
     public ReactiveCommand<Unit, Unit> ToggleDarkModeViewCommand { get; set; }
     public ReactiveCommand<Unit, Unit> ToggleShowMeasureButtonsCommand { get; set; }
     public ReactiveCommand<Unit, Unit> OpenInitialChartSettings { get; }
+
+    private static IPassSetting? Target()
+    {
+        var lifetime = Application.Current?.ApplicationLifetime;
+        if (lifetime is IClassicDesktopStyleApplicationLifetime)
+            return (IPassSetting?)
+                (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)
+                ?.MainWindow;
+
+        return (IPassSetting?)
+            (Application.Current?.ApplicationLifetime as ISingleViewApplicationLifetime)
+            ?.MainView;
+    }
 }

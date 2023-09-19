@@ -5,9 +5,26 @@ namespace BAKKA_Editor.SoundEngines;
 
 public class BassBakkaSound : IBakkaSound
 {
-    private int bassChannel = 0;
+    private uint _playPosition;
+    private readonly int bassChannel;
+
+    private bool paused = true;
+
+    private float playbackSpeed = 1.0f;
 
     private float volume = 1.0f;
+
+    public BassBakkaSound(int channel)
+    {
+        bassChannel = channel;
+
+        // set play length
+        var length = Bass.ChannelBytes2Seconds(bassChannel, Bass.ChannelGetLength(bassChannel));
+        if (length < 0)
+            throw new Exception($"Error getting song length: {Bass.LastError}");
+        PlayLength = (uint) (length * 1000.0);
+    }
+
     public float Volume
     {
         get => volume;
@@ -18,8 +35,6 @@ public class BassBakkaSound : IBakkaSound
             volume = value;
         }
     }
-
-    private float playbackSpeed = 1.0f;
 
     public float PlaybackSpeed
     {
@@ -32,14 +47,6 @@ public class BassBakkaSound : IBakkaSound
         }
     }
 
-    private void SetSpeed(float value)
-    {
-        // 0-255
-        var intSpeed = Math.Abs(value - 1.0f) < 0.0001 ? 0 : (int)((value - 1.0f) * 100.0f);
-        Bass.ChannelSetAttribute(bassChannel, ChannelAttribute.Tempo, intSpeed);
-    }
-
-    private bool paused = true;
     public bool Paused
     {
         get => paused;
@@ -50,14 +57,13 @@ public class BassBakkaSound : IBakkaSound
         }
     }
 
-    private uint _playPosition = 0;
     public uint PlayPosition
     {
         get
         {
             if (paused)
                 return _playPosition;
-            return (uint) GetPosition();
+            return GetPosition();
         }
         set
         {
@@ -70,15 +76,11 @@ public class BassBakkaSound : IBakkaSound
 
     public uint PlayLength { get; } = uint.MaxValue;
 
-    public BassBakkaSound(int channel)
+    private void SetSpeed(float value)
     {
-        bassChannel = channel;
-
-        // set play length
-        var length = Bass.ChannelBytes2Seconds(bassChannel, Bass.ChannelGetLength(bassChannel));
-        if (length < 0)
-            throw new Exception($"Error getting song length: {Bass.LastError}");
-        PlayLength = (uint)(length * 1000.0);
+        // 0-255
+        var intSpeed = Math.Abs(value - 1.0f) < 0.0001 ? 0 : (int) ((value - 1.0f) * 100.0f);
+        Bass.ChannelSetAttribute(bassChannel, ChannelAttribute.Tempo, intSpeed);
     }
 
     private bool SetPosition(uint position)
@@ -90,7 +92,7 @@ public class BassBakkaSound : IBakkaSound
     {
         return (uint) (Bass.ChannelBytes2Seconds(bassChannel, Bass.ChannelGetPosition(bassChannel)) * 1000.0);
     }
-    
+
     private void SetPauseState(bool newPaused)
     {
         if (newPaused)

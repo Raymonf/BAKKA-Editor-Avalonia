@@ -2,8 +2,8 @@
 
 public interface IBakkaSampleChannel
 {
+    public bool Loaded { get; }
     public void Play(bool restart = false);
     public void SetVolume(float volume);
     public void Reset();
-    public bool Loaded { get; }
 }

@@ -18,4 +18,9 @@ public class DummyBakkaSoundEngine : IBakkaSoundEngine
     {
         return null;
     }
+
+    public double GetLatency()
+    {
+        return 0.0;
+    }
 }

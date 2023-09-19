@@ -1,18 +1,18 @@
 ﻿<UserControl xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:viewModels="clr-namespace:BAKKA_Editor.ViewModels"
-        mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="180"
-        Width="300" Height="180"
-        MaxWidth="300" MaxHeight="180"
-        x:Class="BAKKA_Editor.Views.InitChartSettingsView"
-        Name="ChartSettingsView">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:BAKKA_Editor.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="180"
+             Width="300" Height="180"
+             MaxWidth="300" MaxHeight="180"
+             x:Class="BAKKA_Editor.Views.InitChartSettingsView"
+             Name="ChartSettingsView">
     <Panel>
         <Design.DataContext>
             <viewModels:ChartSettingsViewModel />
         </Design.DataContext>
-        
+
         <StackPanel Margin="20">
             <StackPanel.Styles>
                 <Style Selector="TextBlock">
@@ -24,14 +24,14 @@
 
             <Grid ShowGridLines="False">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="*"></RowDefinition>
-                    <RowDefinition Height="*"></RowDefinition>
-                    <RowDefinition Height="*"></RowDefinition>
-                    <RowDefinition Height="*"></RowDefinition>
-                    <RowDefinition Height="*"></RowDefinition>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"></ColumnDefinition>
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
                 <Grid Grid.Row="0" ColumnDefinitions="1.5*,2*" Margin="0,0,0,8">
@@ -43,8 +43,9 @@
                     <TextBlock Grid.Column="0" Text="Time Signature" />
                     <Grid Grid.Column="1" ColumnDefinitions="2*,Auto,2*" RowDefinitions="Auto,Auto,Auto">
                         <NumericUpDown Grid.Column="0" Value="{Binding TimeSigUpper}" ShowButtonSpinner="False" />
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="/" Margin="4,0"></TextBlock>
-                        <NumericUpDown Grid.Row="0" Grid.Column="2" Value="{Binding TimeSigLower}" ShowButtonSpinner="False" />
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="/" Margin="4,0" />
+                        <NumericUpDown Grid.Row="0" Grid.Column="2" Value="{Binding TimeSigLower}"
+                                       ShowButtonSpinner="False" />
                     </Grid>
                 </Grid>
 

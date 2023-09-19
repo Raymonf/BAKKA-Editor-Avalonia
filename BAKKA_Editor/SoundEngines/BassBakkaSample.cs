@@ -6,10 +6,10 @@ public class BassBakkaSample : IBakkaSample
 {
     private const int HitsoundChannelCount = 1;
 
-    private int channelIndex = 0;
-    private IBakkaSampleChannel[] channels = new IBakkaSampleChannel[HitsoundChannelCount];
+    private int channelIndex;
+    private readonly IBakkaSampleChannel[] channels = new IBakkaSampleChannel[HitsoundChannelCount];
 
-    private int sample = 0;
+    private int sample;
 
     public BassBakkaSample(string path)
     {
@@ -17,9 +17,7 @@ public class BassBakkaSample : IBakkaSample
         if (!Loaded)
             return;
         for (var i = 0; i < HitsoundChannelCount; i++)
-        {
             channels[i] = new BassBakkaSampleChannel(Bass.SampleGetChannel(sample));
-        }
     }
 
     public bool Loaded => sample != 0;
@@ -36,10 +34,7 @@ public class BassBakkaSample : IBakkaSample
     {
         if (!Loaded)
             return;
-        foreach (var channel in channels)
-        {
-            channel.Reset();
-        }
+        foreach (var channel in channels) channel.Reset();
         Bass.SampleFree(sample);
         sample = 0;
     }

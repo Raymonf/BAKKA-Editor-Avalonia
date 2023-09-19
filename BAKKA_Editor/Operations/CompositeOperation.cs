@@ -1,36 +1,25 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace BAKKA_Editor.Operations
+namespace BAKKA_Editor.Operations;
+
+internal class CompositeOperation : IOperation
 {
-    internal class CompositeOperation : IOperation
+    public CompositeOperation(string description, IEnumerable<IOperation> operations)
     {
-        public string Description { get; }
+        Description = description;
+        Operations = operations;
+    }
 
-        protected IEnumerable<IOperation> Operations { get; }
+    protected IEnumerable<IOperation> Operations { get; }
+    public string Description { get; }
 
-        public CompositeOperation(string description, IEnumerable<IOperation> operations)
-        {
-            Description = description;
-            Operations = operations;
-        }
+    public void Redo()
+    {
+        foreach (var op in Operations) op.Redo();
+    }
 
-        public void Redo()
-        {
-            foreach (var op in Operations)
-            {
-                op.Redo();
-            }
-        }
-
-        public void Undo()
-        {
-            foreach (var op in Operations)
-            {
-                op.Undo();
-            }
-        }
+    public void Undo()
+    {
+        foreach (var op in Operations) op.Undo();
     }
 }
