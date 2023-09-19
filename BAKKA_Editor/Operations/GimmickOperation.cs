@@ -32,11 +32,13 @@ namespace BAKKA_Editor.Operations
         public override void Redo()
         {
             Chart.Gimmicks.Add(Gimmick);
+            Chart.RecalcTime();
         }
 
         public override void Undo()
         {
             Chart.Gimmicks.Remove(Gimmick);
+            Chart.RecalcTime();
         }
     }
 
@@ -50,11 +52,13 @@ namespace BAKKA_Editor.Operations
         public override void Redo()
         {
             Chart.Gimmicks.Remove(Gimmick);
+            Chart.RecalcTime();
         }
 
         public override void Undo()
         {
             Chart.Gimmicks.Add(Gimmick);
+            Chart.RecalcTime();
         }
     }
 
@@ -65,12 +69,14 @@ namespace BAKKA_Editor.Operations
         protected Gimmick Base { get; }
         protected Gimmick OldGimmick { get; }
         protected Gimmick NewGimmick { get; }
+        protected Chart Chart { get; }
 
-        public EditGimmick(Gimmick baseGimmick, Gimmick newGimmick)
+        public EditGimmick(Gimmick baseGimmick, Gimmick newGimmick, Chart chart)
         {
             Base = baseGimmick;
             OldGimmick = new Gimmick(baseGimmick);
             NewGimmick = new Gimmick(newGimmick);
+            Chart = chart;
         }
 
         public void Redo()
@@ -88,6 +94,7 @@ namespace BAKKA_Editor.Operations
                     Base.HiSpeed = NewGimmick.HiSpeed;
                     break;
             }
+            Chart.RecalcTime();
         }
 
         public void Undo()
@@ -105,6 +112,7 @@ namespace BAKKA_Editor.Operations
                     Base.HiSpeed = OldGimmick.HiSpeed;
                     break;
             }
+            Chart.RecalcTime();
         }
     }
 }

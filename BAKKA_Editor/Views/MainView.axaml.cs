@@ -2256,30 +2256,30 @@ public partial class MainView : UserControl, IPassSetting
                         case GimmickType.BpmChange:
                         case GimmickType.TimeSignatureChange:
                         case GimmickType.HiSpeedChange:
-                            opList.Add(new EditGimmick(gimmick, vm.OutGimmicks[0]));
+                            opList.Add(new EditGimmick(gimmick, vm.OutGimmicks[0], chart));
                             break;
                         case GimmickType.ReverseStart:
-                            opList.Add(new EditGimmick(gimmick, vm.OutGimmicks[0]));
-                            opList.Add(new EditGimmick(gim1, vm.OutGimmicks[1]));
-                            opList.Add(new EditGimmick(gim2, vm.OutGimmicks[2]));
+                            opList.Add(new EditGimmick(gimmick, vm.OutGimmicks[0], chart));
+                            opList.Add(new EditGimmick(gim1, vm.OutGimmicks[1], chart));
+                            opList.Add(new EditGimmick(gim2, vm.OutGimmicks[2], chart));
                             break;
                         case GimmickType.ReverseMiddle:
-                            opList.Add(new EditGimmick(gim1, vm.OutGimmicks[0]));
-                            opList.Add(new EditGimmick(gimmick, vm.OutGimmicks[1]));
-                            opList.Add(new EditGimmick(gim2, vm.OutGimmicks[2]));
+                            opList.Add(new EditGimmick(gim1, vm.OutGimmicks[0], chart));
+                            opList.Add(new EditGimmick(gimmick, vm.OutGimmicks[1], chart));
+                            opList.Add(new EditGimmick(gim2, vm.OutGimmicks[2], chart));
                             break;
                         case GimmickType.ReverseEnd:
-                            opList.Add(new EditGimmick(gim1, vm.OutGimmicks[0]));
-                            opList.Add(new EditGimmick(gim2, vm.OutGimmicks[1]));
-                            opList.Add(new EditGimmick(gimmick, vm.OutGimmicks[2]));
+                            opList.Add(new EditGimmick(gim1, vm.OutGimmicks[0], chart));
+                            opList.Add(new EditGimmick(gim2, vm.OutGimmicks[1], chart));
+                            opList.Add(new EditGimmick(gimmick, vm.OutGimmicks[2], chart));
                             break;
                         case GimmickType.StopStart:
-                            opList.Add(new EditGimmick(gimmick, vm.OutGimmicks[0]));
-                            opList.Add(new EditGimmick(gim1, vm.OutGimmicks[1]));
+                            opList.Add(new EditGimmick(gimmick, vm.OutGimmicks[0], chart));
+                            opList.Add(new EditGimmick(gim1, vm.OutGimmicks[1], chart));
                             break;
                         case GimmickType.StopEnd:
-                            opList.Add(new EditGimmick(gim1, vm.OutGimmicks[0]));
-                            opList.Add(new EditGimmick(gimmick, vm.OutGimmicks[1]));
+                            opList.Add(new EditGimmick(gim1, vm.OutGimmicks[0], chart));
+                            opList.Add(new EditGimmick(gimmick, vm.OutGimmicks[1], chart));
                             break;
                         default:
                             break;
