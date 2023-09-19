@@ -43,7 +43,7 @@
         <vm:MainViewModel />
     </Design.DataContext>
 
-    <DockPanel Margin="8">
+    <DockPanel Margin="2">
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
                 <MenuItem Header="_New..." Command="{Binding NewCommand}" InputGesture="Ctrl+N" />
@@ -342,7 +342,7 @@
                                 </HeaderedContentControl>
 
                                 <Button Name="insertButton" Click="insertButton_Click" HorizontalAlignment="Stretch"
-                                        HorizontalContentAlignment="Center" Margin="0,4,8,0"
+                                        HorizontalContentAlignment="Center" Margin="0,4,8,0" Height="28"
                                         Content="{Binding InsertButtonText}" />
                             </StackPanel>
                         </ScrollViewer>
@@ -447,7 +447,7 @@
             <StackPanel Name="RightStackPanel" Grid.Column="1" VerticalAlignment="Bottom" Margin="8">
                 <HeaderedContentControl Header="Note View" Margin="0,0,0,8">
                     <StackPanel Margin="8">
-                        <Grid RowDefinitions="*,*" ColumnDefinitions="*,*">
+                        <Grid RowDefinitions="*,Auto,*" ColumnDefinitions="*,*">
                             <Button Grid.Row="0" Grid.Column="0" Name="notePrevButton" Margin="0,0,2,4"
                                     Classes="center-text stretch" Click="NotePrevButton_OnClick">
                                 &lt; Previous Note
