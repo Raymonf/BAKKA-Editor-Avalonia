@@ -1681,6 +1681,16 @@ public partial class MainView : UserControl
 
     private async Task<bool> SaveFile(bool prompt = true)
     {
+        // check if we have an end of chart note
+        var hasEndOfChart = chart.Notes.Any(x => x.NoteType == NoteType.EndOfChart);
+        if (!hasEndOfChart)
+        {
+            var shouldSave = await ShowBlockingMessageBox("Save Warning",
+                "This chart does not have an 'End of Chart' note. Do you wish to save anyway?\n\nPlease note that this chart will cause the game to crash in its current state.", MessageBoxType.YesNo);
+            if  (shouldSave == ContentDialogResult.None)
+                return false;
+        }
+
         var result = prompt;
 
         if (prompt || saveFilename.Length < 1)
