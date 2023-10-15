@@ -10,7 +10,6 @@ internal partial class Program
 {
     private static void Main(string[] args) => BuildAvaloniaApp()
         .UseReactiveUI()
-        .WithInterFont()
         .SetupBrowserApp("out");
 
     public static AppBuilder BuildAvaloniaApp()

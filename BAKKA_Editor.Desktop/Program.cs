@@ -1,5 +1,6 @@
 ﻿using System;
 using Avalonia;
+using Avalonia.Media;
 using Avalonia.ReactiveUI;
 
 namespace BAKKA_Editor.Desktop;
@@ -11,7 +12,8 @@ class Program
     // yet and stuff might break.
     [STAThread]
     public static void Main(string[] args) => BuildAvaloniaApp()
-        .WithInterFont()
+        // TODO: make this platform-specific
+        // .With(new FontManagerOptions { DefaultFamilyName = "avares://BAKKA_Editor/Assets/Roboto-Regular.ttf#Roboto"})
         .StartWithClassicDesktopLifetime(args);
 
     // Avalonia configuration, don't remove; also used by visual designer.
