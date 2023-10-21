@@ -36,12 +36,14 @@ internal class InsertNote : NoteOperation
 
     public override void Redo()
     {
-        Chart.Notes.Add(Note);
+        lock (Chart)
+            Chart.Notes.Add(Note);
     }
 
     public override void Undo()
     {
-        Chart.Notes.Remove(Note);
+        lock (Chart)
+            Chart.Notes.Remove(Note);
     }
 }
 
@@ -55,12 +57,14 @@ internal class RemoveNote : NoteOperation
 
     public override void Redo()
     {
-        Chart.Notes.Remove(Note);
+        lock (Chart)
+            Chart.Notes.Remove(Note);
     }
 
     public override void Undo()
     {
-        Chart.Notes.Add(Note);
+        lock (Chart)
+            Chart.Notes.Add(Note);
     }
 }
 
@@ -108,14 +112,18 @@ internal class InsertHoldNote : NoteOperation
     {
         if (Note.PrevNote != null)
             Note.PrevNote.NextNote = Note;
-        Chart.Notes.Add(Note);
+
+        lock (Chart)
+            Chart.Notes.Add(Note);
     }
 
     public override void Undo()
     {
         if (Note.PrevNote != null)
             Note.PrevNote.NextNote = null;
-        Chart.Notes.Remove(Note);
+
+        lock (Chart)
+            Chart.Notes.Remove(Note);
     }
 }
 
@@ -166,8 +174,9 @@ internal class RemoveHoldNote : NoteOperation
 
                 break;
         }
-
-        Chart.Notes.Remove(Note);
+        
+        lock (Chart)
+            Chart.Notes.Remove(Note);
     }
 
     public override void Undo()
@@ -198,6 +207,8 @@ internal class RemoveHoldNote : NoteOperation
                 break;
         }
 
-        Chart.Notes.Add(Note);
+
+        lock (Chart)
+            Chart.Notes.Add(Note);
     }
 }

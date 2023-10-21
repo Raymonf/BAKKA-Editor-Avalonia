@@ -15,26 +15,26 @@ internal class BeatInfo
     {
         Measure = measure;
         Beat = beat;
-        MeasureDecimal = GetMeasureDecimal();
+        MeasureDecimal = GetMeasureDecimal(measure, beat);
     }
 
     public BeatInfo(float measure)
     {
         Measure = (int) Math.Floor(measure);
         Beat = (int) ((measure - Measure) * 1920.0f);
-        MeasureDecimal = GetMeasureDecimal();
+        MeasureDecimal = GetMeasureDecimal(Measure, Beat);
     }
 
     public BeatInfo(BeatInfo info)
     {
         Measure = info.Measure;
         Beat = info.Beat;
-        MeasureDecimal = GetMeasureDecimal();
+        MeasureDecimal = GetMeasureDecimal(Measure, Beat);
     }
 
-    private float GetMeasureDecimal()
+    public static float GetMeasureDecimal(int measure, int beat)
     {
-        return Measure + Beat / 1920.0f;
+        return measure + beat / 1920.0f;
     }
 }
 
@@ -93,9 +93,9 @@ internal class Note : NoteBase
 
     [Browsable(false)] public MaskType MaskFill { get; set; }
 
-    [Browsable(false)] public Note NextNote { get; set; }
+    [Browsable(false)] public Note? NextNote { get; set; }
 
-    [Browsable(false)] public Note PrevNote { get; set; }
+    [Browsable(false)] public Note? PrevNote { get; set; }
 
     [Browsable(false)]
     public bool IsHold

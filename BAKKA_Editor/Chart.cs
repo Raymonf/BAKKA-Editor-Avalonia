@@ -36,7 +36,7 @@ internal class Chart
     public double MovieOffset { get; set; }
 
     private string SongFileName { get; set; }
-    private List<Gimmick> TimeEvents { get; set; }
+    private List<Gimmick>? TimeEvents { get; set; }
 
     public bool HasInitEvents
     {
@@ -297,19 +297,45 @@ internal class Chart
     }
 
     /// <summary>
+    ///     Translate MeasureDecimal to beats
+    /// </summary>
+    /// <param name="time">Current timestamp in ms</param>
+    /// <returns></returns>
+    public float GetBeatFromMeasureDecimal(double time)
+    {
+        if (TimeEvents == null || TimeEvents.Count == 0)
+        {
+            return BeatInfo.GetMeasureDecimal(-1, 0);
+        }
+        var evt = TimeEvents.LastOrDefault(x => time >= x.StartTime) ?? TimeEvents[0];
+        return (float) ((time - evt.StartTime) / (60000.0 / evt.BPM * 4.0f * evt.TimeSig.Ratio) +
+                        evt.Measure);
+    }
+
+    /// <summary>
+    ///     Translate measures into clock time
+    /// </summary>
+    /// <param name="beat"></param>
+    /// <returns></returns>
+    public int GetTime(float measureDecimal)
+    {
+        if (TimeEvents == null || TimeEvents.Count == 0)
+            return 0;
+
+        var evt = TimeEvents.LastOrDefault(x => measureDecimal >= x.Measure);
+        if (evt == null)
+            evt = TimeEvents[0];
+        return (int) (60000.0 / evt.BPM * 4.0f * evt.TimeSig.Ratio * (measureDecimal - evt.Measure) +
+                      evt.StartTime);
+    }
+
+    /// <summary>
     ///     Translate measures into clock time
     /// </summary>
     /// <param name="beat"></param>
     /// <returns></returns>
     public int GetTime(BeatInfo beat)
     {
-        if (TimeEvents == null || TimeEvents.Count == 0)
-            return 0;
-
-        var evt = TimeEvents.LastOrDefault(x => beat.MeasureDecimal >= x.Measure);
-        if (evt == null)
-            evt = TimeEvents[0];
-        return (int) (60000.0 / evt.BPM * 4.0f * evt.TimeSig.Ratio * (beat.MeasureDecimal - evt.Measure) +
-                      evt.StartTime);
+        return GetTime(beat.MeasureDecimal);
     }
 }

@@ -17,8 +17,6 @@ internal struct SkArcInfo
 
 internal class SkCircleView
 {
-    // Graphics.
-    // BufferedGraphics bufGraphics;
     private SKCanvas canvas;
     private readonly int CursorTransparency = 110;
     private readonly int FlairTransparency = 75;
@@ -92,109 +90,214 @@ internal class SkCircleView
             PanelSize.Width * 8.0f / 600.0f);
     }
 
-    private float GetTotalMeasureShowNotes(Chart chart)
+    // lazy reduced allocation version
+    private float GetTotalMeasureShowNotes2(Chart chart)
+    {
+        // Convert hispeed to frames
+        var displayFrames = 73.0f - (Hispeed - 1.5f) * 10.0f;
+        var tempTotalTime = displayFrames / 60.0f * 1000.0f;
+
+        float currentTime = chart.GetTime(CurrentMeasure);
+
+        var tempEndTime = currentTime + tempTotalTime;
+
+        if (showHispeed)
+        {
+            var initialSpeed = chart.Gimmicks.LastOrDefault(x =>
+                x.GimmickType == GimmickType.HiSpeedChange && CurrentMeasure > x.Measure);
+
+            if (initialSpeed == null)
+            {
+                initialSpeed = new Gimmick { HiSpeed = 1.0 };
+            }
+
+            float initialModifiedTime = tempTotalTime / (float)initialSpeed.HiSpeed;
+
+            var gimmicksInTimeRange = chart.Gimmicks.Where(x =>
+                x.Measure >= CurrentMeasure &&
+                chart.GetTime(new BeatInfo(x.Measure)) < tempEndTime &&
+                x.GimmickType == GimmickType.HiSpeedChange).ToList();
+
+            if (gimmicksInTimeRange.Count > 0)
+            {
+                for (var i = 0; i < gimmicksInTimeRange.Count; i++)
+                {
+                    float timeDiff;
+                    float itemTime = chart.GetTime(gimmicksInTimeRange[i].BeatInfo);
+                    float modifiedTime;
+
+                    if (itemTime <= tempTotalTime + currentTime)
+                    {
+                        if (i == 0)
+                            itemTime = currentTime;
+
+                        if (i != gimmicksInTimeRange.Count - 1)
+                        {
+                            var tempTestITimeDiff = currentTime + tempTotalTime - itemTime;
+                            var tempTestIModifiedTime = tempTestITimeDiff / (float)gimmicksInTimeRange[i].HiSpeed;
+
+                            if (currentTime + tempTotalTime - tempTestITimeDiff + tempTestIModifiedTime <
+                                chart.GetTime(gimmicksInTimeRange[i + 1].BeatInfo))
+                            {
+                                timeDiff = currentTime + tempTotalTime - itemTime;
+                                modifiedTime = timeDiff / (float)gimmicksInTimeRange[i].HiSpeed;
+                            }
+                            else
+                            {
+                                timeDiff = chart.GetTime(gimmicksInTimeRange[i + 1].BeatInfo) - itemTime;
+                                modifiedTime = timeDiff / (float)gimmicksInTimeRange[i].HiSpeed;
+                            }
+                        }
+                        else
+                        {
+                            timeDiff = currentTime + tempTotalTime - itemTime;
+                            modifiedTime = timeDiff / (float)gimmicksInTimeRange[i].HiSpeed;
+                        }
+
+                        tempTotalTime = tempTotalTime - timeDiff + modifiedTime;
+                    }
+                }
+            }
+            else
+            {
+                tempTotalTime = initialModifiedTime;
+            }
+
+            tempEndTime = currentTime + tempTotalTime;
+        }
+
+        // Convert total time to total measure
+        var endMeasure = chart.GetBeatFromMeasureDecimal(tempEndTime);
+        return endMeasure - CurrentMeasure;
+    }
+
+    /*private float GetTotalMeasureShowNotes(Chart chart)
     {
         //Convert hispeed to frames
         var displayFrames = 73.0f - (Hispeed - 1.5f) * 10.0f;
         var tempTotalTime = displayFrames / 60.0f * 1000.0f;
-        float currentTime = chart.GetTime(new BeatInfo(CurrentMeasure));
+
+        float currentTime = chart.GetTime(CurrentMeasure);
+
         var tempEndTime = currentTime + tempTotalTime;
         if (showHispeed)
         {
             //Account for hispeed gimmick
-            var HispeedChanges = new List<Gimmick>();
-            var InitialSpeed = chart.Gimmicks.LastOrDefault(x =>
+            var hiSpeedChanges = new List<Gimmick>();
+            var initialSpeed = chart.Gimmicks.LastOrDefault(x =>
                 x.GimmickType == GimmickType.HiSpeedChange && CurrentMeasure > x.Measure);
             //Add initial hispeed to list
-            if (InitialSpeed == null)
+            if (initialSpeed == null)
             {
-                InitialSpeed = new Gimmick();
-                InitialSpeed.HiSpeed = 1.0;
+                initialSpeed = new Gimmick();
+                initialSpeed.HiSpeed = 1.0;
             }
 
-            HispeedChanges.Add(InitialSpeed);
+            hiSpeedChanges.Add(initialSpeed);
             //Random todos that im too lazy to put in applicable locations
             //TODO: add "time" to notes so we can compare against it every time instead of always calculating what time a note is at
             //TODO: add function to reevaluate the time of every note when bpm or TS is added/removed.
 
             //add all hispeed changes to list that happen within the current total time to show notes
-            HispeedChanges.AddRange(chart.Gimmicks.Where(
+            hiSpeedChanges.AddRange(chart.Gimmicks.Where(
                 x => x.Measure >= CurrentMeasure
                      && chart.GetTime(new BeatInfo(x.Measure)) < tempEndTime
-                     && x.GimmickType == GimmickType.HiSpeedChange).ToList());
-            if (HispeedChanges.Count > 1)
-                for (var i = 0; i < HispeedChanges.Count; i++)
+                     && x.GimmickType == GimmickType.HiSpeedChange));
+            if (hiSpeedChanges.Count > 1)
+                for (var i = 0; i < hiSpeedChanges.Count; i++)
                 {
                     float timeDiff;
-                    float itemTime = chart.GetTime(HispeedChanges[i].BeatInfo);
+                    float itemTime = chart.GetTime(hiSpeedChanges[i].BeatInfo);
                     float modifiedTime;
                     if (itemTime <= tempTotalTime + currentTime)
                     {
                         if (i == 0)
                             itemTime = currentTime;
 
-                        if (i != HispeedChanges.Count - 1)
+                        if (i != hiSpeedChanges.Count - 1)
                         {
                             var tempTestITimeDiff = currentTime + tempTotalTime - itemTime;
-                            var tempTestIModifiedTime = tempTestITimeDiff / (float) HispeedChanges[i].HiSpeed;
+                            var tempTestIModifiedTime = tempTestITimeDiff / (float) hiSpeedChanges[i].HiSpeed;
                             if (currentTime + tempTotalTime - tempTestITimeDiff + tempTestIModifiedTime <
-                                chart.GetTime(HispeedChanges[i + 1].BeatInfo))
+                                chart.GetTime(hiSpeedChanges[i + 1].BeatInfo))
                             {
                                 timeDiff = currentTime + tempTotalTime - itemTime;
-                                modifiedTime = timeDiff / (float) HispeedChanges[i].HiSpeed;
+                                modifiedTime = timeDiff / (float) hiSpeedChanges[i].HiSpeed;
                             }
                             else
                             {
-                                timeDiff = chart.GetTime(HispeedChanges[i + 1].BeatInfo) - itemTime;
-                                modifiedTime = timeDiff / (float) HispeedChanges[i].HiSpeed;
+                                timeDiff = chart.GetTime(hiSpeedChanges[i + 1].BeatInfo) - itemTime;
+                                modifiedTime = timeDiff / (float) hiSpeedChanges[i].HiSpeed;
                             }
                         }
                         else
                         {
                             timeDiff = currentTime + tempTotalTime - itemTime;
-                            modifiedTime = timeDiff / (float) HispeedChanges[i].HiSpeed;
+                            modifiedTime = timeDiff / (float) hiSpeedChanges[i].HiSpeed;
                         }
 
                         tempTotalTime = tempTotalTime - timeDiff + modifiedTime;
                     }
                 }
             else
-                tempTotalTime /= (float) HispeedChanges[0].HiSpeed;
+                tempTotalTime /= (float) hiSpeedChanges[0].HiSpeed;
 
             tempEndTime = currentTime + tempTotalTime;
         }
 
         //convert total time to total measure
-        var EndMeasure = chart.GetBeat(tempEndTime);
-        return EndMeasure.MeasureDecimal - CurrentMeasure;
-    }
+        var endMeasure = chart.GetBeatMeasureDecimal(tempEndTime);
+        return endMeasure - CurrentMeasure;
+    }*/
 
     private float GetNoteScaleFromMeasure(Chart chart, float objectTime)
     {
         // Scale from 0-1
         float objectTimeAsTime = chart.GetTime(new BeatInfo(objectTime));
         float currentTime = chart.GetTime(new BeatInfo(CurrentMeasure));
-        float EndTimeShowNotes = chart.GetTime(new BeatInfo(CurrentMeasure + GetTotalMeasureShowNotes(chart)));
+        float endTimeShowNotes = chart.GetTime(new BeatInfo(CurrentMeasure + GetTotalMeasureShowNotes2(chart)));
         float notescaleInit;
-        var LatestHispeedChange = chart.Gimmicks
-            .Where(x => x.GimmickType == GimmickType.HiSpeedChange && CurrentMeasure >= x.Measure).LastOrDefault();
-        if (LatestHispeedChange != null && LatestHispeedChange.HiSpeed < 0.0)
+        var latestHispeedChange = chart.Gimmicks
+            .LastOrDefault(x => x.GimmickType == GimmickType.HiSpeedChange && CurrentMeasure >= x.Measure);
+        if (latestHispeedChange?.HiSpeed < 0.0)
             //Reverse
-            notescaleInit = (objectTimeAsTime - currentTime) / (EndTimeShowNotes - currentTime);
+            notescaleInit = (objectTimeAsTime - currentTime) / (endTimeShowNotes - currentTime);
         else
             //Normal
-            notescaleInit = 1 - (objectTimeAsTime - currentTime) / (EndTimeShowNotes - currentTime);
+            notescaleInit = 1 - (objectTimeAsTime - currentTime) / (endTimeShowNotes - currentTime);
         //Scale math
         notescaleInit = 0.001f + (float) Math.Pow(notescaleInit, 3.0f) -
             0.501f * (float) Math.Pow(notescaleInit, 2.0f) + 0.5f * notescaleInit;
         return notescaleInit;
     }
 
+    private float GetNoteScaleFromMeasure2(Chart chart, float objectTime)
+    {
+        // Scale from 0-1
+        float objectTimeAsTime = chart.GetTime(objectTime);
+        float currentTime = chart.GetTime(CurrentMeasure);
+        float endTimeShowNotes = chart.GetTime(CurrentMeasure + GetTotalMeasureShowNotes2(chart));
+
+        float notescaleInit;
+        var latestHispeedChange = chart.Gimmicks
+            .LastOrDefault(x => x.GimmickType == GimmickType.HiSpeedChange && CurrentMeasure >= x.Measure);
+        if (latestHispeedChange?.HiSpeed < 0.0)
+            //Reverse
+            notescaleInit = (objectTimeAsTime - currentTime) / (endTimeShowNotes - currentTime);
+        else
+            //Normal
+            notescaleInit = 1 - (objectTimeAsTime - currentTime) / (endTimeShowNotes - currentTime);
+        //Scale math
+        notescaleInit = 0.001f + (float) Math.Pow(notescaleInit, 3.0f) -
+            0.501f * (float) Math.Pow(notescaleInit, 2.0f) + 0.5f * notescaleInit;
+
+        return notescaleInit;
+    }
+
     private SkArcInfo GetScaledRect(Chart chart, float objectTime)
     {
         SkArcInfo info = new();
-        var notescaleInit = GetNoteScaleFromMeasure(chart, objectTime);
-        info.NoteScale = GetNoteScaleFromMeasure(chart, objectTime);
+        info.NoteScale = GetNoteScaleFromMeasure2(chart, objectTime);
         var scaledRectSize = DrawRect.Width * info.NoteScale;
         var scaledRadius = scaledRectSize / 2.0f;
         info.Rect = SKRect.Create(
@@ -338,8 +441,9 @@ internal class SkCircleView
     public void DrawCircle(Chart chart)
     {
         // Draw measure circle
+        var totalMeasureShowNotes = GetTotalMeasureShowNotes2(chart);
         for (var meas = (float) Math.Ceiling(CurrentMeasure);
-             meas - CurrentMeasure < GetTotalMeasureShowNotes(chart);
+             meas - CurrentMeasure < totalMeasureShowNotes;
              meas += 1.0f)
         {
             var info = GetScaledRect(chart, meas);
@@ -387,9 +491,10 @@ internal class SkCircleView
     {
         if (showGimmicks)
         {
+            var totalMeasureShowNotes = GetTotalMeasureShowNotes2(chart);
             var drawGimmicks = chart.Gimmicks.Where(
                 x => x.Measure >= CurrentMeasure
-                     && x.Measure <= CurrentMeasure + GetTotalMeasureShowNotes(chart)).ToList();
+                     && x.Measure <= CurrentMeasure + totalMeasureShowNotes);
 
             foreach (var gimmick in drawGimmicks)
             {
@@ -402,23 +507,20 @@ internal class SkCircleView
 
     public void DrawHolds(Chart chart, bool highlightSelectedNote, int selectedNoteIndex)
     {
+        var totalMeasureShowNotes = GetTotalMeasureShowNotes2(chart);
         var currentInfo = GetScaledRect(chart, CurrentMeasure);
-        var endInfo = GetScaledRect(chart, CurrentMeasure + GetTotalMeasureShowNotes(chart));
+        var endInfo = GetScaledRect(chart, CurrentMeasure + totalMeasureShowNotes);
 
         // First, draw holes that start before the viewpoint and have nodes that end after
         var holdNotes = chart.Notes.Where(
             x => x.Measure < CurrentMeasure
                  && x.NextNote != null
-                 && x.NextNote.Measure > CurrentMeasure + GetTotalMeasureShowNotes(chart)
+                 && x.NextNote.Measure > CurrentMeasure + totalMeasureShowNotes
                  && x.IsHold).ToList();
         foreach (var note in holdNotes)
         {
             var info = GetSkArcInfo(chart, note);
             var nextInfo = GetSkArcInfo(chart, note.NextNote);
-            //GraphicsPath path = new GraphicsPath();
-            //path.AddArc(endInfo.Rect, info.StartAngle, info.ArcLength);
-            //path.AddArc(currentInfo.Rect, info.StartAngle + info.ArcLength, -info.ArcLength);
-            //bufGraphics.Graphics.FillPath(HoldBrush, path);
 
             var ratio = (currentInfo.Rect.Width - nextInfo.Rect.Width) / (info.Rect.Width - nextInfo.Rect.Width);
             var startNoteAngle = nextInfo.StartAngle;
@@ -448,24 +550,19 @@ internal class SkCircleView
             p.ArcTo(currentInfo.Rect, startAngle, arcLength, true);
             p.ArcTo(endInfo.Rect, startAngle2 + arcLength2, -arcLength2, false);
             canvas.DrawPath(p, HoldBrush);
-
-            /*GraphicsPath path = new GraphicsPath();
-            path.AddArc(currentInfo.Rect, startAngle, arcLength);
-            path.AddArc(endInfo.Rect, startAngle2 + arcLength2, -arcLength2);
-            draw.FillPath(HoldBrush, path);*/
         }
 
         // Second, draw all the notes on-screen
         holdNotes = chart.Notes.Where(
             x => x.Measure >= CurrentMeasure
-                 && x.Measure <= CurrentMeasure + GetTotalMeasureShowNotes(chart)
+                 && x.Measure <= CurrentMeasure + totalMeasureShowNotes
                  && x.IsHold).ToList();
         foreach (var note in holdNotes)
         {
             var info = GetSkArcInfo(chart, note);
 
             // If the previous note is off-screen, this case handles that
-            if (note.PrevNote != null && note.PrevNote.Measure < CurrentMeasure)
+            if (note.PrevNote?.Measure < CurrentMeasure)
             {
                 var prevInfo = GetSkArcInfo(chart, (Note) note.PrevNote);
                 var ratio = (currentInfo.Rect.Width - info.Rect.Width) / (prevInfo.Rect.Width - info.Rect.Width);
@@ -487,7 +584,7 @@ internal class SkCircleView
             }
 
             // If the next note is on-screen, this case handles that
-            if (note.NextNote != null && note.NextNote.Measure <= CurrentMeasure + GetTotalMeasureShowNotes(chart))
+            if (note.NextNote != null && note.NextNote.Measure <= CurrentMeasure + totalMeasureShowNotes)
             {
                 var nextInfo = GetSkArcInfo(chart, note.NextNote);
                 var p = new SKPath();
@@ -497,7 +594,95 @@ internal class SkCircleView
             }
 
             // If the next note is off-screen, this case handles that
-            if (note.NextNote != null && note.NextNote.Measure > CurrentMeasure + GetTotalMeasureShowNotes(chart))
+            if (note.NextNote != null && note.NextNote.Measure > CurrentMeasure + totalMeasureShowNotes)
+            {
+                var nextInfo = GetSkArcInfo(chart, note.NextNote);
+                var ratio = (endInfo.Rect.Width - nextInfo.Rect.Width) / (info.Rect.Width - nextInfo.Rect.Width);
+                var startNoteAngle = nextInfo.StartAngle;
+                var endNoteAngle = info.StartAngle;
+                if (nextInfo.StartAngle > info.StartAngle && Math.Abs(nextInfo.StartAngle - info.StartAngle) > 180)
+                    startNoteAngle -= 360;
+                else if (info.StartAngle > nextInfo.StartAngle && Math.Abs(nextInfo.StartAngle - info.StartAngle) > 180)
+                    endNoteAngle -= 360;
+                var startAngle = ratio * (endNoteAngle - startNoteAngle) + startNoteAngle;
+                var endAngle = ratio * (endNoteAngle - info.ArcLength - (startNoteAngle - nextInfo.ArcLength)) +
+                               (startNoteAngle - nextInfo.ArcLength);
+                var arcLength = startAngle - endAngle;
+
+                var p = new SKPath();
+                p.ArcTo(endInfo.Rect, startAngle, arcLength, true);
+                p.ArcTo(info.Rect, info.StartAngle + info.ArcLength, -info.ArcLength, false);
+                canvas.DrawPath(p, HoldBrush);
+            }
+
+            // Draw note
+            if (info.Rect.Width >= 1)
+            {
+                canvas.DrawArc(info.Rect, info.StartAngle, info.ArcLength, false, GetNotePaint(note));
+
+                // Draw bonus
+                if (note.IsFlair)
+                    canvas.DrawArc(info.Rect, info.StartAngle + 2, info.ArcLength - 4, false, HighlightPen);
+
+                // Plot highlighted
+                if (highlightSelectedNote)
+                    if (selectedNoteIndex != -1 && note == chart.Notes[selectedNoteIndex])
+                        canvas.DrawArc(info.Rect, info.StartAngle + 2, info.ArcLength - 4, false, HighlightPen);
+            }
+        }
+    }
+
+    public void DrawHoldsSingle(Chart chart, bool highlightSelectedNote, int selectedNoteIndex)
+    {
+        var currentInfo = GetScaledRect(chart, CurrentMeasure);
+        var totalMeasureShowNotes = GetTotalMeasureShowNotes2(chart);
+        var endInfo = GetScaledRect(chart, CurrentMeasure + totalMeasureShowNotes);
+        var endMeasure = CurrentMeasure + totalMeasureShowNotes;
+
+        // Draw all the notes on-screen
+        var holdNotes = chart.Notes
+            .Where(x => x.IsHold && (
+                (x.Measure < CurrentMeasure && x.NextNote?.Measure > endMeasure) ||
+                (x.Measure >= CurrentMeasure && x.Measure <= endMeasure)));
+            // .ToList();
+        foreach (var note in holdNotes)
+        {
+            var info = GetSkArcInfo(chart, note);
+
+            // If the previous note is off-screen, this case handles that
+            if (note.PrevNote?.Measure < CurrentMeasure)
+            {
+                var prevInfo = GetSkArcInfo(chart, (Note) note.PrevNote);
+                var ratio = (currentInfo.Rect.Width - info.Rect.Width) / (prevInfo.Rect.Width - info.Rect.Width);
+                var startNoteAngle = info.StartAngle;
+                var endNoteAngle = prevInfo.StartAngle;
+                if (info.StartAngle > prevInfo.StartAngle && Math.Abs(info.StartAngle - prevInfo.StartAngle) > 180)
+                    startNoteAngle -= 360;
+                else if (prevInfo.StartAngle > info.StartAngle && Math.Abs(info.StartAngle - prevInfo.StartAngle) > 180)
+                    endNoteAngle -= 360;
+                var startAngle = ratio * (endNoteAngle - startNoteAngle) + startNoteAngle;
+                var endAngle = ratio * (endNoteAngle - prevInfo.ArcLength - (startNoteAngle - info.ArcLength)) +
+                               (startNoteAngle - info.ArcLength);
+                var arcLength = startAngle - endAngle;
+
+                var p = new SKPath();
+                p.ArcTo(info.Rect, info.StartAngle, info.ArcLength, true);
+                p.ArcTo(currentInfo.Rect, startAngle + arcLength, -arcLength, false);
+                canvas.DrawPath(p, HoldBrush);
+            }
+
+            // If the next note is on-screen, this case handles that
+            if (note.NextNote != null && note.NextNote.Measure <= CurrentMeasure + totalMeasureShowNotes)
+            {
+                var nextInfo = GetSkArcInfo(chart, note.NextNote);
+                var p = new SKPath();
+                p.ArcTo(info.Rect, info.StartAngle, info.ArcLength, true);
+                p.ArcTo(nextInfo.Rect, nextInfo.StartAngle + nextInfo.ArcLength, -nextInfo.ArcLength, false);
+                canvas.DrawPath(p, HoldBrush);
+            }
+
+            // If the next note is off-screen, this case handles that
+            if (note.NextNote != null && note.NextNote.Measure > CurrentMeasure + totalMeasureShowNotes)
             {
                 var nextInfo = GetSkArcInfo(chart, note.NextNote);
                 var ratio = (endInfo.Rect.Width - nextInfo.Rect.Width) / (info.Rect.Width - nextInfo.Rect.Width);
@@ -537,18 +722,21 @@ internal class SkCircleView
 
     public void DrawNotes(Chart chart, bool highlightSelectedNote, int selectedNoteIndex)
     {
+        var totalMeasureShowNotes = GetTotalMeasureShowNotes2(chart);
         var drawNotes = chart.Notes.Where(
             x => x.Measure >= CurrentMeasure
-                 && x.Measure <= CurrentMeasure + GetTotalMeasureShowNotes(chart)
-                 && !x.IsHold && !x.IsMask).ToList();
+                 && x.Measure <= CurrentMeasure + totalMeasureShowNotes
+                 && !x.IsHold && !x.IsMask); //.ToList();
         foreach (var note in drawNotes)
         {
             var info = GetSkArcInfo(chart, note);
 
             if (info.Rect.Width >= 1)
             {
-                canvas.DrawArc(info.Rect, info.StartAngle, info.ArcLength, false, GetNotePaint(note, info.NoteScale));
-                if (note.IsFlair) canvas.DrawArc(info.Rect, info.StartAngle + 2, info.ArcLength - 4, false, FlairPen);
+                canvas.DrawArc(info.Rect, info.StartAngle, info.ArcLength, false,
+                    GetNotePaint(note, info.NoteScale));
+                if (note.IsFlair)
+                    canvas.DrawArc(info.Rect, info.StartAngle + 2, info.ArcLength - 4, false, FlairPen);
                 // Plot highlighted
                 if (highlightSelectedNote)
                     if (selectedNoteIndex != -1 && note == chart.Notes[selectedNoteIndex])

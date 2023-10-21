@@ -625,36 +625,41 @@ public partial class MainView : UserControl
     private bool OpenFile()
     {
         chart = new Chart();
-        if (!chart.ParseFile(openChartFileReadStream))
+        lock (chart)
         {
-            Dispatcher.UIThread.Post(
-                async () => await ShowBlockingMessageBox("Error", "Failed to parse file. Ensure it is not corrupted."));
-            chart = new Chart();
-            openChartFileReadStream.Close();
-            return false;
-        }
+            var loadSuccess = chart.ParseFile(openChartFileReadStream);
+            if (!loadSuccess)
+            {
+                Dispatcher.UIThread.Post(
+                    async () => await ShowBlockingMessageBox("Error",
+                        "Failed to parse file. Ensure it is not corrupted."));
+                chart = new Chart();
+                openChartFileReadStream.Close();
+                return false;
+            }
 
-        // Successful parse
-        var initGimmicks = chart.Gimmicks.Where(x => x.StartTime == 0);
-        var initBpm = initGimmicks.FirstOrDefault(x => x.GimmickType == GimmickType.BpmChange);
-        var bpm = initBpm != null ? initBpm.BPM : 120.0;
-        var initTimeSig = initGimmicks.FirstOrDefault(x => x.GimmickType == GimmickType.TimeSignatureChange);
-        var timeSigUpper = initTimeSig != null ? initTimeSig.TimeSig.Upper : 4;
-        var timeSigLower = initTimeSig != null ? initTimeSig.TimeSig.Lower : 4;
-        chartSettingsViewModel.Bpm = bpm;
-        chartSettingsViewModel.TimeSigUpper = timeSigUpper;
-        chartSettingsViewModel.TimeSigLower = timeSigLower;
-        chartSettingsViewModel.Offset = chart.Offset;
-        chartSettingsViewModel.MovieOffset = chart.MovieOffset;
-        ResetChartTime();
-        UpdateNoteLabels(chart.Notes.Count > 0 ? 0 : -1);
-        UpdateGimmickLabels(chart.Gimmicks.Count > 0 ? 0 : -1);
-        if (!IsDesktop)
-            saveFileStream = openChartFileWriteStream;
-        saveFilename = openFilename;
-        chart.IsSaved = true;
-        isNewFile = false;
-        SetText();
+            // Successful parse
+            var initGimmicks = chart.Gimmicks.Where(x => x.StartTime == 0).ToList();
+            var initBpm = initGimmicks.FirstOrDefault(x => x.GimmickType == GimmickType.BpmChange);
+            var bpm = initBpm?.BPM ?? 120.0;
+            var initTimeSig = initGimmicks.FirstOrDefault(x => x.GimmickType == GimmickType.TimeSignatureChange);
+            var timeSigUpper = initTimeSig != null ? initTimeSig.TimeSig.Upper : 4;
+            var timeSigLower = initTimeSig != null ? initTimeSig.TimeSig.Lower : 4;
+            chartSettingsViewModel.Bpm = bpm;
+            chartSettingsViewModel.TimeSigUpper = timeSigUpper;
+            chartSettingsViewModel.TimeSigLower = timeSigLower;
+            chartSettingsViewModel.Offset = chart.Offset;
+            chartSettingsViewModel.MovieOffset = chart.MovieOffset;
+            ResetChartTime();
+            UpdateNoteLabels(chart.Notes.Count > 0 ? 0 : -1);
+            UpdateGimmickLabels(chart.Gimmicks.Count > 0 ? 0 : -1);
+            if (!IsDesktop)
+                saveFileStream = openChartFileWriteStream;
+            saveFilename = openFilename;
+            chart.IsSaved = true;
+            isNewFile = false;
+            SetText();
+        }
         return true;
     }
 
@@ -662,6 +667,7 @@ public partial class MainView : UserControl
     {
         var oldAutosave = Directory.GetFiles(PlatformUtils.GetTempPath(), "*.mer");
         foreach (var file in oldAutosave)
+        {
             try
             {
                 if (file != keep)
@@ -670,9 +676,31 @@ public partial class MainView : UserControl
             catch
             {
             }
+        }
     }
 
     private void RenderCanvas(SKCanvas canvas)
+    {
+        if (userSettings.ViewSettings.RenderSafelyButSlowly)
+        {
+            try
+            {
+                DoCanvasRender(canvas);
+            }
+            catch (InvalidOperationException ex)
+            {
+                Dispatcher.UIThread.Post(
+                    async () => await ShowBlockingMessageBox("Warning",
+                        "Caught an exception while rendering. A collection has potentially changed during render. Please yell at Ray to check this out, since you should never ever _ever_ see this." + Environment.NewLine + ex.Message));
+            }
+        }
+        else
+        {
+            DoCanvasRender(canvas);
+        }
+    }
+
+    private void DoCanvasRender(SKCanvas canvas)
     {
         skCircleView.showHispeed = userSettings.ViewSettings.ShowGimmicksDuringPlayback;
 
@@ -680,30 +708,36 @@ public partial class MainView : UserControl
 
         skCircleView.DrawBackground(BackColor, ResetBackColor);
 
-        // Draw masks
-        skCircleView.DrawMasks(chart);
+        lock (chart)
+        {
+            // Draw masks
+            skCircleView.DrawMasks(chart);
 
-        // Draw base and measure circle.
-        skCircleView.DrawCircle(chart);
+            // Draw base and measure circle.
+            skCircleView.DrawCircle(chart);
 
-        // Draw degree lines
-        skCircleView.DrawDegreeLines();
+            // Draw degree lines
+            skCircleView.DrawDegreeLines();
 
-        // Draw Gimmicks
-        skCircleView.DrawGimmicks(chart, userSettings.ViewSettings.ShowGimmicks, selectedGimmickIndex);
+            // Draw Gimmicks
+            skCircleView.DrawGimmicks(chart, userSettings.ViewSettings.ShowGimmicks, selectedGimmickIndex);
 
-        // Draw holds
-        skCircleView.DrawHolds(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex);
+            // Draw holds
+            //skCircleView.DrawHolds(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex);
+            skCircleView.DrawHoldsSingle(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex);
 
-        // Draw notes
-        skCircleView.DrawNotes(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex);
+            // Draw notes
+            skCircleView.DrawNotes(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex);
+        }
 
         // Determine if cursor should be showing
         var showCursor = userSettings.ViewSettings.ShowCursor || skCircleView.mouseDownPos != -1;
-        if (currentSong != null && !currentSong.Paused) showCursor = userSettings.ViewSettings.ShowCursorDuringPlayback;
+        if (currentSong != null && !currentSong.Paused)
+            showCursor = userSettings.ViewSettings.ShowCursorDuringPlayback;
 
         // Draw cursor
-        if (showCursor) skCircleView.DrawCursor(currentNoteType, (float) _vm.PositionNumeric, (float) _vm.SizeNumeric);
+        if (showCursor)
+            skCircleView.DrawCursor(currentNoteType, (float) _vm.PositionNumeric, (float) _vm.SizeNumeric);
     }
 
     private void CircleControl_OnWheel(object? sender, PointerWheelEventArgs e)
@@ -1472,7 +1506,9 @@ public partial class MainView : UserControl
             // new object so update the temporary last note to the new one
             if (userSettings.ViewSettings.SelectLastInsertedNote)
                 nextSelectedNote = tempNote;
-            chart.Notes.Add(tempNote);
+
+            lock (chart)
+                chart.Notes.Add(tempNote);
             chart.IsSaved = false;
             switch (currentNoteType)
             {
@@ -1644,11 +1680,14 @@ public partial class MainView : UserControl
                 if (initBpm != null)
                     initBpm.BPM = chartSettingsViewModel.Bpm;
                 else
-                    chart.Gimmicks.Add(new Gimmick
+                    lock (chart)
                     {
-                        BPM = chartSettingsViewModel.Bpm, BeatInfo = new BeatInfo(0, 0),
-                        GimmickType = GimmickType.BpmChange
-                    });
+                        chart.Gimmicks.Add(new Gimmick
+                        {
+                            BPM = chartSettingsViewModel.Bpm, BeatInfo = new BeatInfo(0, 0),
+                            GimmickType = GimmickType.BpmChange
+                        });
+                    }
 
                 var initTimSig =
                     chart.Gimmicks.FirstOrDefault(x =>
@@ -1660,16 +1699,20 @@ public partial class MainView : UserControl
                 }
                 else
                 {
-                    chart.Gimmicks.Add(
-                        new Gimmick
-                        {
-                            TimeSig = new TimeSignature
+                    lock (chart)
+                    {
+                        chart.Gimmicks.Add(
+                            new Gimmick
                             {
-                                Upper = chartSettingsViewModel.TimeSigUpper, Lower = chartSettingsViewModel.TimeSigLower
-                            },
-                            BeatInfo = new BeatInfo(0, 0),
-                            GimmickType = GimmickType.TimeSignatureChange
-                        });
+                                TimeSig = new TimeSignature
+                                {
+                                    Upper = chartSettingsViewModel.TimeSigUpper,
+                                    Lower = chartSettingsViewModel.TimeSigLower
+                                },
+                                BeatInfo = new BeatInfo(0, 0),
+                                GimmickType = GimmickType.TimeSignatureChange
+                            });
+                    }
                 }
 
                 chart.Offset = chartSettingsViewModel.Offset;
@@ -1937,15 +1980,18 @@ public partial class MainView : UserControl
 
     private void InsertGimmick(List<Gimmick> gimmicks)
     {
-        var operations = new List<InsertGimmick>();
-        foreach (var gim in gimmicks)
+        lock (chart)
         {
-            chart.Gimmicks.Add(gim);
-            operations.Add(new InsertGimmick(chart, gim));
-        }
+            var operations = new List<InsertGimmick>();
+            foreach (var gim in gimmicks)
+            {
+                chart.Gimmicks.Add(gim);
+                operations.Add(new InsertGimmick(chart, gim));
+            }
 
-        chart.IsSaved = false;
-        opManager.Push(new CompositeOperation(operations[0].Description, operations));
+            chart.IsSaved = false;
+            opManager.Push(new CompositeOperation(operations[0].Description, operations));
+        }
     }
 
     private void NotePrevButton_OnClick(object? sender, RoutedEventArgs e)
@@ -2256,44 +2302,47 @@ public partial class MainView : UserControl
         if (selectedGimmickIndex == -1)
             return;
 
-        var measure = chart.Gimmicks[selectedGimmickIndex].Measure;
-        var type = chart.Gimmicks[selectedGimmickIndex].GimmickType;
-        var gimmicks = new List<Gimmick>();
-        gimmicks.Add(chart.Gimmicks[selectedGimmickIndex]);
-        chart.Gimmicks.RemoveAt(selectedGimmickIndex);
-        switch (type)
+        lock (chart)
         {
-            case GimmickType.ReverseStart:
-                gimmicks.Add(
-                    chart.Gimmicks.First(x => x.Measure > measure && x.GimmickType == GimmickType.ReverseMiddle));
-                gimmicks.Add(chart.Gimmicks.First(x => x.Measure > measure && x.GimmickType == GimmickType.ReverseEnd));
-                break;
-            case GimmickType.ReverseMiddle:
-                gimmicks.Add(chart.Gimmicks.Last(x =>
-                    x.Measure < measure && x.GimmickType == GimmickType.ReverseStart));
-                gimmicks.Add(chart.Gimmicks.First(x => x.Measure > measure && x.GimmickType == GimmickType.ReverseEnd));
-                break;
-            case GimmickType.ReverseEnd:
-                gimmicks.Add(chart.Gimmicks.Last(x =>
-                    x.Measure < measure && x.GimmickType == GimmickType.ReverseStart));
-                gimmicks.Add(
-                    chart.Gimmicks.Last(x => x.Measure < measure && x.GimmickType == GimmickType.ReverseMiddle));
-                break;
-            case GimmickType.StopStart:
-                gimmicks.Add(chart.Gimmicks.First(x => x.Measure > measure && x.GimmickType == GimmickType.StopEnd));
-                break;
-            case GimmickType.StopEnd:
-                gimmicks.Add(chart.Gimmicks.Last(x => x.Measure < measure && x.GimmickType == GimmickType.StopStart));
-                break;
-        }
+            var measure = chart.Gimmicks[selectedGimmickIndex].Measure;
+            var type = chart.Gimmicks[selectedGimmickIndex].GimmickType;
+            var gimmicks = new List<Gimmick>();
+            gimmicks.Add(chart.Gimmicks[selectedGimmickIndex]);
+            chart.Gimmicks.RemoveAt(selectedGimmickIndex);
+            switch (type)
+            {
+                case GimmickType.ReverseStart:
+                    gimmicks.Add(
+                        chart.Gimmicks.First(x => x.Measure > measure && x.GimmickType == GimmickType.ReverseMiddle));
+                    gimmicks.Add(chart.Gimmicks.First(x => x.Measure > measure && x.GimmickType == GimmickType.ReverseEnd));
+                    break;
+                case GimmickType.ReverseMiddle:
+                    gimmicks.Add(chart.Gimmicks.Last(x =>
+                        x.Measure < measure && x.GimmickType == GimmickType.ReverseStart));
+                    gimmicks.Add(chart.Gimmicks.First(x => x.Measure > measure && x.GimmickType == GimmickType.ReverseEnd));
+                    break;
+                case GimmickType.ReverseEnd:
+                    gimmicks.Add(chart.Gimmicks.Last(x =>
+                        x.Measure < measure && x.GimmickType == GimmickType.ReverseStart));
+                    gimmicks.Add(
+                        chart.Gimmicks.Last(x => x.Measure < measure && x.GimmickType == GimmickType.ReverseMiddle));
+                    break;
+                case GimmickType.StopStart:
+                    gimmicks.Add(chart.Gimmicks.First(x => x.Measure > measure && x.GimmickType == GimmickType.StopEnd));
+                    break;
+                case GimmickType.StopEnd:
+                    gimmicks.Add(chart.Gimmicks.Last(x => x.Measure < measure && x.GimmickType == GimmickType.StopStart));
+                    break;
+            }
 
-        var ops = new List<RemoveGimmick>();
-        foreach (var gim in gimmicks)
-            ops.Add(new RemoveGimmick(chart, gim));
-        opManager.InvokeAndPush(new CompositeOperation(ops[0].Description, ops));
-        if (selectedGimmickIndex >= chart.Gimmicks.Count)
-            selectedGimmickIndex = chart.Gimmicks.Count - 1;
-        UpdateGimmickLabels();
+            var ops = new List<RemoveGimmick>();
+            foreach (var gim in gimmicks)
+                ops.Add(new RemoveGimmick(chart, gim));
+            opManager.InvokeAndPush(new CompositeOperation(ops[0].Description, ops));
+            if (selectedGimmickIndex >= chart.Gimmicks.Count)
+                selectedGimmickIndex = chart.Gimmicks.Count - 1;
+            UpdateGimmickLabels();
+        }
     }
 
     private async Task<ContentDialogResult> ShowBlockingMessageBox(string title, string text,

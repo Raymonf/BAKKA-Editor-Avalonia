@@ -29,13 +29,15 @@ internal class InsertGimmick : GimmickOperation
 
     public override void Redo()
     {
-        Chart.Gimmicks.Add(Gimmick);
+        lock (Chart)
+            Chart.Gimmicks.Add(Gimmick);
         Chart.RecalcTime();
     }
 
     public override void Undo()
     {
-        Chart.Gimmicks.Remove(Gimmick);
+        lock (Chart)
+            Chart.Gimmicks.Remove(Gimmick);
         Chart.RecalcTime();
     }
 }
@@ -50,13 +52,15 @@ internal class RemoveGimmick : GimmickOperation
 
     public override void Redo()
     {
-        Chart.Gimmicks.Remove(Gimmick);
+        lock (Chart)
+            Chart.Gimmicks.Remove(Gimmick);
         Chart.RecalcTime();
     }
 
     public override void Undo()
     {
-        Chart.Gimmicks.Add(Gimmick);
+        lock (Chart)
+            Chart.Gimmicks.Add(Gimmick);
         Chart.RecalcTime();
     }
 }

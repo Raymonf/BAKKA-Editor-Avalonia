@@ -26,6 +26,7 @@ internal class ViewSettings
     public bool ShowMeasureButtons { get; set; } = false;
     public int SliderScrollFactor { get; set; } = 3;
     public bool UseSpaceToPlaySink { get; set; } = false;
+    public bool RenderSafelyButSlowly { get; set; } = true;
 }
 
 internal class SaveSettings
