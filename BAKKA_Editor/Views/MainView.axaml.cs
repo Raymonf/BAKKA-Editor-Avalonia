@@ -2797,8 +2797,28 @@ public partial class MainView : UserControl
 
         var factor = userSettings.ViewSettings.SliderScrollFactor;
         var delta = e.Delta.Y > 0 ? factor : -factor;
-        _vm.PositionTrackBar = Math.Clamp(_vm.PositionTrackBar + delta, _vm.PositionTrackBarMinimum,
-            _vm.PositionTrackBarMaximum);
+
+        if (userSettings.ViewSettings.HandleOverflowPositionNumericScroll)
+        {
+            var newVal = _vm.PositionTrackBar + delta;
+            if (newVal > _vm.PositionTrackBarMaximum)
+            {
+                _vm.PositionTrackBar = _vm.PositionTrackBarMinimum;
+            }
+            else if (newVal < _vm.PositionTrackBarMinimum)
+            {
+                _vm.PositionTrackBar = _vm.PositionTrackBarMaximum;
+            }
+            else
+            {
+                _vm.PositionTrackBar = newVal;
+            }
+        }
+        else
+        {
+            _vm.PositionTrackBar = Math.Clamp(_vm.PositionTrackBar + delta, _vm.PositionTrackBarMinimum,
+                _vm.PositionTrackBarMaximum);
+        }
     }
 
     private void SizeTrackBar_OnPointerWheelChanged(object? sender, PointerWheelEventArgs e)
@@ -2807,6 +2827,26 @@ public partial class MainView : UserControl
 
         var factor = userSettings.ViewSettings.SliderScrollFactor;
         var delta = e.Delta.Y > 0 ? factor : -factor;
-        _vm.SizeTrackBar = Math.Clamp(_vm.SizeTrackBar + delta, _vm.SizeTrackBarMinimum, _vm.SizeTrackBarMaximum);
+
+        if (userSettings.ViewSettings.HandleOverflowSizeNumericScroll)
+        {
+            var newVal = _vm.SizeTrackBar + delta;
+            if (newVal > _vm.SizeTrackBarMaximum)
+            {
+                _vm.SizeTrackBar = _vm.SizeTrackBarMinimum;
+            }
+            else if (newVal < _vm.SizeTrackBarMinimum)
+            {
+                _vm.SizeTrackBar = _vm.SizeTrackBarMaximum;
+            }
+            else
+            {
+                _vm.SizeTrackBar = newVal;
+            }
+        }
+        else
+        {
+            _vm.SizeTrackBar = Math.Clamp(_vm.SizeTrackBar + delta, _vm.SizeTrackBarMinimum, _vm.SizeTrackBarMaximum);
+        }
     }
 }
