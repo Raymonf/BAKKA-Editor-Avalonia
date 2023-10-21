@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using BAKKA_Editor.Enums;
 
 namespace BAKKA_Editor;
 

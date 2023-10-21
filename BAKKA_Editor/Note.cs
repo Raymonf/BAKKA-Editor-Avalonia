@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using BAKKA_Editor.Enums;
 using SkiaSharp;
 
 namespace BAKKA_Editor;

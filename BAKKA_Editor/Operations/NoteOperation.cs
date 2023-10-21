@@ -1,4 +1,6 @@
-﻿namespace BAKKA_Editor.Operations;
+﻿using BAKKA_Editor.Enums;
+
+namespace BAKKA_Editor.Operations;
 
 internal abstract class NoteOperation : IOperation
 {

@@ -1,4 +1,4 @@
-﻿namespace BAKKA_Editor;
+namespace BAKKA_Editor.Enums;
 
 internal enum NoteType
 {
@@ -30,39 +30,4 @@ internal enum NoteType
     SlideGreenBonusFlair = 24,
     HoldStartBonusFlair = 25,
     ChainBonusFlair = 26
-}
-
-internal enum GimmickType
-{
-    NoGimmick = 1,
-    BpmChange = 2,
-    TimeSignatureChange = 3,
-
-    // Stop = 4,
-    HiSpeedChange = 5,
-    ReverseStart = 6,
-    ReverseMiddle = 7,
-    ReverseEnd = 8,
-    StopStart = 9,
-    StopEnd = 10
-}
-
-internal enum MaskType
-{
-    CounterClockwise = 0,
-    Clockwise = 1,
-    Center = 2
-}
-
-internal enum BonusType
-{
-    NoBonus = 0,
-    Bonus = 1,
-    Flair = 2
-}
-
-internal enum OperationDirection
-{
-    Undo,
-    Redo
 }

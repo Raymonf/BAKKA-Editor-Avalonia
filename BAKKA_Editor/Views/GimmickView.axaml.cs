@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Avalonia.Controls;
+using BAKKA_Editor.Enums;
 using BAKKA_Editor.ViewModels;
 
 namespace BAKKA_Editor.Views;

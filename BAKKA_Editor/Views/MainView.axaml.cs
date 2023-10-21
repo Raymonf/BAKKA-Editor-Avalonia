@@ -870,6 +870,10 @@ public partial class MainView : UserControl
     private void SetSelectedObject(NoteType type)
     {
         currentNoteType = type;
+
+        // bonus variants are only for tap and slide
+        bonusRadio.IsEnabled = currentNoteType.IsTouchNote() || currentNoteType.IsSlideNote();
+
         var minSize = 1;
         switch (type)
         {
@@ -991,6 +995,8 @@ public partial class MainView : UserControl
         if (_vm.SizeTrackBar < minSize) _vm.SizeTrackBar = minSize;
         _vm.SizeNumericMinimum = minSize;
         _vm.SizeTrackBarMinimum = minSize;
+
+
     }
 
     private void updateLabel(string text)
@@ -1235,10 +1241,8 @@ public partial class MainView : UserControl
                         SetSelectedObject(NoteType.SnapRedNoBonus);
                         break;
                     case BonusType.Bonus:
-                        flairRadio.IsChecked = true;
-                        SetSelectedObject(NoteType.SnapRedBonusFlair);
-                        break;
                     case BonusType.Flair:
+                        flairRadio.IsChecked = true;
                         SetSelectedObject(NoteType.SnapRedBonusFlair);
                         break;
                 }
@@ -1249,13 +1253,12 @@ public partial class MainView : UserControl
                 switch (currentBonusType)
                 {
                     case BonusType.NoBonus:
+                        noBonusRadio.IsChecked = true;
                         SetSelectedObject(NoteType.SnapBlueNoBonus);
                         break;
                     case BonusType.Bonus:
-                        flairRadio.IsChecked = true;
-                        SetSelectedObject(NoteType.SnapBlueBonusFlair);
-                        break;
                     case BonusType.Flair:
+                        flairRadio.IsChecked = true;
                         SetSelectedObject(NoteType.SnapBlueBonusFlair);
                         break;
                 }
@@ -1267,12 +1270,15 @@ public partial class MainView : UserControl
                 switch (currentBonusType)
                 {
                     case BonusType.NoBonus:
+                        noBonusRadio.IsChecked = true;
                         SetSelectedObject(NoteType.SlideOrangeNoBonus);
                         break;
                     case BonusType.Bonus:
+                        bonusRadio.IsChecked = true;
                         SetSelectedObject(NoteType.SlideOrangeBonus);
                         break;
                     case BonusType.Flair:
+                        flairRadio.IsChecked = true;
                         SetSelectedObject(NoteType.SlideOrangeBonusFlair);
                         break;
                 }
@@ -1284,12 +1290,15 @@ public partial class MainView : UserControl
                 switch (currentBonusType)
                 {
                     case BonusType.NoBonus:
+                        noBonusRadio.IsChecked = true;
                         SetSelectedObject(NoteType.SlideGreenNoBonus);
                         break;
                     case BonusType.Bonus:
+                        bonusRadio.IsChecked = true;
                         SetSelectedObject(NoteType.SlideGreenBonus);
                         break;
                     case BonusType.Flair:
+                        flairRadio.IsChecked = true;
                         SetSelectedObject(NoteType.SlideGreenBonusFlair);
                         break;
                 }
@@ -1300,26 +1309,21 @@ public partial class MainView : UserControl
                 switch (currentBonusType)
                 {
                     case BonusType.NoBonus:
+                        noBonusRadio.IsChecked = true;
                         SetSelectedObject(NoteType.HoldStartNoBonus);
                         break;
                     case BonusType.Bonus:
-                        flairRadio.IsChecked = true;
-                        SetSelectedObject(NoteType.HoldStartBonusFlair);
-                        break;
                     case BonusType.Flair:
+                        flairRadio.IsChecked = true;
                         SetSelectedObject(NoteType.HoldStartBonusFlair);
                         break;
                 }
 
                 break;
             case NoteType.HoldJoint:
-                break;
             case NoteType.HoldEnd:
-                break;
             case NoteType.MaskAdd:
-                break;
             case NoteType.MaskRemove:
-                break;
             case NoteType.EndOfChart:
                 break;
             case NoteType.Chain:
@@ -1327,13 +1331,12 @@ public partial class MainView : UserControl
                 switch (currentBonusType)
                 {
                     case BonusType.NoBonus:
+                        noBonusRadio.IsChecked = true;
                         SetSelectedObject(NoteType.Chain);
                         break;
                     case BonusType.Bonus:
-                        flairRadio.IsChecked = true;
-                        SetSelectedObject(NoteType.ChainBonusFlair);
-                        break;
                     case BonusType.Flair:
+                        flairRadio.IsChecked = true;
                         SetSelectedObject(NoteType.ChainBonusFlair);
                         break;
                 }

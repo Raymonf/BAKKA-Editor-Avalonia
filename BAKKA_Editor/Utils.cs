@@ -2,6 +2,7 @@
 using System.Drawing;
 using Avalonia.Controls;
 using Avalonia.Input;
+using BAKKA_Editor.Enums;
 using SkiaSharp;
 
 namespace BAKKA_Editor;
