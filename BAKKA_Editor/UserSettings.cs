@@ -29,6 +29,7 @@ internal class ViewSettings
     public bool RenderSafelyButSlowly { get; set; } = true;
     public bool HandleOverflowPositionNumericScroll { get; set; } = false;
     public bool HandleOverflowSizeNumericScroll { get; set; } = false;
+    public bool PlaceNoteOnDrag { get; set; } = true;
 }
 
 internal class SaveSettings

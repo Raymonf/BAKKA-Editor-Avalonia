@@ -368,6 +368,7 @@ public partial class MainView : UserControl
         _vm.ShowGimmicksDuringPlaybackInCircleView = userSettings.ViewSettings.ShowGimmicksDuringPlayback;
         _vm.DarkMode = userSettings.ViewSettings.DarkMode;
         _vm.AreMeasureButtonsVisible = userSettings.ViewSettings.ShowMeasureButtons;
+        _vm.PlaceNoteOnDrag = userSettings.ViewSettings.PlaceNoteOnDrag;
         _vm.VisualHiSpeedNumeric = (decimal) userSettings.ViewSettings.HispeedSetting;
         _vm.VolumeTrackBar = userSettings.ViewSettings.Volume;
         _vm.HitsoundVolumeTrackBar = Math.Clamp(userSettings.SoundSettings.HitsoundVolume, 0, 100);
@@ -1600,7 +1601,7 @@ public partial class MainView : UserControl
             return;
 
         var dist = Utils.GetDist(point.Position.ToSystemDrawing(), skCircleView.mouseDownPt);
-        if (dist > 5.0f)
+        if (dist > 5.0f && userSettings.ViewSettings.PlaceNoteOnDrag)
             InsertObject();
         skCircleView.UpdateMouseUp();
     }
@@ -2848,5 +2849,10 @@ public partial class MainView : UserControl
         {
             _vm.SizeTrackBar = Math.Clamp(_vm.SizeTrackBar + delta, _vm.SizeTrackBarMinimum, _vm.SizeTrackBarMaximum);
         }
+    }
+
+    public void SetPlaceNoteOnDrag(bool value)
+    {
+        userSettings.ViewSettings.PlaceNoteOnDrag = value;
     }
 }

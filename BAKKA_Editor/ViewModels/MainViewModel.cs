@@ -22,9 +22,9 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty] private bool showCursorDuringPlayback;
     [ObservableProperty] private bool showGimmicksDuringPlaybackInCircleView = true;
     [ObservableProperty] private bool showGimmicksInCircleView = true;
+    [ObservableProperty] private bool placeNoteOnDrag = true;
 
     // Music UI State
-
     // TODO: move this stuff out of here
     [ObservableProperty] private double sizeTrackBar = 0.0;
     [ObservableProperty] private int sizeTrackBarMinimum = 4;
@@ -165,6 +165,15 @@ public partial class MainViewModel : ViewModelBase
 
         var mainWindow = Target();
         mainWindow?.SetShowGimmicksInCircleView(ShowGimmicksInCircleView);
+        return true;
+    }
+
+    public bool TogglePlaceNoteOnDragCommand()
+    {
+        PlaceNoteOnDrag = !PlaceNoteOnDrag;
+
+        var mainWindow = Target();
+        mainWindow?.SetPlaceNoteOnDrag(PlaceNoteOnDrag);
         return true;
     }
 
