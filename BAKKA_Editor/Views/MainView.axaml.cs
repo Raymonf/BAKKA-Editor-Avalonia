@@ -106,8 +106,8 @@ public partial class MainView : UserControl
         DataContext ??= new MainViewModel();
         InitializeComponent();
         Setup();
-        AddHandler(KeyDownEvent, OnPreviewKeyDown, RoutingStrategies.Tunnel);
-        AddHandler(KeyUpEvent, OnPreviewKeyUp, RoutingStrategies.Tunnel);
+        KeyDownEvent.AddClassHandler<TopLevel>(OnPreviewKeyDown, RoutingStrategies.Tunnel, handledEventsToo: true);
+        KeyUpEvent.AddClassHandler<TopLevel>(OnPreviewKeyUp, RoutingStrategies.Tunnel, handledEventsToo: true);
     }
 
     private static bool IsDesktop => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ||
