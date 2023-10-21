@@ -28,7 +28,7 @@ public partial class MainViewModel : ViewModelBase
     // TODO: move this stuff out of here
     [ObservableProperty] private double sizeTrackBar = 0.0;
     [ObservableProperty] private int sizeTrackBarMinimum = 4;
-    [ObservableProperty] private int sizeTrackBarMaximum = 59;
+    [ObservableProperty] private int sizeTrackBarMaximum = 60;
 
     [ObservableProperty] private double positionTrackBar = 0.0;
     [ObservableProperty] private int positionTrackBarMinimum = 0;
