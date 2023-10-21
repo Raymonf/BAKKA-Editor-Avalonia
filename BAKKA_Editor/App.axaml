@@ -77,12 +77,18 @@
             Selector="NumericUpDown /template/ TextBox#PART_TextBox.spinRight /template/ ScrollViewer /template/ ScrollContentPresenter#PART_ContentPresenter">
             <Setter Property="Margin" Value="2,4,0,0" />
         </Style>
-        <Style Selector="NumericUpDown /template/ TextBox#PART_TextBox.spinRight /template/ Border#PART_BorderElement">
-            <Setter Property="CornerRadius" Value="4,0,0,4" />
-            <Setter Property="Background" Value="Transparent" />
+        <Style Selector="CheckBox /template/ ContentPresenter#ContentPresenter">
+            <Setter Property="Padding" Value="0,4,0,0" />
+        </Style>
+        <Style Selector="RadioButton /template/ ContentPresenter#ContentPresenter">
+            <Setter Property="Padding" Value="0,2,0,0" />
         </Style>
         <Style Selector="RadioButton /template/ ContentPresenter#ContentPresenter TextBlock">
             <Setter Property="ClipToBounds" Value="False" />
+        </Style>
+        <Style Selector="NumericUpDown /template/ TextBox#PART_TextBox.spinRight /template/ Border#PART_BorderElement">
+            <Setter Property="CornerRadius" Value="4,0,0,4" />
+            <Setter Property="Background" Value="Transparent" />
         </Style>
 
         <!-- thanks https://github.com/AvaloniaUI/Avalonia/issues/823#issuecomment-692270581 -->
