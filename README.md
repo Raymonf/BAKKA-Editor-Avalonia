@@ -1,5 +1,7 @@
 # BAKKA Editor Avalonia ~~Port~~ Fork
 
+#### [**Download Latest Nightly Build**](https://nightly.link/Raymonf/BAKKA-Editor-Avalonia/workflows/build/main?preview) <-- click this link if you're a normal person that just wants to run this thing
+
 A Marvelously simple and scuffed editor, but this time it's cross-platform (tested on Windows, Linux, and macOS)! Currently mostly up-to-date with upstream v2.1.8.
 
 ~~For the most part, this is a port of the Windows Forms code, with "MVVM" in place to connect the dots into the old Windows Forms parts. It's _horrible_.~~ There is some work to slowly start moving things to MVVM. If you are a developer, consider this caution tape in text form. Contributions/PRs are welcome and they will be reviewed (and merged) ASAP.
@@ -19,8 +21,8 @@ This depends on ManagedBass. Since BASS doesn't have WASM support, the `Web` pro
 Neither the `iOS` nor `Android` projects function properly at this time. iOS support was worked on long ago, but is mostly nonfunctional today.
 
 ### Credits / Attribution
-* Goatgarien - Wrote the original editor and tons of support
+* Goatgarien - Wrote the original editor and gave lots of support
 * Original editor contributors
-* kevqiu - ported code from Upstream PR #17 (Notes on Beat list view)
-* Yellow - ported code from Upstream PR #18 (Place Note on Drag)
+* kevqiu - ported code from upstream PR #17 (Notes on Beat list view)
+* yellowberryHN - ported code from upstream PR #18 (Place Note on Drag)
 * All the people who reported bugs and feedback
