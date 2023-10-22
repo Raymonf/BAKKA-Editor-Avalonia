@@ -51,7 +51,7 @@ internal class PlatformUtils
         var lines = new List<string>();
         using var sr = new StreamReader(stream);
         while (!sr.EndOfStream)
-            lines.Add(sr.ReadLine());
+            lines.Add(sr.ReadLine() ?? "");
         return lines;
     }
 }

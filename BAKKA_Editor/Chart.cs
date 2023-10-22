@@ -36,6 +36,7 @@ internal class Chart
     public double MovieOffset { get; set; }
 
     private string SongFileName { get; set; }
+    public string? EditorSongFileName { get; set; }
     private List<Gimmick>? TimeEvents { get; set; }
 
     public bool HasInitEvents
@@ -51,8 +52,11 @@ internal class Chart
 
     public bool IsSaved { get; set; }
 
-    public bool ParseFile(Stream stream)
+    public bool ParseFile(Stream? stream)
     {
+        if (stream == null)
+            return false;
+
         var file = PlatformUtils.ReadAllStreamLines(stream);
 
         if (file.Count < 1) return false;
@@ -66,6 +70,10 @@ internal class Chart
             var path = Utils.GetTag(line, "#MUSIC_FILE_PATH ");
             if (path != null)
                 SongFileName = path;
+
+            var editorSongName = Utils.GetTag(line, "#X_BAKKA_MUSIC_FILENAME ");
+            if (editorSongName != null)
+                EditorSongFileName = editorSongName;
 
             var offset = Utils.GetTag(line, "#OFFSET");
             if (offset != null)
@@ -182,6 +190,8 @@ internal class Chart
             sw.WriteLine("#MUSIC_SCORE_VERSION 0");
             sw.WriteLine("#GAME_VERSION ");
             sw.WriteLine($"#MUSIC_FILE_PATH {SongFileName}");
+            if (EditorSongFileName != null)
+                sw.WriteLine($"#X_BAKKA_MUSIC_FILENAME {EditorSongFileName}");
             sw.WriteLine($"#OFFSET {Offset:F6}");
             sw.WriteLine($"#MOVIEOFFSET {MovieOffset:F6}");
             sw.WriteLine("#BODY");

@@ -87,7 +87,7 @@ public partial class MainView : UserControl
 
     // Playfield
     private SkCircleView skCircleView;
-    private string songFilePath = "";
+    private string? songFilePath;
 
     // Music
     private IBakkaSoundEngine soundEngine;
@@ -166,6 +166,10 @@ public partial class MainView : UserControl
         UpdateGimmickLabels(-1);
         SetText();
         opManager.Clear();
+        if (IsDesktop && currentSong != null && songFilePath != null)
+        {
+            chart.EditorSongFileName = Path.GetFileName(songFilePath);
+        }
     }
 
     public async Task OpenChartSettings_OnClick()
@@ -196,7 +200,7 @@ public partial class MainView : UserControl
 
         openChartFileReadStream = await result[0].OpenReadAsync();
         openFilename = result[0].Path.LocalPath;
-        if (OpenFile() && !IsDesktop)
+        if (await OpenFile() && !IsDesktop)
             openChartFileWriteStream = await result[0].OpenWriteAsync();
     }
 
@@ -607,7 +611,7 @@ public partial class MainView : UserControl
                                 {
                                     openChartFileReadStream = File.Open(autosaveFile, FileMode.Open);
                                     isRecoveredFile = true;
-                                    OpenFile();
+                                    await OpenFile();
                                 }
 
                                 if (!isRecoveredFile) DeleteAutosaves();
@@ -627,7 +631,7 @@ public partial class MainView : UserControl
         }
     }
 
-    private bool OpenFile()
+    private async Task<bool> OpenFile()
     {
         chart = new Chart();
         lock (chart)
@@ -639,7 +643,7 @@ public partial class MainView : UserControl
                     async () => await ShowBlockingMessageBox("Error",
                         "Failed to parse file. Ensure it is not corrupted."));
                 chart = new Chart();
-                openChartFileReadStream.Close();
+                openChartFileReadStream?.Close();
                 return false;
             }
 
@@ -664,6 +668,27 @@ public partial class MainView : UserControl
             chart.IsSaved = true;
             isNewFile = false;
             SetText();
+        }
+
+        if (IsDesktop)
+        {
+            if (!string.IsNullOrEmpty(chart.EditorSongFileName))
+            {
+                var chartDirectory = Path.GetDirectoryName(openFilename);
+                var absoluteSongPath = Path.Combine(chartDirectory ?? "", chart.EditorSongFileName);
+                if (File.Exists(absoluteSongPath) && songFilePath != absoluteSongPath)
+                {
+                    var shouldSave = await ShowBlockingMessageBox("Load Song File?",
+                        $"A song file named '{chart.EditorSongFileName}' was detected.\n\nDo you want to load it?", MessageBoxType.YesNo);
+                    if (shouldSave == ContentDialogResult.None)
+                        return true;
+                    SetOpenedSongFile(absoluteSongPath);
+                }
+            }
+            else if (songFilePath != null)
+            {
+                chart.EditorSongFileName = Path.GetFileName(songFilePath);
+            }
         }
         return true;
     }
@@ -2496,17 +2521,23 @@ public partial class MainView : UserControl
         if (result.Count < 1)
             return;
 
-        songFilePath = result[0].Path.LocalPath;
-        songFileLabel.Text = Path.GetFileName(songFilePath);
+        SetOpenedSongFile(result[0].Path.LocalPath, IsDesktop ? null : await result[0].OpenReadAsync());
+    }
 
+    /// <summary>
+    /// Set the currently opened song file
+    /// </summary>
+    /// <param name="stream">For mobile only: file stream for the song file</param>
+    public void SetOpenedSongFile(string? songPath, Stream? stream = null)
+    {
         if (currentSong != null) currentSong.Paused = true;
 
         try
         {
-            if (PlatformUtils.FormFactorType == FormFactorType.Mobile)
-                currentSong = soundEngine.Play2D(await result[0].OpenReadAsync(), false, true);
-            else
-                currentSong = soundEngine.Play2D(songFilePath, false, true);
+            if (stream == null && songPath != null)
+                currentSong = soundEngine.Play2D(songPath, false, true);
+            else if (stream != null)
+                currentSong = soundEngine.Play2D(stream, false, true);
         }
         catch (Exception exception)
         {
@@ -2515,7 +2546,6 @@ public partial class MainView : UserControl
             updateTimer.IsEnabled = false;
             updateTimer.Stop();
             hitsoundTimer.Stop();
-            return;
         }
 
         if (currentSong != null)
@@ -2528,6 +2558,20 @@ public partial class MainView : UserControl
             playButton.IsEnabled = true;
             _vm.MeasureNumeric = 0;
             _vm.Beat1Numeric = 0;
+
+            // Update chart's editor song file path
+            if (!string.IsNullOrEmpty(songPath))
+            {
+                songFilePath = songPath;
+                chart.EditorSongFileName = Path.GetFileName(songPath);
+            }
+
+            // update song file label
+            Dispatcher.UIThread.Invoke(() =>
+            {
+                if (songFilePath != null)
+                    songFileLabel.Text = Path.GetFileName(songFilePath);
+            });
         }
     }
 
