@@ -27,9 +27,9 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty] private bool showGimmicksDuringPlaybackInCircleView = true;
     [ObservableProperty] private bool showGimmicksInCircleView = true;
     [ObservableProperty] private bool placeNoteOnDrag = true;
+    [ObservableProperty] private bool showNotesOnBeat = false;
     
     // Note UI State
-    [ObservableProperty] private bool showNotesOnBeat = false;
     public ObservableCollection<NoteOnBeatItem> NotesOnBeatList { get; } = new();
 
     // Music UI State
