@@ -316,12 +316,14 @@ internal class SkCircleView
 
         if (note.Size == 60)
         {
-            // info.StartAngle -= 2;
-            // info.ArcLength += 4;
-
             // hack hack hack HACK
             // skia's arcs cannot have a sweep angle of 360deg or something :(
             info.ArcLength = -359.999f;
+        }
+        else
+        {
+            info.StartAngle -= 2;
+            info.ArcLength += 4;
         }
 
         return info;
