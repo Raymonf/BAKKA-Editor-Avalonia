@@ -26,30 +26,37 @@ internal static class Utils
         return deg * Math.PI / 180.0f;
     }
 
+    private static readonly SKColor BpmChangeColor = new(0, 255, 255, 200);
+    private static readonly SKColor TimeSignatureChangeColor = new(160, 255, 160, 200);
+    private static readonly SKColor HiSpeedChangeColor = new(0, 255, 0, 200);
+    private static readonly SKColor ReverseColor = new(255, 255, 0, 200);
+    private static readonly SKColor StopColor = new(255, 0, 0, 200);
+
     internal static SKColor GimmickTypeToColor(GimmickType type)
     {
         switch (type)
         {
+            default:
             case GimmickType.NoGimmick:
                 return SKColors.Transparent;
             case GimmickType.BpmChange:
-                return new SKColor(200, 0, 255, 255);
+                return BpmChangeColor;
             case GimmickType.TimeSignatureChange:
-                return new SKColor(200, 160, 255, 160);
+                return TimeSignatureChangeColor;
             case GimmickType.HiSpeedChange:
-                return new SKColor(200, 0, 255, 0);
+                return HiSpeedChangeColor;
             case GimmickType.ReverseStart:
             case GimmickType.ReverseMiddle:
             case GimmickType.ReverseEnd:
-                return new SKColor(200, 255, 255, 0);
+                return ReverseColor;
             case GimmickType.StopStart:
             case GimmickType.StopEnd:
-                return new SKColor(200, 255, 0, 0);
-            default:
-                return SKColors.Transparent;
+                return StopColor;
         }
     }
 
+    private static readonly SKColor SlideOrangeColor = new SKColor(255, 128, 0);
+    private static readonly SKColor ChainColor = new SKColor(204, 190, 45);
     internal static SKColor NoteTypeToColor(NoteType type)
     {
         switch (type)
@@ -67,7 +74,7 @@ internal static class Utils
             case NoteType.SlideOrangeNoBonus:
             case NoteType.SlideOrangeBonus:
             case NoteType.SlideOrangeBonusFlair:
-                return new SKColor(255, 128, 0);
+                return SlideOrangeColor;
             case NoteType.SlideGreenNoBonus:
             case NoteType.SlideGreenBonus:
             case NoteType.SlideGreenBonusFlair:
@@ -79,7 +86,7 @@ internal static class Utils
                 return SKColors.Yellow;
             case NoteType.Chain:
             case NoteType.ChainBonusFlair:
-                return new SKColor(204, 190, 45);
+                return ChainColor;
             default:
                 return SKColors.Transparent;
         }
