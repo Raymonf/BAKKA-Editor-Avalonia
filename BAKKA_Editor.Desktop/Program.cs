@@ -12,8 +12,38 @@ class Program
     // yet and stuff might break.
     [STAThread]
     public static void Main(string[] args) => BuildAvaloniaApp()
-        // TODO: make this platform-specific
-        // .With(new FontManagerOptions { DefaultFamilyName = "avares://BAKKA_Editor/Assets/Roboto-Regular.ttf#Roboto"})
+        .With(() =>
+        {
+            if (!OperatingSystem.IsWindows())
+            {
+                return new FontManagerOptions
+                {
+                    DefaultFamilyName = "avares://BAKKA_Editor/Assets/Roboto-Regular.ttf#Roboto"
+                };
+            }
+
+            return new FontManagerOptions();
+        })
+        .With(() =>
+        {
+            if (OperatingSystem.IsMacOS())
+            {
+                return new AvaloniaNativePlatformOptions
+                {
+                    RenderingMode = new[]
+                    {
+#pragma warning disable CS0618
+                        // experimental option
+                        AvaloniaNativeRenderingMode.Metal,
+#pragma warning restore CS0618
+                        AvaloniaNativeRenderingMode.OpenGl,
+                        AvaloniaNativeRenderingMode.Software
+                    }
+                };
+            }
+
+            return new AvaloniaNativePlatformOptions();
+        })
         .StartWithClassicDesktopLifetime(args);
 
     // Avalonia configuration, don't remove; also used by visual designer.
