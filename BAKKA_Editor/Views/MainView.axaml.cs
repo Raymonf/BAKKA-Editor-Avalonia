@@ -2283,8 +2283,9 @@ public partial class MainView : UserControl
             {
                 Title = "Gimmick Settings",
                 Content = window,
-                PrimaryButtonText = "Yes",
-                CloseButtonText = "No"
+                PrimaryButtonCommand = vm.OkCommand,
+                PrimaryButtonText = "Save",
+                CloseButtonText = "Cancel"
             };
             vm.Dialog = dialog;
             Dispatcher.UIThread.Post(
