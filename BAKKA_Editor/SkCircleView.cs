@@ -313,10 +313,15 @@ internal class SkCircleView
         var info = GetScaledRect(chart, note.Measure);
         info.StartAngle = -note.Position * 6;
         info.ArcLength = -note.Size * 6;
-        if (Math.Abs(info.ArcLength - -360) > 0.00001)
+
+        if (note.Size == 60)
         {
-            info.StartAngle -= 2;
-            info.ArcLength += 4;
+            // info.StartAngle -= 2;
+            // info.ArcLength += 4;
+
+            // hack hack hack HACK
+            // skia's arcs cannot have a sweep angle of 360deg or something :(
+            info.ArcLength = -359.999f;
         }
 
         return info;
