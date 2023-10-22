@@ -772,7 +772,7 @@ internal class SkCircleView
             IsAntialias = true,
             Color = Utils.GimmickTypeToColor(gimmick.GimmickType),
             Style = SKPaintStyle.Stroke,
-            StrokeWidth = PanelSize.Width * 8.0f * noteScale / 600.0f
+            StrokeWidth = PanelSize.Width * 5.0f * noteScale / 600.0f
         };
     }
 
