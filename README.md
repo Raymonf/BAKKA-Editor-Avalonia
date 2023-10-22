@@ -5,15 +5,22 @@ A Marvelously simple and scuffed editor, but this time it's cross-platform (test
 ~~For the most part, this is a port of the Windows Forms code, with "MVVM" in place to connect the dots into the old Windows Forms parts. It's _horrible_.~~ There is some work to slowly start moving things to MVVM. If you are a developer, consider this caution tape in text form. Contributions/PRs are welcome and they will be reviewed (and merged) ASAP.
 
 ### Non-Upstream Features
-* Hardware-accelerated rendering and uncapped FPS (note: CPU/single-threaded performance is generally the bottleneck now)
+* Hardware-accelerated rendering and uncapped FPS (with some optimizations for performance)
 * Built-in FLAC support
 * Badly-implemented and very, very approximate hitsounds (edit `settings.toml`)
 * Dark mode, thanks to FluentAvalonia
 * You can actually type in the number boxes (is this a feature?)
 * Checks and prompts for a "End of Chart" note before saving
 
-### Cross Platform Warnings
+### Cross Platform Code Warnings
 
 This depends on ManagedBass. Since BASS doesn't have WASM support, the `Web` project is just the default Avalonia template. It might be as simple as adding another sound engine (`IBakkaSoundEngine`).
 
 Neither the `iOS` nor `Android` projects function properly at this time. iOS support was worked on long ago, but is mostly nonfunctional today.
+
+### Credits / Attribution
+* Goatgarien - Wrote the original editor and tons of support
+* Original editor contributors
+* kevqiu - ported code from Upstream PR #17 (Notes on Beat list view)
+* Yellow - ported code from Upstream PR #18 (Place Note on Drag)
+* All the people who reported bugs and feedback
