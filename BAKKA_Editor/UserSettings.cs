@@ -30,6 +30,7 @@ internal class ViewSettings
     public bool HandleOverflowPositionNumericScroll { get; set; } = false;
     public bool HandleOverflowSizeNumericScroll { get; set; } = false;
     public bool PlaceNoteOnDrag { get; set; } = true;
+    public bool ShowNotesOnBeat { get; set; } = false;
 }
 
 internal class SaveSettings

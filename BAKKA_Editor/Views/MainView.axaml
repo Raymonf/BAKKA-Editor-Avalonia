@@ -474,6 +474,34 @@
 
             <!-- Right Side Stack Panel (Note View, Gimmick View) -->
             <StackPanel Name="RightStackPanel" Grid.Column="1" VerticalAlignment="Bottom" Margin="8">
+                <!-- TODO: move this shit out!!!!!!!! -->
+                <HeaderedContentControl Header="Notes on Beat" Margin="0,0,0,8" IsVisible="{Binding ShowNotesOnBeat}">
+                    <Grid RowDefinitions="Auto,Auto">
+                        <!-- Headers -->
+                        <Grid ColumnDefinitions="10*,5*,5*" Margin="0,8,0,4">
+                            <TextBlock Padding="16,0,0,0">Type</TextBlock>
+                            <TextBlock Grid.Column="1">Position</TextBlock>
+                            <TextBlock Grid.Column="2">Size</TextBlock>
+                        </Grid>
+                        
+                        <ListBox Grid.Row="1" Name="NotesOnBeatListBox"
+                                 ItemsSource="{Binding NotesOnBeatList}"
+                                 SelectionChanged="NotesOnBeatListBox_OnSelectionChanged"
+                                 Height="160"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid ColumnDefinitions="10*,5*,5*">
+                                        <TextBlock VerticalAlignment="Center" Text="{Binding Type}" TextWrapping="Wrap" />
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding Position}" TextWrapping="Wrap" />
+                                        <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="{Binding Size}" TextWrapping="Wrap" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                </HeaderedContentControl>
+                
                 <HeaderedContentControl Header="Note View" Margin="0,0,0,8">
                     <StackPanel Margin="8">
                         <Grid RowDefinitions="*,Auto,*" ColumnDefinitions="*,*">

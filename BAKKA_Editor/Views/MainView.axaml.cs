@@ -15,10 +15,12 @@ using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using BAKKA_Editor.Data;
 using BAKKA_Editor.Enums;
 using BAKKA_Editor.Operations;
 using BAKKA_Editor.SoundEngines;
 using BAKKA_Editor.ViewModels;
+using DynamicData;
 using FluentAvalonia.UI.Controls;
 using SkiaSharp;
 using Tomlyn;
@@ -359,6 +361,7 @@ public partial class MainView : UserControl
         }
 
         // Apply settings
+        // TODO: REFACTOR THIS SHIT!!!!!!!!!
         _vm = (MainViewModel) DataContext!;
         _vm.ShowCursor = userSettings.ViewSettings.ShowCursor;
         _vm.ShowCursorDuringPlayback = userSettings.ViewSettings.ShowCursorDuringPlayback;
@@ -372,6 +375,7 @@ public partial class MainView : UserControl
         _vm.VisualHiSpeedNumeric = (decimal) userSettings.ViewSettings.HispeedSetting;
         _vm.VolumeTrackBar = userSettings.ViewSettings.Volume;
         _vm.HitsoundVolumeTrackBar = Math.Clamp(userSettings.SoundSettings.HitsoundVolume, 0, 100);
+        _vm.ShowNotesOnBeat = userSettings.ViewSettings.ShowNotesOnBeat;
         SetDarkMode(userSettings.ViewSettings.DarkMode);
 
         autoSaveTimer =
@@ -1107,6 +1111,8 @@ public partial class MainView : UserControl
             insertButton.IsEnabled = false;
         else
             insertButton.IsEnabled = true;
+
+        UpdateNotesOnBeat();
     }
 
     private void tapButton_Click(object sender, RoutedEventArgs e)
@@ -1510,6 +1516,9 @@ public partial class MainView : UserControl
 
             lock (chart)
                 chart.Notes.Add(tempNote);
+
+            UpdateNotesOnBeat();
+            
             chart.IsSaved = false;
             switch (currentNoteType)
             {
@@ -2854,5 +2863,44 @@ public partial class MainView : UserControl
     public void SetPlaceNoteOnDrag(bool value)
     {
         userSettings.ViewSettings.PlaceNoteOnDrag = value;
+    }
+    
+    private void UpdateNotesOnBeat()
+    {
+        if (!userSettings.ViewSettings.ShowNotesOnBeat)
+            return;
+        
+        // Fill list of notes on beat
+        _vm.NotesOnBeatList.Clear();
+        _vm.NotesOnBeatList.AddRange(
+            chart.Notes.Where(n => Math.Abs(n.BeatInfo.MeasureDecimal - skCircleView.CurrentMeasure) < 0.00001)
+            .Select(n => new NoteOnBeatItem(n.NoteType.ToLabel(), n.Position, n.Size))
+            .ToList()
+        );
+    }
+
+    private void NotesOnBeatListBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (!userSettings.ViewSettings.ShowNotesOnBeat || e.AddedItems.Count < 1)
+            return;
+        
+        var selectedNote = (NoteOnBeatItem?) e.AddedItems[0];
+        if (selectedNote == null)
+            return;
+        var noteType = selectedNote.Type;
+        var position = selectedNote.Position;
+        var size = selectedNote.Size;
+        var currentMeasure = skCircleView.CurrentMeasure;
+        // Find the matching selected note
+        var noteInChart = chart.Notes.FirstOrDefault(
+            x => Math.Abs(x.BeatInfo.MeasureDecimal - currentMeasure) < 0.00001 && 
+                 x.NoteType.ToLabel() == noteType &&
+                 x.Position == position &&
+                 x.Size == size
+        );
+        if (noteInChart == null)
+            return;
+        selectedNoteIndex = chart.Notes.IndexOf(noteInChart);
+        UpdateNoteLabels();
     }
 }

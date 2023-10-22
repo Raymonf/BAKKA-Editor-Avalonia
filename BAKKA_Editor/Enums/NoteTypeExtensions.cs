@@ -1,6 +1,6 @@
 ﻿namespace BAKKA_Editor.Enums;
 
-internal static class NoteTypeExtensions
+public static class NoteTypeExtensions
 {
     public static bool IsTouchNote(this NoteType type)
     {

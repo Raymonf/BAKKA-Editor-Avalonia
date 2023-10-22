@@ -1,6 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
+using BAKKA_Editor.Data;
 using BAKKA_Editor.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 
@@ -18,11 +21,16 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty] private bool selectLastInsertedNote = true;
 
     // View Model Settings State
+    // TODO: move this stuff out of here
     [ObservableProperty] private bool showCursor = true;
     [ObservableProperty] private bool showCursorDuringPlayback;
     [ObservableProperty] private bool showGimmicksDuringPlaybackInCircleView = true;
     [ObservableProperty] private bool showGimmicksInCircleView = true;
     [ObservableProperty] private bool placeNoteOnDrag = true;
+    
+    // Note UI State
+    [ObservableProperty] private bool showNotesOnBeat = false;
+    public ObservableCollection<NoteOnBeatItem> NotesOnBeatList { get; } = new();
 
     // Music UI State
     // TODO: move this stuff out of here

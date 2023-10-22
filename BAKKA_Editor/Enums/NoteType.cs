@@ -1,6 +1,6 @@
 namespace BAKKA_Editor.Enums;
 
-internal enum NoteType
+public enum NoteType
 {
     TouchNoBonus = 1,
     TouchBonus = 2,
