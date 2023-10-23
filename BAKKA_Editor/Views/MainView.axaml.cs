@@ -2128,7 +2128,7 @@ public partial class MainView : UserControl
                     if (isInsertHold)
                     {
                         SetNonHoldButtonState(false);
-                        SetSelectedObject(note.NoteType);
+                        SetSelectedObject(NoteType.HoldJoint);
                         lastNote = note.PrevNote;
                     }
                 }
