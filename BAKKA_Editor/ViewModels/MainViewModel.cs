@@ -59,7 +59,7 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty] private int beat1NumericMaximum = 1920;
 
     [ObservableProperty] private decimal beat2Numeric = 16;
-    [ObservableProperty] private int beat2NumericMinimum = 0;
+    [ObservableProperty] private int beat2NumericMinimum = 1;
     [ObservableProperty] private int beat2NumericMaximum = 1920;
 
     [ObservableProperty] private double songTrackBar = 0.0;
