@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using Avalonia.Threading;
@@ -978,7 +978,7 @@ public partial class MainView : UserControl
                 minSize = 2;
                 break;
             case NoteType.HoldJoint:
-                if (endHoldCheck.IsChecked!.Value)
+                if (_vm.EndHoldChecked)
                 {
                     updateLabel("Hold End");
                     currentNoteType = NoteType.HoldEnd;
@@ -1413,6 +1413,8 @@ public partial class MainView : UserControl
 
     private void MeasureNumeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
     {
+        if (_vm.MeasureNumeric != e.NewValue)
+            _vm.MeasureNumeric = Convert.ToDecimal(e.NewValue ?? _vm.MeasureNumeric);
         updateTime();
     }
 
@@ -1425,10 +1427,8 @@ public partial class MainView : UserControl
             _vm.PositionTrackBar = newValue;
     }
 
-    private void PositionTrackBar_OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    private void PositionTrackBar_OnValueChanged(object? sender, RangeBaseValueChangedEventArgs e)
     {
-        if (!e.Property.Name.Equals("Value", StringComparison.InvariantCultureIgnoreCase) || e.NewValue == null)
-            return;
         var newValue = Convert.ToInt32(e.NewValue);
         if ((int) _vm.PositionNumeric != newValue)
             _vm.PositionNumeric = newValue;
@@ -1443,10 +1443,8 @@ public partial class MainView : UserControl
             _vm.SizeTrackBar = newValue;
     }
 
-    private void SizeTrackBar_OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    private void SizeTrackBar_OnValueChanged(object? sender, RangeBaseValueChangedEventArgs e)
     {
-        if (!e.Property.Name.Equals("Value", StringComparison.InvariantCultureIgnoreCase) || e.NewValue == null)
-            return;
         var newValue = Convert.ToInt32(e.NewValue);
         if ((int) _vm.SizeNumeric != newValue)
             _vm.SizeNumeric = newValue;
@@ -1488,11 +1486,11 @@ public partial class MainView : UserControl
                     tempNote.PrevNote = lastNote;
                     if (lastNote != null)
                         tempNote.PrevNote.NextNote = tempNote;
-                    if (endHoldCheck.IsChecked!.Value)
+                    if (_vm.EndHoldChecked)
                     {
                         tempNote.NoteType = NoteType.HoldEnd;
                         SetNonHoldButtonState(true);
-                        endHoldCheck.IsChecked = false;
+                        _vm.EndHoldChecked = false;
                         holdButtonClicked();
                     }
                     else
@@ -1579,14 +1577,13 @@ public partial class MainView : UserControl
         reverseButton.IsEnabled = state;
     }
 
-    private void EndHoldCheck_OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    private void EndHoldCheck_IsCheckedChanged(object? sender, RoutedEventArgs routedEventArgs)
     {
-        if (endHoldCheck == null || e.Property.Name != "IsChecked")
-            return;
+        if (_vm.EndHoldChecked && currentNoteType == NoteType.HoldJoint)
+            SetSelectedObject(NoteType.HoldEnd);
 
-        if (endHoldCheck.IsChecked.Value && currentNoteType == NoteType.HoldJoint) SetSelectedObject(NoteType.HoldEnd);
-
-        if (!endHoldCheck.IsChecked.Value && currentNoteType == NoteType.HoldEnd) SetSelectedObject(NoteType.HoldJoint);
+        if (!_vm.EndHoldChecked && currentNoteType == NoteType.HoldEnd)
+            SetSelectedObject(NoteType.HoldJoint);
     }
 
     private void OnResize()
@@ -2581,7 +2578,7 @@ public partial class MainView : UserControl
         Dispatcher.UIThread.Post(async () => await ShowOpenSongDialog(), DispatcherPriority.Background);
     }
 
-    private void SongTrackBar_OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    private void SongTrackBar_OnValueChanged(object? sender, RangeBaseValueChangedEventArgs e)
     {
         // TODO: tighten property check
         if (currentSong == null)
@@ -2589,7 +2586,7 @@ public partial class MainView : UserControl
         if (IsSongPlaying())
             return;
 
-        currentSong.PlayPosition = (uint) _vm.SongTrackBar;
+        currentSong.PlayPosition = (uint) e.NewValue;
         var info = chart.GetBeat(currentSong.PlayPosition);
         if (info.Measure != -1 && valueTriggerEvent != EventSource.MouseWheel)
         {
@@ -2603,27 +2600,26 @@ public partial class MainView : UserControl
         valueTriggerEvent = EventSource.None;
     }
 
-    private void TrackBarVolume_OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    private void TrackBarVolume_OnValueChanged(object? sender, RangeBaseValueChangedEventArgs e)
     {
         if (trackBarVolume == null)
             return;
-        userSettings.ViewSettings.Volume = (int) _vm.VolumeTrackBar;
-        if (currentSong != null && e.Property.Name == "Value")
-            UpdateSongVolume();
+        userSettings.ViewSettings.Volume = (int) e.NewValue;
+        UpdateSongVolume();
     }
 
-    private void TrackBarSpeed_OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    private void TrackBarSpeed_OnValueChanged(object? sender, RangeBaseValueChangedEventArgs e)
     {
         /* No song, nothing to do. */
         if (currentSong == null)
             return;
-        currentSong.PlaybackSpeed = (float) (_vm.SpeedTrackBar / (float) _vm.SpeedTrackBarMaximum);
+        currentSong.PlaybackSpeed = (float) e.NewValue / _vm.SpeedTrackBarMaximum;
         LabelSpeed.Text = $"Speed (x{currentSong.PlaybackSpeed:0.00})";
     }
 
     private void VisualHispeedNumeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
     {
-        var value = (float) _vm.VisualHiSpeedNumeric;
+        var value = (float) (e.NewValue ?? _vm.VisualHiSpeedNumeric);
         if (value >= (float) _vm.VisualHiSpeedNumericMinimum && value <= (float) _vm.VisualHiSpeedNumericMaximum)
             // update
             skCircleView.Hispeed = value;
@@ -2789,9 +2785,9 @@ public partial class MainView : UserControl
         UpdateGimmickLabels();
     }
 
-    private void TrackBarHitsounds_OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+    private void TrackBarHitsounds_OnValueChanged(object? sender, RangeBaseValueChangedEventArgs e)
     {
-        userSettings.SoundSettings.HitsoundVolume = (int) _vm.HitsoundVolumeTrackBar;
+        userSettings.SoundSettings.HitsoundVolume = (int) e.NewValue;
         var volume = (float) _vm.HitsoundVolumeTrackBar / (float) _vm.HitsoundVolumeMaximum;
         hitsoundChannel?.SetVolume(Math.Clamp(volume, 0.0f, 1.0f));
     }

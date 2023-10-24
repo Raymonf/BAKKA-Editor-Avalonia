@@ -208,8 +208,9 @@
                                                     Click="endChartButton_Click">
                                                 End of Chart
                                             </Button>
-                                            <CheckBox Name="endHoldCheck" IsChecked="False" Margin="0,0"
-                                                      PropertyChanged="EndHoldCheck_OnPropertyChanged">
+                                            <CheckBox Name="_endHoldCheck"
+                                                      IsChecked="{Binding EndHoldChecked}" Margin="0,0"
+                                                      IsCheckedChanged="EndHoldCheck_IsCheckedChanged">
                                                 End Hold
                                             </CheckBox>
 
@@ -318,7 +319,7 @@
                                                     Maximum="{Binding PositionTrackBarMaximum}"
                                                     SmallChange="1" LargeChange="5"
                                                     Padding="8,0,0,0"
-                                                    PropertyChanged="PositionTrackBar_OnPropertyChanged"
+                                                    ValueChanged="PositionTrackBar_OnValueChanged"
                                                     PointerWheelChanged="PositionTrackBar_OnPointerWheelChanged" />
                                         </Grid>
                                         <TextBlock Margin="0,4">Size:</TextBlock>
@@ -335,7 +336,7 @@
                                                     Maximum="{Binding SizeTrackBarMaximum}"
                                                     SmallChange="1" LargeChange="5"
                                                     Padding="8,0,0,0"
-                                                    PropertyChanged="SizeTrackBar_OnPropertyChanged"
+                                                    ValueChanged="SizeTrackBar_OnValueChanged"
                                                     PointerWheelChanged="SizeTrackBar_OnPointerWheelChanged" />
                                         </Grid>
                                         <TextBlock Margin="0,4">Measure:</TextBlock>
@@ -373,15 +374,16 @@
                     </StackPanel>
 
                     <!-- Canvas Stack Panel -->
-
-                    <!-- Width="611" Height="524" -->
                     <StackPanel Grid.Column="1" Name="CanvasStackPanel">
-                        <controls:SkiaCanvas Name="CircleControl" Background="Transparent" RenderSkia="RenderCanvas"
-                                             HorizontalAlignment="Center" VerticalAlignment="Center"
-                                             PointerPressed="CircleControl_OnPointerPressed"
-                                             PointerReleased="CircleControl_OnPointerReleased"
-                                             PointerMoved="CircleControl_OnPointerMoved"
-                                             PointerWheelChanged="CircleControl_OnWheel" />
+                        <controls:SkiaCanvas
+                            Name="CircleControl"
+                            Background="Transparent"
+                            RenderSkia="RenderCanvas"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                            PointerPressed="CircleControl_OnPointerPressed"
+                            PointerReleased="CircleControl_OnPointerReleased"
+                            PointerMoved="CircleControl_OnPointerMoved"
+                            PointerWheelChanged="CircleControl_OnWheel" />
                     </StackPanel>
                 </Grid>
 
@@ -410,7 +412,7 @@
                                 <StackPanel Grid.Column="1">
                                     <Slider Value="{Binding SongTrackBar}" Minimum="0"
                                             Maximum="{Binding SongTrackBarMaximum}" SmallChange="1"
-                                            LargeChange="5" PropertyChanged="SongTrackBar_OnPropertyChanged"
+                                            LargeChange="5" ValueChanged="SongTrackBar_OnValueChanged"
                                             VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
 
                                     <!-- Speed and Volume -->
@@ -426,7 +428,7 @@
                                                     Maximum="{Binding SpeedTrackBarMaximum}"
                                                     SmallChange="1" LargeChange="5" Width="100"
                                                     HorizontalAlignment="Center"
-                                                    PropertyChanged="TrackBarSpeed_OnPropertyChanged" />
+                                                    ValueChanged="TrackBarSpeed_OnValueChanged" />
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -437,7 +439,7 @@
                                                     Maximum="{Binding VolumeTrackBarMaximum}"
                                                     SmallChange="1" LargeChange="5" Width="100"
                                                     HorizontalAlignment="Center"
-                                                    PropertyChanged="TrackBarVolume_OnPropertyChanged" />
+                                                    ValueChanged="TrackBarVolume_OnValueChanged" />
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal" Name="HitsoundPanel">
                                             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -448,7 +450,7 @@
                                                     Maximum="{Binding HitsoundVolumeMaximum}"
                                                     SmallChange="1" LargeChange="5" Width="50"
                                                     HorizontalAlignment="Center"
-                                                    PropertyChanged="TrackBarHitsounds_OnPropertyChanged" />
+                                                    ValueChanged="TrackBarHitsounds_OnValueChanged" />
                                         </StackPanel>
                                     </StackPanel>
                                 </StackPanel>
@@ -483,7 +485,7 @@
                             <TextBlock Grid.Column="1">Position</TextBlock>
                             <TextBlock Grid.Column="2">Size</TextBlock>
                         </Grid>
-                        
+
                         <ListBox Grid.Row="1" Name="NotesOnBeatListBox"
                                  ItemsSource="{Binding NotesOnBeatList}"
                                  SelectionChanged="NotesOnBeatListBox_OnSelectionChanged"
@@ -493,15 +495,17 @@
                                 <DataTemplate>
                                     <Grid ColumnDefinitions="10*,5*,5*">
                                         <TextBlock VerticalAlignment="Center" Text="{Binding Type}" TextWrapping="Wrap" />
-                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding Position}" TextWrapping="Wrap" />
-                                        <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="{Binding Size}" TextWrapping="Wrap" />
+                                        <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding Position}"
+                                                   TextWrapping="Wrap" />
+                                        <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="{Binding Size}"
+                                                   TextWrapping="Wrap" />
                                     </Grid>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
                     </Grid>
                 </HeaderedContentControl>
-                
+
                 <HeaderedContentControl Header="Note View" Margin="0,0,0,8">
                     <StackPanel Margin="8">
                         <Grid RowDefinitions="*,Auto,*" ColumnDefinitions="*,*">

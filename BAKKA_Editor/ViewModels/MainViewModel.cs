@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -31,6 +30,7 @@ public partial class MainViewModel : ViewModelBase
     
     // Note UI State
     public ObservableCollection<NoteOnBeatItem> NotesOnBeatList { get; } = new();
+    [ObservableProperty] private bool endHoldChecked = false;
 
     // Music UI State
     // TODO: move this stuff out of here
