@@ -356,7 +356,17 @@ public partial class MainView : UserControl
         // Look for user settings
         if (File.Exists("settings.toml"))
         {
-            userSettings = Toml.ToModel<UserSettings>(File.ReadAllText("settings.toml"));
+            try
+            {
+                userSettings = Toml.ToModel<UserSettings>(File.ReadAllText("settings.toml"));
+            }
+            catch (Exception e)
+            {
+                userSettings = new();
+                Dispatcher.UIThread.Post(
+                    async () => await ShowBlockingMessageBox("Error",
+                        $"Failed to load settings.toml. Default settings will be used.\n\n{e.Message}"));
+            }
         }
         else
         {
@@ -636,7 +646,20 @@ public partial class MainView : UserControl
         chart = new Chart();
         lock (chart)
         {
-            var loadSuccess = chart.ParseFile(openChartFileReadStream);
+            bool loadSuccess = false;
+            try
+            {
+                loadSuccess = chart.ParseFile(openChartFileReadStream);
+            }
+            catch (Exception e)
+            {
+                Dispatcher.UIThread.Post(
+                    async () => await ShowBlockingMessageBox("Chart Load Exception", e.Message));
+                chart = new Chart();
+                openChartFileReadStream?.Close();
+                return false;
+            }
+
             if (!loadSuccess)
             {
                 Dispatcher.UIThread.Post(
@@ -721,7 +744,7 @@ public partial class MainView : UserControl
             {
                 Dispatcher.UIThread.Post(
                     async () => await ShowBlockingMessageBox("Warning",
-                        "Caught an exception while rendering. A collection has potentially changed during render. Please yell at Ray to check this out, since you should never ever _ever_ see this." + Environment.NewLine + ex.Message));
+                        "Caught an exception while rendering. A collection has potentially changed during render. Please yell at Ray to check this out, since you should never ever _ever_ see this.\n\n" + ex.Message));
             }
         }
         else
@@ -1059,8 +1082,6 @@ public partial class MainView : UserControl
         if (_vm.SizeTrackBar < minSize) _vm.SizeTrackBar = minSize;
         _vm.SizeNumericMinimum = minSize;
         _vm.SizeTrackBarMinimum = minSize;
-
-
     }
 
     private void updateLabel(string text)
