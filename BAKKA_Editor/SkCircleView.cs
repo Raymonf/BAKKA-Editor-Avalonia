@@ -126,6 +126,11 @@ internal class SkCircleView
                     float itemTime = chart.GetTime(gimmicksInTimeRange[i].BeatInfo);
                     float modifiedTime;
 
+                    // hack: prevent divide by zero when hi-speed is 0
+                    var clampedSpeed = (float) gimmicksInTimeRange[i].HiSpeed;
+                    if (clampedSpeed == 0)
+                        clampedSpeed = 0.01f;
+
                     if (itemTime <= tempTotalTime + currentTime)
                     {
                         if (i == 0)
@@ -140,18 +145,18 @@ internal class SkCircleView
                                 chart.GetTime(gimmicksInTimeRange[i + 1].BeatInfo))
                             {
                                 timeDiff = currentTime + tempTotalTime - itemTime;
-                                modifiedTime = timeDiff / (float)gimmicksInTimeRange[i].HiSpeed;
+                                modifiedTime = timeDiff / clampedSpeed;
                             }
                             else
                             {
                                 timeDiff = chart.GetTime(gimmicksInTimeRange[i + 1].BeatInfo) - itemTime;
-                                modifiedTime = timeDiff / (float)gimmicksInTimeRange[i].HiSpeed;
+                                modifiedTime = timeDiff / clampedSpeed;
                             }
                         }
                         else
                         {
                             timeDiff = currentTime + tempTotalTime - itemTime;
-                            modifiedTime = timeDiff / (float)gimmicksInTimeRange[i].HiSpeed;
+                            modifiedTime = timeDiff / clampedSpeed;
                         }
 
                         tempTotalTime = tempTotalTime - timeDiff + modifiedTime;
@@ -168,7 +173,16 @@ internal class SkCircleView
 
         // Convert total time to total measure
         var endMeasure = chart.GetBeatFromMeasureDecimal(tempEndTime);
-        return endMeasure - CurrentMeasure;
+        var result = endMeasure - CurrentMeasure;
+
+        // hack: make sure we don't get infinity
+        // better to render nothing than to deadlock because we never finish rendering a frame
+        if (float.IsInfinity(result))
+        {
+            return 0.001f;
+        }
+
+        return result;
     }
 
     /*private float GetTotalMeasureShowNotes(Chart chart)
