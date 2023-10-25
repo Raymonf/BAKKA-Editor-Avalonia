@@ -374,6 +374,7 @@ internal class SkCircleView
         var theta = (int) (thetaCalc / 6.0f);
 
         var delta = theta - lastMousePos;
+
         // Handle rollover
         if (delta == -59)
         {

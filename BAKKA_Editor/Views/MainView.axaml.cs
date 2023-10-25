@@ -1631,26 +1631,67 @@ public partial class MainView : UserControl
             skCircleView.mouseDownPos <= -1)
             return;
 
-        var dist = Utils.GetDist(point.Position.ToSystemDrawing(), skCircleView.mouseDownPt);
-        if (dist > 5.0f && userSettings.ViewSettings.PlaceNoteOnDrag)
-            InsertObject();
+        //var dist = Utils.GetDist(point.Position.ToSystemDrawing(), skCircleView.mouseDownPt);
+        //if (dist > 5.0f && userSettings.ViewSettings.PlaceNoteOnDrag)
+        //    InsertObject();
+
+        InsertObject();
+
         skCircleView.UpdateMouseUp();
     }
 
     private void CircleControl_OnPointerMoved(object? sender, PointerEventArgs e)
     {
         var point = e.GetCurrentPoint(CircleControl);
+
+        // X and Y are relative to the upper left of the panel
+        var xCen = point.Position.X - CircleControl.DesiredSize.Width / 2;
+        var yCen = -(point.Position.Y - CircleControl.DesiredSize.Height / 2);
+
+        var initialSize = (int)_vm.SizeNumeric;
+
+        var theta = skCircleView.UpdateMouseMove((float)xCen, (float)yCen);
+        _vm.PositionNumeric = theta;
+
+        if (skCircleView.mouseDownPos != -1)
+        {
+            // If left click is held down, see if size needs to update.
+            if (theta == skCircleView.mouseDownPos)
+            {
+                _vm.PositionNumeric = skCircleView.mouseDownPos;
+                initialSize = 1;
+            }
+            else if ((theta > skCircleView.mouseDownPos || skCircleView.rolloverPos) && !skCircleView.rolloverNeg)
+            {
+                _vm.PositionNumeric = skCircleView.mouseDownPos;
+                if (skCircleView.rolloverPos)
+                    initialSize = Math.Min(theta + 60 - skCircleView.mouseDownPos + 1, 60);
+                else
+                    initialSize = theta - skCircleView.mouseDownPos + 1;
+            }
+            else if (theta < skCircleView.mouseDownPos || skCircleView.rolloverNeg)
+            {
+                _vm.PositionNumeric = theta;
+                if (skCircleView.rolloverNeg)
+                    initialSize = Math.Min(skCircleView.mouseDownPos + 60 - theta + 1, 60);
+                else
+                    initialSize = skCircleView.mouseDownPos - theta + 1;
+            }
+
+            _vm.SizeNumeric = Math.Max(Math.Min(initialSize, 60), _vm.SizeNumericMinimum);
+        }
+
+        return;
+
         // Mouse down position wasn't within the window or wasn't a left click, do nothing.
         if (!point.Properties.IsLeftButtonPressed || skCircleView.mouseDownPos <= -1) return;
 
-        var initialSize = (int) _vm.SizeNumeric;
+        
 
         {
-            // X and Y are relative to the upper left of the panel
-            var xCen = point.Position.X - CircleControl.DesiredSize.Width / 2;
-            var yCen = -(point.Position.Y - CircleControl.DesiredSize.Height / 2);
+            
             // Update the location of mouse click inside the circle.
-            var theta = skCircleView.UpdateMouseMove((float) xCen, (float) yCen);
+            
             // Left click will alter the note width and possibly position depending on which direction we move
             if (theta == skCircleView.mouseDownPos)
             {
