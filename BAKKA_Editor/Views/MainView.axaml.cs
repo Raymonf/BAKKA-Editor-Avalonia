@@ -2989,7 +2989,12 @@ public partial class MainView : UserControl
             IsPrimaryButtonEnabled = false,
             CloseButtonText = this.L("L.Generic.CloseButtonText")
         };
+        appSettingsVm.Dialog = dialog;
 
-        Dispatcher.UIThread.Post(async () => { await dialog.ShowAsync(); });
+        Dispatcher.UIThread.Post(async () =>
+        {
+            await dialog.ShowAsync();
+            appSettingsVm.Dialog = null;
+        });
     }
 }

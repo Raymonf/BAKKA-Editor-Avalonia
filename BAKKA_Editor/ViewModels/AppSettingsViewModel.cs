@@ -1,14 +1,17 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using BAKKA_Editor.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
+using FluentAvalonia.UI.Controls;
 
 namespace BAKKA_Editor.ViewModels;
 
 public partial class AppSettingsViewModel : ViewModelBase
 {
-
     private UserSettings? UserSettings { get; }
     private Localizer? Localizer { get; }
+
+    public ContentDialog? Dialog { get; set; }
 
     private Dictionary<string, string> SupportedLanguages { get; } = new()
     {
@@ -36,6 +39,12 @@ public partial class AppSettingsViewModel : ViewModelBase
         Localizer?.SetLanguage(kv.Key);
         if (UserSettings != null)
             UserSettings.ViewSettings.Language = kv.Key;
+
+        if (Dialog != null)
+        {
+            Dialog.Title = this.L("L.Settings.SettingsHeader");
+            Dialog.CloseButtonText = this.L("L.Generic.CloseButtonText");
+        }
     }
 
     public bool SetLanguage(string language)
