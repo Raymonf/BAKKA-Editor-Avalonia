@@ -4,7 +4,7 @@ using Avalonia.Input;
 
 namespace BAKKA_Editor;
 
-internal class UserSettings
+public class UserSettings
 {
     public ViewSettings ViewSettings { get; set; } = new();
     public SaveSettings SaveSettings { get; set; } = new();
@@ -12,7 +12,7 @@ internal class UserSettings
     public SoundSettings SoundSettings { get; set; } = new();
 }
 
-internal class ViewSettings
+public class ViewSettings
 {
     public bool ShowCursor { get; set; } = true;
     public bool ShowCursorDuringPlayback { get; set; } = false;
@@ -31,9 +31,10 @@ internal class ViewSettings
     public bool HandleOverflowSizeNumericScroll { get; set; } = false;
     public bool PlaceNoteOnDrag { get; set; } = true;
     public bool ShowNotesOnBeat { get; set; } = false;
+    public string Language { get; set; } = "en-US";
 }
 
-internal class SaveSettings
+public class SaveSettings
 {
     /// <summary>
     ///     How frequently autosave occurs (in minutes)
@@ -41,7 +42,7 @@ internal class SaveSettings
     public int AutoSaveInterval { get; set; } = 1;
 }
 
-internal class HotkeySettings
+public class HotkeySettings
 {
     private static readonly CultureInfo _defaultParsingCulture = CultureInfo.InvariantCulture;
     public int TouchHotkey { get; set; } = Convert.ToInt32(Key.D1, _defaultParsingCulture);
@@ -54,7 +55,7 @@ internal class HotkeySettings
     public int PlayHotkey { get; set; } = Convert.ToInt32(Key.P, _defaultParsingCulture);
 }
 
-internal class SoundSettings
+public class SoundSettings
 {
     public bool HitsoundEnabled { get; set; } = false;
     public string HitsoundPath { get; set; } = "";

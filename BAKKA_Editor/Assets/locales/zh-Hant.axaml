@@ -1,0 +1,45 @@
+﻿<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:system="clr-namespace:System;assembly=System.Runtime">
+    <system:String x:Key="L.FileMenuItem">檔案</system:String>
+    <system:String x:Key="L.ExitMenuOption">結束</system:String>
+    <system:String x:Key="L.EditMenuItem">編輯</system:String>
+    <system:String x:Key="L.ChartMenuItem">譜面</system:String>
+    <system:String x:Key="L.NA">無</system:String>
+    <system:String x:Key="L.RedoMenuOption">重做</system:String>
+    <system:String x:Key="L.ViewMenuItem">顯示</system:String>
+    <system:String x:Key="L.UndoMenuOption">復原</system:String>
+    <system:String x:Key="L.TypeLabel">類型：</system:String>
+    <system:String x:Key="L.SongFileLabel">歌曲：</system:String>
+    <system:String x:Key="L.SaveMenuOption">儲存...</system:String>
+    <system:String x:Key="L.SaveAsMenuOption">儲存為...</system:String>
+    <system:String x:Key="L.NewMenuOption">新增...</system:String>
+    <system:String x:Key="L.OpenMenuOption">打開檔案...</system:String>
+    <system:String x:Key="L.VolumeLabel">音量</system:String>
+    <system:String x:Key="L.SelectSongLabel">選擇歌曲</system:String>
+    <system:String x:Key="L.None">無</system:String>
+    <system:String x:Key="L.PlayButton">播放</system:String>
+    <system:String x:Key="L.PlaybackHeader">重放選項</system:String>
+    <system:String x:Key="L.PositionLabel">位置：</system:String>
+    <system:String x:Key="L.SizeLabel">大小：</system:String>
+    <system:String x:Key="L.DarkModeMenuOption">夜間模式</system:String>
+    <system:String x:Key="L.CurrentSelectionHeader">目前選擇</system:String>
+    <system:String x:Key="L.VisualSettingsHeader">視覺設定</system:String>
+    <system:String x:Key="L.SpeedSliderLabel">速度</system:String>
+    <system:String x:Key="L.ValueLabel">值：</system:String>
+    <system:String x:Key="L.MeasureLabel">小節：</system:String>
+    <system:String x:Key="L.BeatLabel">拍：</system:String>
+    <system:String x:Key="L.PreviousMeasureButton">&lt; 小節</system:String>
+    <system:String x:Key="L.NextMeasureButton">小節 &gt;</system:String>
+    <system:String x:Key="L.SelectFileDefaultLabel">選擇檔案（*.ogg, *.wav, *.flac）</system:String>
+    <system:String x:Key="L.InitialChartSettings">初始譜面設定</system:String>
+
+    <system:String x:Key="L.Generic.CloseButtonText">關閉</system:String>
+    <system:String x:Key="L.Generic.OkButtonText">確定</system:String>
+    <system:String x:Key="L.Generic.YesButtonText">是</system:String>
+    <system:String x:Key="L.Generic.NoButtonText">否</system:String>
+
+    <system:String x:Key="L.MainView.Menu.File.Settings">設定</system:String>
+    <system:String x:Key="L.Settings.SettingsHeader">設定</system:String>
+    <system:String x:Key="L.Settings.LanguageLabel">語言：</system:String>
+</ResourceDictionary>

@@ -15,11 +15,13 @@ using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using BAKKA_Editor.Controls;
 using BAKKA_Editor.Data;
 using BAKKA_Editor.Enums;
 using BAKKA_Editor.Operations;
 using BAKKA_Editor.SoundEngines;
 using BAKKA_Editor.ViewModels;
+using BAKKA_Editor.Views.Settings;
 using DynamicData;
 using FluentAvalonia.UI.Controls;
 using SkiaSharp;
@@ -96,7 +98,10 @@ public partial class MainView : UserControl
 
     // Timers
     private DispatcherTimer updateTimer;
+
+    // Settings
     private UserSettings userSettings = new();
+    private AppSettingsViewModel appSettingsVm;
 
     private EventSource valueTriggerEvent = EventSource.None;
 
@@ -362,7 +367,6 @@ public partial class MainView : UserControl
             }
             catch (Exception e)
             {
-                userSettings = new();
                 Dispatcher.UIThread.Post(
                     async () => await ShowBlockingMessageBox("Error",
                         $"Failed to load settings.toml. Default settings will be used.\n\n{e.Message}"));
@@ -370,13 +374,20 @@ public partial class MainView : UserControl
         }
         else
         {
-            userSettings = new UserSettings();
             File.WriteAllText("settings.toml", Toml.FromModel(userSettings));
         }
 
         // Apply settings
         // TODO: REFACTOR THIS SHIT!!!!!!!!!
         _vm = (MainViewModel) DataContext!;
+        appSettingsVm = new(userSettings);
+        if (!appSettingsVm.SetLanguage(userSettings.ViewSettings.Language))
+        {
+            userSettings.ViewSettings.Language = "en-US";
+            Dispatcher.UIThread.Post(
+                async () => await ShowBlockingMessageBox("Warning",
+                    $"The selected language was invalid."));
+        }
         _vm.ShowCursor = userSettings.ViewSettings.ShowCursor;
         _vm.ShowCursorDuringPlayback = userSettings.ViewSettings.ShowCursorDuringPlayback;
         _vm.HighlightViewedNote = userSettings.ViewSettings.HighlightViewedNote;
@@ -609,8 +620,8 @@ public partial class MainView : UserControl
                         {
                             Title = "Load Auto-Save Data?",
                             Content = $"Auto-save data found{autosaveTime}\n\nLoad?",
-                            PrimaryButtonText = "Yes",
-                            CloseButtonText = "No"
+                            PrimaryButtonText = this.L("L.Generic.YesButtonText"),
+                            CloseButtonText = this.L("L.Generic.NoButtonText")
                         };
                         Dispatcher.UIThread.Post(
                             async () =>
@@ -910,10 +921,10 @@ public partial class MainView : UserControl
             selectedGimmickIndex = val;
         if (selectedGimmickIndex == -1)
         {
-            gimmickMeasureLabel.Text = "None";
-            gimmickBeatLabel.Text = "None";
-            gimmickTypeLabel.Text = "None";
-            gimmickValueLabel.Text = "None";
+            gimmickMeasureLabel.Text = this.L("L.None");
+            gimmickBeatLabel.Text = this.L("L.None");
+            gimmickTypeLabel.Text = this.L("L.None");
+            gimmickValueLabel.Text = this.L("L.None");
             return;
         }
 
@@ -1101,12 +1112,12 @@ public partial class MainView : UserControl
             selectedNoteIndex = val;
         if (selectedNoteIndex <= -1 || selectedNoteIndex >= chart.Notes.Count)
         {
-            noteMeasureLabel.Text = "None";
-            noteBeatLabel.Text = "None";
-            noteTypeLabel.Text = "None";
-            notePositionLabel.Text = "None";
-            noteSizeLabel.Text = "None";
-            noteMaskLabel.Text = "N/A";
+            noteMeasureLabel.Text = this.L("L.None");
+            noteBeatLabel.Text = this.L("L.None");
+            noteTypeLabel.Text = this.L("L.None");
+            notePositionLabel.Text = this.L("L.None");
+            noteSizeLabel.Text = this.L("L.None");
+            noteMaskLabel.Text = this.L("L.NA");
             return;
         }
 
@@ -1562,7 +1573,7 @@ public partial class MainView : UserControl
                 chart.Notes.Add(tempNote);
 
             UpdateNotesOnBeat();
-            
+
             chart.IsSaved = false;
             switch (currentNoteType)
             {
@@ -2408,18 +2419,18 @@ public partial class MainView : UserControl
 
         if (type == MessageBoxType.Ok)
         {
-            closeText = "OK";
+            closeText = this.L("L.Generic.OkButtonText");
         }
         else if (type == MessageBoxType.YesNo)
         {
-            primaryText = "Yes";
-            closeText = "No";
+            primaryText = this.L("L.Generic.YesButtonText");
+            closeText = this.L("L.Generic.NoButtonText");
         }
         else if (type == MessageBoxType.YesNoCancel)
         {
-            primaryText = "Yes";
-            secondaryText = "No";
-            closeText = "Cancel";
+            primaryText = this.L("L.Generic.YesButtonText");
+            secondaryText = this.L("L.Generic.NoButtonText");
+            closeText = this.L("L.Generic.CancelButtonText");
         }
 
         var dialog = new ContentDialog
@@ -2926,12 +2937,12 @@ public partial class MainView : UserControl
     {
         userSettings.ViewSettings.PlaceNoteOnDrag = value;
     }
-    
+
     private void UpdateNotesOnBeat()
     {
         if (!userSettings.ViewSettings.ShowNotesOnBeat)
             return;
-        
+
         // Fill list of notes on beat
         _vm.NotesOnBeatList.Clear();
         _vm.NotesOnBeatList.AddRange(
@@ -2945,7 +2956,7 @@ public partial class MainView : UserControl
     {
         if (!userSettings.ViewSettings.ShowNotesOnBeat || e.AddedItems.Count < 1)
             return;
-        
+
         var selectedNote = (NoteOnBeatItem?) e.AddedItems[0];
         if (selectedNote == null)
             return;
@@ -2955,7 +2966,7 @@ public partial class MainView : UserControl
         var currentMeasure = skCircleView.CurrentMeasure;
         // Find the matching selected note
         var noteInChart = chart.Notes.FirstOrDefault(
-            x => Math.Abs(x.BeatInfo.MeasureDecimal - currentMeasure) < 0.00001 && 
+            x => Math.Abs(x.BeatInfo.MeasureDecimal - currentMeasure) < 0.00001 &&
                  x.NoteType.ToLabel() == noteType &&
                  x.Position == position &&
                  x.Size == size
@@ -2964,5 +2975,21 @@ public partial class MainView : UserControl
             return;
         selectedNoteIndex = chart.Notes.IndexOf(noteInChart);
         UpdateNoteLabels();
+    }
+
+    public async Task OpenSettings_OnClick()
+    {
+        var window = new SettingsView();
+        window.DataContext = appSettingsVm;
+
+        var dialog = new ContentDialog
+        {
+            Title = this.L("L.MainView.Menu.File.Settings"),
+            Content = window,
+            IsPrimaryButtonEnabled = false,
+            CloseButtonText = this.L("L.Generic.CloseButtonText")
+        };
+
+        Dispatcher.UIThread.Post(async () => { await dialog.ShowAsync(); });
     }
 }

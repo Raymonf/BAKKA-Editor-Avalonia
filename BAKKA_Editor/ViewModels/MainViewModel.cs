@@ -220,6 +220,14 @@ public partial class MainViewModel : ViewModelBase
         return true;
     }
 
+    public async Task<bool> OpenSettingsCommand()
+    {
+        var mainWindow = Target();
+        if (mainWindow != null)
+            await mainWindow.OpenSettings_OnClick();
+        return true;
+    }
+
     private static MainView? Target()
     {
         var lifetime = Application.Current?.ApplicationLifetime;
