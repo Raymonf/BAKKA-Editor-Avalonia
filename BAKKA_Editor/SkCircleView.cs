@@ -1,14 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Drawing;
 using System.Linq;
-using Avalonia.Automation.Peers;
-using Avalonia.Metadata;
 using BAKKA_Editor.Enums;
-using DynamicData;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.VisualBasic;
 using SkiaSharp;
 
 namespace BAKKA_Editor;
