@@ -1620,7 +1620,7 @@ public partial class MainView : UserControl
         var xCen = point.Position.X - CircleControl.DesiredSize.Width / 2;
         var yCen = -(point.Position.Y - CircleControl.DesiredSize.Height / 2);
         // Update the location of mouse click inside the circle
-        skCircleView.UpdateMouseDown((float) xCen, (float) yCen, point.Position.ToSystemDrawing());
+        skCircleView.UpdateMouseDown((float) xCen, (float) yCen, point.Position.ToSystemDrawing(), (int)_vm.SizeNumeric);
         _vm.PositionNumeric = skCircleView.mouseDownPos;
     }
 
@@ -1665,6 +1665,7 @@ public partial class MainView : UserControl
             var deltaClockwise = (skCircleView.lastMousePos - theta + 60) % 60;
             var deltaCounterclockwise = (theta - skCircleView.lastMousePos + 60) % 60;
             bool movedClockwise = deltaClockwise < deltaCounterclockwise;
+            int minSize = Math.Max(skCircleView.mouseDownSize, _vm.SizeNumericMinimum);
 
             if (skCircleView.rolloverPos)
             {
@@ -1680,8 +1681,8 @@ public partial class MainView : UserControl
             else if (skCircleView.rolloverNeg)
             {
                 // If rolled over clockwise, the mouse moved counterclockwise, and mouse down position
-                // is between the delta, we are no longer rolled over
-                var delta = ((theta - skCircleView.mouseDownPos + 60) % 60);
+                // plus the minimum size is between the delta, we are no longer rolled over
+                var delta = ((theta - (skCircleView.mouseDownPos + minSize) + 60) % 60);
                 if (!movedClockwise && delta <= deltaCounterclockwise)
                 {
                     skCircleView.rolloverNeg = false;
@@ -1692,9 +1693,9 @@ public partial class MainView : UserControl
             {
                 if (movedClockwise)
                 {
-                    skCircleView.relativeMouseDragPos = Math.Max(skCircleView.relativeMouseDragPos - deltaClockwise, -60);
+                    skCircleView.relativeMouseDragPos = Math.Max(skCircleView.relativeMouseDragPos - deltaClockwise, minSize - 60);
 
-                    if (skCircleView.relativeMouseDragPos <= -60)
+                    if (skCircleView.relativeMouseDragPos <= minSize - 60)
                     {
                         skCircleView.rolloverNeg = true;
                     }
@@ -1706,6 +1707,16 @@ public partial class MainView : UserControl
                     if (skCircleView.relativeMouseDragPos >= 60)
                     {
                         skCircleView.rolloverPos = true;
+                    }
+
+                    // If the mouse moved counterclockwise of the mouse down position
+                    // and the mouse down position plus the starting size is between the
+                    // delta, we can start decreasing the size.
+                    var delta = ((theta - (skCircleView.mouseDownPos + minSize - 1) + 120) % 60);
+                    if (delta <= deltaCounterclockwise)
+                    {
+                        skCircleView.mouseDownSize = -1;
+                        minSize = _vm.SizeNumericMinimum;
                     }
                 }
             }
@@ -1720,12 +1731,12 @@ public partial class MainView : UserControl
             else if (skCircleView.relativeMouseDragPos >= 0)
             {
                 _vm.PositionNumeric = skCircleView.mouseDownPos;
-                _vm.SizeNumeric = Math.Max(_vm.SizeNumericMinimum, skCircleView.relativeMouseDragPos + 1);
+                _vm.SizeNumeric = Math.Max(minSize, skCircleView.relativeMouseDragPos + 1);
             }
             else
             {
                 _vm.PositionNumeric = (skCircleView.mouseDownPos + skCircleView.relativeMouseDragPos + 60) % 60;
-                _vm.SizeNumeric = Math.Max(_vm.SizeNumericMinimum, _vm.SizeNumericMinimum - skCircleView.relativeMouseDragPos);
+                _vm.SizeNumeric = Math.Max(minSize, minSize - skCircleView.relativeMouseDragPos);
             }
         }
 

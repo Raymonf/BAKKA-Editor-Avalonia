@@ -28,6 +28,7 @@ internal class SkCircleView
     public bool rolloverNeg;
     public bool rolloverPos;
     public int relativeMouseDragPos = 0;
+    public int mouseDownSize = -1;
     private readonly int SelectTransparency = 110;
 
     public SkCircleView(SizeF size)
@@ -331,7 +332,7 @@ internal class SkCircleView
     }
 
     // Updates the mouse down position within the circle, and returns the new position.
-    public void UpdateMouseDown(float xCen, float yCen, Point mousePt)
+    public void UpdateMouseDown(float xCen, float yCen, Point mousePt, int size)
     {
         var theta = (float) (Math.Atan2(yCen, xCen) * 180.0f / Math.PI);
         if (theta < 0)
@@ -343,6 +344,7 @@ internal class SkCircleView
         rolloverPos = false;
         rolloverNeg = false;
         relativeMouseDragPos = 0;
+        mouseDownSize = size;
     }
 
     public void UpdateMouseUp()
