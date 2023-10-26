@@ -1,8 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Drawing;
 using System.Linq;
+using Avalonia.Automation.Peers;
+using Avalonia.Metadata;
 using BAKKA_Editor.Enums;
+using DynamicData;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.VisualBasic;
 using SkiaSharp;
 
 namespace BAKKA_Editor;
@@ -41,9 +47,13 @@ internal class SkCircleView
     public float Radius { get; private set; }
     public float CurrentMeasure { get; set; }
     public float Hispeed { get; set; } = 1.5f;
+    public float BeatDivision { get; set; } = 2;
+    public string GuideLineSelection { get; set; } = "None";
     public bool showHispeed { get; set; } = true;
+    public bool renderNotesBeyondCircle { get; set; } = false; // temporary(?) - may be moved to settings since it's for the Settings UI, just wanted to put it here to put it in the code already.
 
     // Pens and Brushes
+    public SKPaint? MeasurePen { get; set; }
     public SKPaint? BeatPen { get; set; }
     public SKPaint? TickMinorPen { get; set; }
     public SKPaint? TickMediumPen { get; set; }
@@ -80,7 +90,8 @@ internal class SkCircleView
         CenterPoint = new PointF(TopCorner.X + Radius, TopCorner.Y + Radius);
 
         // Pens
-        BeatPen = Utils.CreateStrokeBrush(SKColors.White, PanelSize.Width * 1.0f / 600.0f);
+        MeasurePen = Utils.CreateStrokeBrush(SKColors.White, PanelSize.Width * 1.0f / 600.0f);
+        BeatPen = Utils.CreateStrokeBrush(SKColors.White.WithAlpha(0x80), PanelSize.Width * 0.5f / 600.0f);
         TickMinorPen = Utils.CreateStrokeBrush(SKColors.Black, PanelSize.Width * 2.0f / 600.0f);
         TickMediumPen = Utils.CreateStrokeBrush(SKColors.Black, PanelSize.Width * 4.0f / 600.0f);
         TickMajorPen = Utils.CreateStrokeBrush(SKColors.Black, PanelSize.Width * 7.0f / 600.0f);
@@ -461,20 +472,34 @@ internal class SkCircleView
 
     public void DrawCircle(Chart chart)
     {
-        // Draw measure circle
+        // Draw measure circles
         var totalMeasureShowNotes = GetTotalMeasureShowNotes2(chart);
-        for (var meas = (float) Math.Ceiling(CurrentMeasure);
-             meas - CurrentMeasure < totalMeasureShowNotes;
-             meas += 1.0f)
+        for (var measure = (float)Math.Ceiling(CurrentMeasure - 1);
+             measure - CurrentMeasure < totalMeasureShowNotes;
+             measure += 1.0f)
         {
-            var info = GetScaledRect(chart, meas);
-            if (info.Rect.Width >= 1) canvas.DrawOval(info.Rect, BeatPen);
+            var measureArcInfo = GetScaledRect(chart, measure);
+            if (measureArcInfo.Rect.Width >= 1 && GetObjectVisibility(measure))
+                canvas.DrawOval(measureArcInfo.Rect, MeasurePen);
+        }
+
+        // Draw beat divider circle
+        if (BeatDivision > 1)
+        {
+            for (var beat = (float)Math.Floor(CurrentMeasure / BeatDivision) * BeatDivision;
+             beat - CurrentMeasure < totalMeasureShowNotes;
+             beat += 1 / BeatDivision)
+            {
+                var beatArcInfo = GetScaledRect(chart, beat);
+                if (beatArcInfo.Rect.Width >= 1 && beat % 1 > 0.0001 && GetObjectVisibility(beat))
+                    canvas.DrawOval(beatArcInfo.Rect, BeatPen);
+            }
         }
 
         // Draw base circle
         canvas.DrawOval(DrawRect, TickMediumPen);
     }
-
+    
     public void DrawDegreeLines()
     {
         for (var i = 0; i < 360; i += 6)
@@ -508,20 +533,118 @@ internal class SkCircleView
         }
     }
 
+    public void DrawGuideLines()
+    {
+        // none - offset   0 - interval 00
+        // A - offset   0 - interval 06
+        // B - offset +06 - interval 12
+        // C - offset   0 - interval 18
+        // D - offset +06 - interval 24
+        // E - offset   0 - interval 30
+        // F - offset +30 - interval 60
+        // G - offset   0 - interval 90
+
+        float offset;
+        float interval;
+
+        switch (GuideLineSelection)
+        {
+            case "None":
+                offset = 0;
+                interval = 0;
+                break;
+
+            case "A":
+                offset = 0;
+                interval = 6;
+                break;
+
+            case "B":
+                offset = 6;
+                interval = 12;
+                break;
+
+            case "C":
+                offset = 0;
+                interval = 18;
+                break;
+
+            case "D":
+                offset = 6;
+                interval = 24;
+                break;
+
+            case "E":
+                offset = 0;
+                interval = 30;
+                break;
+
+            case "F":
+                offset = 30;
+                interval = 60;
+                break;
+
+            case "G":
+                offset = 0;
+                interval = 90;
+                break;
+
+            default: 
+                offset = 0;
+                interval = 0;
+                break;
+        }
+
+        if (interval > 0)
+        {
+            var colors = new[]
+             {
+                SKColors.White.WithAlpha(0x20),
+                SKColors.White.WithAlpha(0x00)
+            };
+
+            for (var i = 0 + offset; i < 360 + offset; i += interval)
+            {
+                var tickLength = PanelSize.Width * 110.0f / 285.0f;
+                var innerRad = Radius - tickLength;
+
+                var startPoint = new SKPoint(
+                    (float)(Radius * Math.Cos(Utils.DegToRad(i)) + CenterPoint.X),
+                    (float)(Radius * Math.Sin(Utils.DegToRad(i)) + CenterPoint.Y));
+
+                var endPoint = new SKPoint(
+                    (float)(innerRad * Math.Cos(Utils.DegToRad(i)) + CenterPoint.X),
+                    (float)(innerRad * Math.Sin(Utils.DegToRad(i)) + CenterPoint.Y));
+
+                var shader = SKShader.CreateLinearGradient(
+                    new SKPoint(startPoint.X, startPoint.Y),
+                    new SKPoint(endPoint.X, endPoint.Y),
+                    colors,
+                    null,
+                    SKShaderTileMode.Clamp);
+
+                var GuideLinePaint = new SKPaint { Shader = shader };
+
+                canvas.DrawLine(startPoint, endPoint, GuideLinePaint);
+            }
+        }
+    }
+
     public void DrawGimmicks(Chart chart, bool showGimmicks, int selectedGimmickIndex)
     {
         if (showGimmicks)
         {
             var totalMeasureShowNotes = GetTotalMeasureShowNotes2(chart);
             var drawGimmicks = chart.Gimmicks.Where(
-                x => x.Measure >= CurrentMeasure
+                x => x.Measure >= CurrentMeasure - 1
                      && x.Measure <= CurrentMeasure + totalMeasureShowNotes);
 
             foreach (var gimmick in drawGimmicks)
             {
                 var info = GetScaledRect(chart, gimmick.Measure);
 
-                if (info.Rect.Width >= 1) canvas.DrawOval(info.Rect, GetNotePaint(gimmick));
+                if (info.Rect.Width >= 1 && GetObjectVisibility(gimmick.Measure))
+                    canvas.DrawOval(info.Rect, GetNotePaint(gimmick));
             }
         }
     }
@@ -745,23 +868,26 @@ internal class SkCircleView
     {
         var totalMeasureShowNotes = GetTotalMeasureShowNotes2(chart);
         var drawNotes = chart.Notes.Where(
-            x => x.Measure >= CurrentMeasure
+            x => x.Measure >= CurrentMeasure - 1
                  && x.Measure <= CurrentMeasure + totalMeasureShowNotes
                  && !x.IsHold && !x.IsMask); //.ToList();
         foreach (var note in drawNotes)
         {
             var info = GetSkArcInfo(chart, note);
 
-            if (info.Rect.Width >= 1)
+            if (info.Rect.Width >= 1 && GetObjectVisibility(note.Measure))
             {
                 canvas.DrawArc(info.Rect, info.StartAngle, info.ArcLength, false,
                     GetNotePaint(note, info.NoteScale));
+
                 if (note.IsFlair)
                     canvas.DrawArc(info.Rect, info.StartAngle + 2, info.ArcLength - 4, false, FlairPen);
                 // Plot highlighted
                 if (highlightSelectedNote)
                     if (selectedNoteIndex != -1 && note == chart.Notes[selectedNoteIndex])
                         canvas.DrawArc(info.Rect, info.StartAngle + 2, info.ArcLength - 4, false, HighlightPen);
+                //if (note.Measure < CurrentMeasure)
+                    //canvas.DrawArc(info.Rect, info.StartAngle, info.ArcLength, false, HitPen);
             }
         }
     }
@@ -777,10 +903,12 @@ internal class SkCircleView
 
     private SKPaint GetNotePaint(Note note, float noteScale = 1.0f)
     {
+        var color = note.Measure >= CurrentMeasure ? note.Color : note.Color.WithAlpha(0x30);
+
         return new SKPaint
         {
             IsAntialias = true,
-            Color = note.Color,
+            Color = color,
             Style = SKPaintStyle.Stroke,
             StrokeWidth = PanelSize.Width * 8.0f * noteScale / 600.0f
         };
@@ -788,10 +916,12 @@ internal class SkCircleView
 
     private SKPaint GetNotePaint(Gimmick gimmick, float noteScale = 1.0f)
     {
+        var color = gimmick.Measure >= CurrentMeasure ? Utils.GimmickTypeToColor(gimmick.GimmickType) : Utils.GimmickTypeToColor(gimmick.GimmickType).WithAlpha(0x30);
+
         return new SKPaint
         {
             IsAntialias = true,
-            Color = Utils.GimmickTypeToColor(gimmick.GimmickType),
+            Color = color,
             Style = SKPaintStyle.Stroke,
             StrokeWidth = PanelSize.Width * 5.0f * noteScale / 600.0f
         };
@@ -807,5 +937,10 @@ internal class SkCircleView
             Style = SKPaintStyle.Stroke,
             StrokeWidth = PanelSize.Width * 24.0f / 600.0f
         };
+    }
+
+    private bool GetObjectVisibility(float noteTime)
+    {
+        return (noteTime >= CurrentMeasure && !renderNotesBeyondCircle) || (noteTime > CurrentMeasure - 1 && renderNotesBeyondCircle);
     }
 }

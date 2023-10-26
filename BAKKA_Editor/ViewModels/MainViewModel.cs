@@ -78,6 +78,12 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty] private double visualHiSpeedNumericMinimum = 0.001;
     [ObservableProperty] private double visualHiSpeedNumericMaximum = 500;
 
+    [ObservableProperty] private decimal visualBeatDivisionNumeric = 2.00m;
+    [ObservableProperty] private double visualBeatDivisionNumericMinimum = 1;
+    [ObservableProperty] private double visualBeatDivisionNumericMaximum = 1920;
+
+    public ObservableCollection<string> guideLineOptions { get; } = new ObservableCollection<string> { "None", "A", "B", "C", "D", "E", "F", "G" };
+
     // Commands
     public async Task<bool> NewCommand()
     {

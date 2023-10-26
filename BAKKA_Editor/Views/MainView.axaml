@@ -406,14 +406,35 @@
                             </StackPanel>
                         </StackPanel>
                     </HeaderedContentControl>
-                    <HeaderedContentControl Grid.Column="1" Header="{DynamicResource L.VisualSettingsHeader}"
+
+                  <!-- Visual Settings-->
+                    <HeaderedContentControl Grid.Column="1" Header="Visual Settings"
                                             Margin="0,0,0,8" HorizontalAlignment="Stretch">
-                        <StackPanel Margin="8">
-                            <TextBlock Margin="0,0,0,8" Text="{DynamicResource L.HiSpeedLabel}"></TextBlock>
-                            <NumericUpDown Minimum="{Binding VisualHiSpeedNumericMinimum}"
-                                           Maximum="{Binding VisualHiSpeedNumericMaximum}"
-                                           Value="{Binding VisualHiSpeedNumeric}" Increment="0.05"
-                                           ValueChanged="VisualHispeedNumeric_OnValueChanged" />
+                        <StackPanel>
+                            <Grid RowDefinitions="*,*" ColumnDefinitions="*,*">
+                                <TextBlock Margin="4,4,0,0" Grid.Row="0" Grid.Column="1"
+                                           Text="Beat Div."></TextBlock>
+                                <NumericUpDown Grid.Row="0" Grid.Column="1" Margin="2,16,4,0"
+                                               Minimum="{Binding VisualBeatDivisionNumericMinimum}"
+                                               Maximum="{Binding VisualBeatDivisionNumericMaximum}"
+                                               Value="{Binding VisualBeatDivisionNumeric}"
+                                               Increment="1.00"
+                                               ValueChanged="VisualBeatDivisionNumeric_OnValueChanged"/>
+                                <TextBlock Margin="4,4,0,0" Grid.Row="0" Grid.Column="0"
+                                           Text="Guide Lines"/>
+                                <ComboBox Grid.Row="0" Grid.Column="0" Margin="4,16,0,0"
+                                          ItemsSource="{Binding guideLineOptions}"
+                                          SelectionChanged="GuideLine_OnSelectionChanged"
+                                          SelectedIndex="0"/>
+                                <TextBlock Margin="4,4,0,0" Grid.Row="1"
+                                           Text="Hi-Speed"></TextBlock>
+                                <NumericUpDown Grid.Row="1" Grid.ColumnSpan="2" Margin="4,16,2,0"
+                                               Minimum="{Binding VisualHiSpeedNumericMinimum}"
+                                               Maximum="{Binding VisualHiSpeedNumericMaximum}"
+                                               Value="{Binding VisualHiSpeedNumeric}" 
+                                               Increment="0.05"
+                                               ValueChanged="VisualHispeedNumeric_OnValueChanged"/>
+                            </Grid>
                         </StackPanel>
                     </HeaderedContentControl>
                 </Grid>

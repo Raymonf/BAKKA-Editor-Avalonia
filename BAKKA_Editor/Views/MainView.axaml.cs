@@ -780,6 +780,9 @@ public partial class MainView : UserControl
             // Draw base and measure circle.
             skCircleView.DrawCircle(chart);
 
+            // Draw guide lines
+            skCircleView.DrawGuideLines();
+
             // Draw degree lines
             skCircleView.DrawDegreeLines();
 
@@ -2658,6 +2661,25 @@ public partial class MainView : UserControl
         else
             // revert
             _vm.VisualHiSpeedNumeric = (decimal) skCircleView.Hispeed;
+    }
+
+    private void VisualBeatDivisionNumeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
+    {
+        var value = (float) (e.NewValue ?? _vm.VisualBeatDivisionNumeric);
+        if (value >= (float) _vm.VisualBeatDivisionNumericMinimum && value <= (float) _vm.VisualBeatDivisionNumericMaximum)
+            // update
+            skCircleView.BeatDivision = value;
+        else
+            // revert
+            _vm.VisualBeatDivisionNumeric = (decimal) skCircleView.BeatDivision;
+    }
+
+    private void GuideLine_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (_vm != null)
+        {
+            skCircleView.GuideLineSelection = ((ComboBox) sender).SelectedItem.ToString();
+        }
     }
 
     protected void OnPreviewKeyUp(object? sender, KeyEventArgs e)
