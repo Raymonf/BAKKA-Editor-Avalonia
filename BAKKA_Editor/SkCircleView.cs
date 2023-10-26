@@ -27,6 +27,7 @@ internal class SkCircleView
     public Point mouseDownPt;
     public bool rolloverNeg;
     public bool rolloverPos;
+    public int relativeMouseDragPos = 0;
     private readonly int SelectTransparency = 110;
 
     public SkCircleView(SizeF size)
@@ -338,9 +339,10 @@ internal class SkCircleView
         // Left click moves the cursor
         mouseDownPos = (int) (theta / 6.0f);
         mouseDownPt = mousePt;
-        lastMousePos = -1;
+        lastMousePos = mouseDownPos;
         rolloverPos = false;
         rolloverNeg = false;
+        relativeMouseDragPos = 0;
     }
 
     public void UpdateMouseUp()
@@ -372,27 +374,6 @@ internal class SkCircleView
         if (thetaCalc < 0)
             thetaCalc += 360.0f;
         var theta = (int) (thetaCalc / 6.0f);
-
-        var delta = theta - lastMousePos;
-
-        // Handle rollover
-        if (delta == -59)
-        {
-            if (rolloverNeg)
-                rolloverNeg = false;
-            else
-                rolloverPos = true;
-        }
-        else if (delta == 59)
-        {
-            if (rolloverPos)
-                rolloverPos = false;
-            else
-                rolloverNeg = true;
-        }
-
-        lastMousePos = theta;
-
         return theta;
     }
 
