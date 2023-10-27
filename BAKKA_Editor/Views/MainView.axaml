@@ -406,14 +406,49 @@
                             </StackPanel>
                         </StackPanel>
                     </HeaderedContentControl>
+
+                  <!-- Visual Settings-->
                     <HeaderedContentControl Grid.Column="1" Header="{DynamicResource L.VisualSettingsHeader}"
                                             Margin="0,0,0,8" HorizontalAlignment="Stretch">
-                        <StackPanel Margin="8">
-                            <TextBlock Margin="0,0,0,8" Text="{DynamicResource L.HiSpeedLabel}"></TextBlock>
-                            <NumericUpDown Minimum="{Binding VisualHiSpeedNumericMinimum}"
+                        <StackPanel Margin="0,4,0,0">
+                            <Grid RowDefinitions="*,*" ColumnDefinitions="*,*" Margin="4,0,4,0" IsVisible="{Binding AppSettings.ShowBeatVisualSettings}">
+                                <StackPanel Margin="0,0,2,0">
+                                    <TextBlock
+                                               Text="{DynamicResource L.MainView.Labels.GuideLine}"/>
+                                    <ComboBox
+                                              SelectionChanged="GuideLine_OnSelectionChanged"
+                                              SelectedIndex="0"
+                                              HorizontalAlignment="Stretch">
+                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.None}"/>
+                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.A}"/>
+                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.B}"/>
+                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.C}"/>
+                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.D}"/>
+                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.E}"/>
+                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.F}"/>
+                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.G}"/>
+                                    </ComboBox>
+                                </StackPanel>
+                                <StackPanel Grid.Row="0" Grid.Column="1">
+                                    <TextBlock
+                                               Text="{DynamicResource L.MainView.Labels.BeatDivision}"></TextBlock>
+                                    <NumericUpDown
+                                                   Minimum="{Binding VisualBeatDivisionNumericMinimum}"
+                                                   Maximum="{Binding VisualBeatDivisionNumericMaximum}"
+                                                   Value="{Binding VisualBeatDivisionNumeric}"
+                                                   Increment="1.00"
+                                                   ValueChanged="VisualBeatDivisionNumeric_OnValueChanged"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock Margin="4,2,4,0" Grid.Row="1"
+                                       Text="{DynamicResource L.HiSpeedLabel}"></TextBlock>
+                            <NumericUpDown Margin="4,0,4,0"
+                                           Minimum="{Binding VisualHiSpeedNumericMinimum}"
                                            Maximum="{Binding VisualHiSpeedNumericMaximum}"
-                                           Value="{Binding VisualHiSpeedNumeric}" Increment="0.05"
-                                           ValueChanged="VisualHispeedNumeric_OnValueChanged" />
+                                           Value="{Binding VisualHiSpeedNumeric}"
+                                           Increment="0.05"
+                                           ValueChanged="VisualHispeedNumeric_OnValueChanged"/>
                         </StackPanel>
                     </HeaderedContentControl>
                 </Grid>

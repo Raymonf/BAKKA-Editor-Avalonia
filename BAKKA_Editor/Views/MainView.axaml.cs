@@ -88,7 +88,7 @@ public partial class MainView : UserControl
     private int selectedNoteIndex = -1;
 
     // Playfield
-    private SkCircleView skCircleView;
+    private SkCircleView? skCircleView;
     private string? songFilePath;
 
     // Music
@@ -381,6 +381,7 @@ public partial class MainView : UserControl
         // TODO: REFACTOR THIS SHIT!!!!!!!!!
         _vm = (MainViewModel) DataContext!;
         appSettingsVm = new(userSettings);
+        _vm.AppSettings = appSettingsVm;
         if (!appSettingsVm.SetLanguage(userSettings.ViewSettings.Language))
         {
             userSettings.ViewSettings.Language = "en-US";
@@ -388,6 +389,8 @@ public partial class MainView : UserControl
                 async () => await ShowBlockingMessageBox("Warning",
                     $"The selected language was invalid."));
         }
+
+        // TODO: this should move to the AppSettings VM at minimum
         _vm.ShowCursor = userSettings.ViewSettings.ShowCursor;
         _vm.ShowCursorDuringPlayback = userSettings.ViewSettings.ShowCursorDuringPlayback;
         _vm.HighlightViewedNote = userSettings.ViewSettings.HighlightViewedNote;
@@ -402,6 +405,7 @@ public partial class MainView : UserControl
         _vm.HitsoundVolumeTrackBar = Math.Clamp(userSettings.SoundSettings.HitsoundVolume, 0, 100);
         _vm.ShowNotesOnBeat = userSettings.ViewSettings.ShowNotesOnBeat;
         SetDarkMode(userSettings.ViewSettings.DarkMode);
+        appSettingsVm.ShowBeatVisualSettings = userSettings.ViewSettings.ShowBeatVisualSettings;
 
         autoSaveTimer =
             new DispatcherTimer(TimeSpan.FromMilliseconds(userSettings.SaveSettings.AutoSaveInterval * 60000),
@@ -505,7 +509,8 @@ public partial class MainView : UserControl
             var beat1 = (int) ((info.Beat + 5) / 1920.0f * (float) _vm.Beat2Numeric);
             if ((int) _vm.Beat1Numeric != beat1)
                 _vm.Beat1Numeric = beat1;
-            skCircleView.CurrentMeasure = info.MeasureDecimal;
+            if (skCircleView != null)
+                skCircleView.CurrentMeasure = info.MeasureDecimal;
             if (valueTriggerEvent == EventSource.UpdateTick)
                 valueTriggerEvent = EventSource.None;
 
@@ -766,6 +771,9 @@ public partial class MainView : UserControl
 
     private void DoCanvasRender(SKCanvas canvas)
     {
+        if (skCircleView == null)
+            return;
+
         skCircleView.showHispeed = userSettings.ViewSettings.ShowGimmicksDuringPlayback;
 
         skCircleView.SetCanvas(canvas);
@@ -777,8 +785,19 @@ public partial class MainView : UserControl
             // Draw masks
             skCircleView.DrawMasks(chart);
 
-            // Draw base and measure circle.
-            skCircleView.DrawCircle(chart);
+            if (appSettingsVm.ShowBeatVisualSettings)
+            {
+                // Draw base and measure circle with dividers
+                skCircleView.DrawCircleWithDividers(chart);
+
+                // Draw guide lines
+                skCircleView.DrawGuideLines();
+            }
+            else
+            {
+                // Draw base and measure circle
+                skCircleView.DrawCircle(chart);
+            }
 
             // Draw degree lines
             skCircleView.DrawDegreeLines();
@@ -1156,9 +1175,16 @@ public partial class MainView : UserControl
 
     private void updateTime()
     {
+        if (skCircleView == null)
+        {
+            return;
+        }
+
         if (currentSong == null || (currentSong != null && currentSong.Paused))
+        {
             skCircleView.CurrentMeasure =
                 (float) _vm.MeasureNumeric + (float) _vm.Beat1Numeric / (float) _vm.Beat2Numeric;
+        }
 
         if (currentNoteType is NoteType.HoldJoint or NoteType.HoldEnd)
             insertButton.IsEnabled = !(lastNote.BeatInfo.MeasureDecimal >= skCircleView.CurrentMeasure);
@@ -1635,7 +1661,7 @@ public partial class MainView : UserControl
 
         var paddingLeft = (zoneWidth - CircleControl.Width) / 2;
         CircleControl.Padding = new Thickness(paddingLeft, 0, 0, 0);
-        skCircleView.Update(new SizeF((float) CircleControl.Width, (float) CircleControl.Height));
+        skCircleView?.Update(new SizeF((float) CircleControl.Width, (float) CircleControl.Height));
     }
 
     private void AvaloniaObject_OnPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
@@ -1645,6 +1671,11 @@ public partial class MainView : UserControl
 
     private void CircleControl_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
+        if (skCircleView == null)
+        {
+            return;
+        }
+
         var point = e.GetCurrentPoint(CircleControl);
         if (point.Properties.PointerUpdateKind != PointerUpdateKind.LeftButtonPressed) return;
 
@@ -1658,6 +1689,11 @@ public partial class MainView : UserControl
 
     private void CircleControl_OnPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
+        if (skCircleView == null)
+        {
+            return;
+        }
+
         var point = e.GetCurrentPoint(CircleControl);
         if (point.Properties.PointerUpdateKind != PointerUpdateKind.LeftButtonReleased ||
             skCircleView.mouseDownPos <= -1)
@@ -1671,6 +1707,11 @@ public partial class MainView : UserControl
 
     private void CircleControl_OnPointerMoved(object? sender, PointerEventArgs e)
     {
+        if (skCircleView == null)
+        {
+            return;
+        }
+
         var point = e.GetCurrentPoint(CircleControl);
         // Mouse down position wasn't within the window or wasn't a left click, do nothing.
         if (!point.Properties.IsLeftButtonPressed || skCircleView.mouseDownPos <= -1) return;
@@ -2086,7 +2127,7 @@ public partial class MainView : UserControl
 
     private void NoteJumpToCurrTimeButton_Click(object? sender, RoutedEventArgs e)
     {
-        if (chart.Notes.Count == 0 || selectedNoteIndex >= chart.Notes.Count)
+        if (chart.Notes.Count == 0 || selectedNoteIndex >= chart.Notes.Count || skCircleView == null)
             return;
 
         var currentMeasure = skCircleView.CurrentMeasure;
@@ -2620,7 +2661,7 @@ public partial class MainView : UserControl
 
         currentSong.PlayPosition = (uint) e.NewValue;
         var info = chart.GetBeat(currentSong.PlayPosition);
-        if (info.Measure != -1 && valueTriggerEvent != EventSource.MouseWheel)
+        if (info.Measure != -1 && valueTriggerEvent != EventSource.MouseWheel && skCircleView != null)
         {
             valueTriggerEvent = EventSource.TrackBar;
             _vm.MeasureNumeric = info.Measure < 0 ? 0 : info.Measure;
@@ -2651,6 +2692,11 @@ public partial class MainView : UserControl
 
     private void VisualHispeedNumeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
     {
+        if (skCircleView == null)
+        {
+            return;
+        }
+
         var value = (float) (e.NewValue ?? _vm.VisualHiSpeedNumeric);
         if (value >= (float) _vm.VisualHiSpeedNumericMinimum && value <= (float) _vm.VisualHiSpeedNumericMaximum)
             // update
@@ -2658,6 +2704,30 @@ public partial class MainView : UserControl
         else
             // revert
             _vm.VisualHiSpeedNumeric = (decimal) skCircleView.Hispeed;
+    }
+
+    private void VisualBeatDivisionNumeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
+    {
+        if (skCircleView == null)
+        {
+            return;
+        }
+
+        var value = (float) (e.NewValue ?? _vm.VisualBeatDivisionNumeric);
+        if (value >= (float) _vm.VisualBeatDivisionNumericMinimum && value <= (float) _vm.VisualBeatDivisionNumericMaximum)
+            // update
+            skCircleView.BeatDivision = value;
+        else
+            // revert
+            _vm.VisualBeatDivisionNumeric = (decimal) skCircleView.BeatDivision;
+    }
+
+    private void GuideLine_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (skCircleView != null && sender != null)
+        {
+            skCircleView.GuideLineSelection = ((ComboBox) sender).SelectedIndex;
+        }
     }
 
     protected void OnPreviewKeyUp(object? sender, KeyEventArgs e)
@@ -2799,7 +2869,7 @@ public partial class MainView : UserControl
 
     private void GimmickJumpToCurrTimeButton_OnClick(object? sender, RoutedEventArgs e)
     {
-        if (chart.Gimmicks.Count == 0)
+        if (chart.Gimmicks.Count == 0 || skCircleView == null)
             return;
 
         var currentMeasure = skCircleView.CurrentMeasure;
@@ -2940,7 +3010,7 @@ public partial class MainView : UserControl
 
     private void UpdateNotesOnBeat()
     {
-        if (!userSettings.ViewSettings.ShowNotesOnBeat)
+        if (!userSettings.ViewSettings.ShowNotesOnBeat || skCircleView == null)
             return;
 
         // Fill list of notes on beat
@@ -2954,7 +3024,7 @@ public partial class MainView : UserControl
 
     private void NotesOnBeatListBox_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        if (!userSettings.ViewSettings.ShowNotesOnBeat || e.AddedItems.Count < 1)
+        if (!userSettings.ViewSettings.ShowNotesOnBeat || e.AddedItems.Count < 1 || skCircleView == null)
             return;
 
         var selectedNote = (NoteOnBeatItem?) e.AddedItems[0];

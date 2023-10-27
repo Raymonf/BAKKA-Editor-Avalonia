@@ -10,6 +10,7 @@
         <vm:AppSettingsViewModel />
     </UserControl.DataContext>
 
+
     <StackPanel>
         <TextBlock TextWrapping="Wrap" Text="can we just pretend this looks good and correct for the time being? thanks :)" Margin="0,0,0,8" />
 
@@ -21,5 +22,7 @@
                 </DataTemplate>
             </ComboBox.ItemTemplate>
         </ComboBox>
+
+        <CheckBox IsChecked="{Binding ShowBeatVisualSettings}" Content="{DynamicResource L.Settings.CheckBoxes.ShowBeatVisualSettings}" />
     </StackPanel>
 </UserControl>

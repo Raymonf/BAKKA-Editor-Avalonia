@@ -32,6 +32,7 @@ public class ViewSettings
     public bool PlaceNoteOnDrag { get; set; } = true;
     public bool ShowNotesOnBeat { get; set; } = false;
     public string Language { get; set; } = "en-US";
+    public bool ShowBeatVisualSettings { get; set; } = true;
 }
 
 public class SaveSettings
