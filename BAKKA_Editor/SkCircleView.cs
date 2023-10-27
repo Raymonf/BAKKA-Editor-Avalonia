@@ -393,7 +393,7 @@ internal partial class SkCircleView
         canvas.Clear(color);
     }
 
-    // Updates the mouse position and returns the new position in degrees.
+    // Returns the new position in degrees.
     public int CalculateTheta(float xCen, float yCen)
     {
         var thetaCalc = (float) (Math.Atan2(yCen, xCen) * 180.0f / Math.PI);
@@ -403,6 +403,7 @@ internal partial class SkCircleView
         return theta;
     }
 
+    // Updates cursor states.
     public void UpdateMouseMove(int mousePosition, int relativeMousePosition, int minimumCursorSize, RolloverState state)
     {
         lastMousePos = mousePosition;
