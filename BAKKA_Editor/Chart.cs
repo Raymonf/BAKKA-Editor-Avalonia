@@ -156,16 +156,26 @@ internal class Chart
         }
 
         // Generate hold references
+        var errors = new List<string>();
+
         for (var i = 0; i < Notes.Count; i++)
+        {
             if (refByLine.ContainsKey(i))
             {
                 if (!notesByLine.ContainsKey(refByLine[i]))
-                    throw new Exception(
-                        $"Broken hold found: {refByLine[i]} was not found in notesByLine (max indices = {notesByLine.Count - 1})");
+                {
+                    errors.Add($"Broken note found: referenced note index {refByLine[i]} (at index {i}) was not found in notesByLine (max = {notesByLine.Count - 1})");
+                    continue;
+                }
 
                 Notes[i].NextNote = notesByLine[refByLine[i]];
                 Notes[i].NextNote.PrevNote = Notes[i];
             }
+        }
+
+        // error if we have any broken notes
+        if (errors.Count > 0)
+            throw new Exception(string.Join("\n", errors));
 
         RecalcTime();
 

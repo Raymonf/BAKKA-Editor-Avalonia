@@ -1,13 +1,10 @@
-<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:BAKKA_Editor.ViewModels"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="1154" d:DesignHeight="800"
-             xmlns:controls="clr-namespace:BAKKA_Editor.Controls"
-             x:Class="BAKKA_Editor.Views.MainView"
-             PropertyChanged="AvaloniaObject_OnPropertyChanged"
-             Focusable="True">
+<?xml version="1.0" encoding="utf-8"?>
+
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:BAKKA_Editor.ViewModels" xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d"
+             d:DesignWidth="1154" d:DesignHeight="800" xmlns:controls="clr-namespace:BAKKA_Editor.Controls"
+             x:Class="BAKKA_Editor.Views.MainView" PropertyChanged="AvaloniaObject_OnPropertyChanged" Focusable="True">
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.ThemeDictionaries>
@@ -20,7 +17,6 @@
             </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
-
     <UserControl.Styles>
         <Style Selector="RadioButton">
             <Setter Property="Margin" Value="0,4,0,4" />
@@ -39,105 +35,101 @@
             <Setter Property="HorizontalAlignment" Value="Stretch" />
         </Style>
     </UserControl.Styles>
-
     <Design.DataContext>
         <vm:MainViewModel />
     </Design.DataContext>
-
     <DockPanel Margin="2">
         <Menu DockPanel.Dock="Top">
-            <MenuItem Header="_File">
-                <MenuItem Header="_New..." Command="{Binding NewCommand}" InputGesture="Ctrl+N" />
-                <MenuItem Header="_Open..." Command="{Binding OpenCommand}" InputGesture="Ctrl+O" />
-                <MenuItem Header="_Save..." Command="{Binding SaveCommand}" InputGesture="Ctrl+S" />
-                <MenuItem Header="_Save As..." Command="{Binding SaveAsCommand}" InputGesture="Ctrl+Shift+S" />
+            <MenuItem Header="{DynamicResource L.FileMenuItem}">
+                <MenuItem Header="{DynamicResource L.NewMenuOption}" Command="{Binding NewCommand}"
+                          InputGesture="Ctrl+N" />
+                <MenuItem Header="{DynamicResource L.OpenMenuOption}" Command="{Binding OpenCommand}"
+                          InputGesture="Ctrl+O" />
+                <MenuItem Header="{DynamicResource L.SaveMenuOption}" Command="{Binding SaveCommand}"
+                          InputGesture="Ctrl+S" />
+                <MenuItem Header="{DynamicResource L.SaveAsMenuOption}" Command="{Binding SaveAsCommand}"
+                          InputGesture="Ctrl+Shift+S" />
                 <Separator />
-                <MenuItem Header="_Exit" Command="{Binding ExitCommand}" />
+                <MenuItem Header="{DynamicResource L.MainView.Menu.File.Settings}"
+                          Command="{Binding OpenSettingsCommand}" />
+                <Separator />
+                <MenuItem Header="{DynamicResource L.ExitMenuOption}" Command="{Binding ExitCommand}" />
             </MenuItem>
-            <MenuItem Header="_Edit">
-                <MenuItem Header="Undo" Name="UndoMenuItem" Command="{Binding UndoCommand}" InputGesture="Ctrl+Z" />
-                <MenuItem Header="Redo" Name="RedoMenuItem" Command="{Binding RedoCommand}" InputGesture="Ctrl+Y" />
+            <MenuItem Header="{DynamicResource L.EditMenuItem}">
+                <MenuItem Header="{DynamicResource L.UndoMenuOption}" Name="UndoMenuItem"
+                          Command="{Binding UndoCommand}"
+                          InputGesture="Ctrl+Z" />
+                <MenuItem Header="{DynamicResource L.RedoMenuOption}" Name="RedoMenuItem"
+                          Command="{Binding RedoCommand}"
+                          InputGesture="Ctrl+Y" />
             </MenuItem>
-            <MenuItem Header="_View">
-                <MenuItem Header="Show Cursor" Command="{Binding ToggleShowCursorCommand}">
+            <MenuItem Header="{DynamicResource L.ViewMenuItem}">
+                <MenuItem Header="{DynamicResource L.ShowCursorMenuOption}" Command="{Binding ToggleShowCursorCommand}">
                     <MenuItem.Icon>
-                        <CheckBox
-                            Name="ShowCursorMenuItem"
-                            BorderThickness="0"
-                            IsHitTestVisible="False"
-                            IsChecked="{Binding ShowCursor}" />
+                        <CheckBox Name="ShowCursorMenuItem" BorderThickness="0" IsHitTestVisible="False"
+                                  IsChecked="{Binding ShowCursor}" />
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="Show Cursor During Playback"
+                <MenuItem Header="{DynamicResource L.ShowCursorDuringPlaybackMenuOption}"
                           Command="{Binding ToggleShowCursorDuringPlaybackCommand}">
                     <MenuItem.Icon>
-                        <CheckBox Margin="0"
-                                  IsChecked="{Binding ShowCursorDuringPlayback}"
-                                  Name="ShowCursorDuringPlaybackMenuItem"
-                                  BorderThickness="0"
-                                  IsHitTestVisible="False" />
+                        <CheckBox Margin="0" IsChecked="{Binding ShowCursorDuringPlayback}"
+                                  Name="ShowCursorDuringPlaybackMenuItem" BorderThickness="0" IsHitTestVisible="False" />
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="Highlight Viewed Note" Command="{Binding ToggleHighlightViewedNoteCommand}">
+                <MenuItem Header="{DynamicResource L.HighlightViewedNoteMenuOption}"
+                          Command="{Binding ToggleHighlightViewedNoteCommand}">
                     <MenuItem.Icon>
-                        <CheckBox IsChecked="{Binding HighlightViewedNote}"
-                                  Name="HighlightViewedNoteMenuItem"
-                                  BorderThickness="0"
-                                  IsHitTestVisible="False" />
+                        <CheckBox IsChecked="{Binding HighlightViewedNote}" Name="HighlightViewedNoteMenuItem"
+                                  BorderThickness="0" IsHitTestVisible="False" />
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="Select Last Inserted Note" Command="{Binding ToggleSelectLastInsertedNoteCommand}">
+                <MenuItem Header="{DynamicResource L.SelectLastInsertedNoteMenuOption}"
+                          Command="{Binding ToggleSelectLastInsertedNoteCommand}">
                     <MenuItem.Icon>
-                        <CheckBox IsChecked="{Binding SelectLastInsertedNote}"
-                                  Name="SelectLastInsertedNoteMenuItem"
-                                  BorderThickness="0"
-                                  IsHitTestVisible="False" />
+                        <CheckBox IsChecked="{Binding SelectLastInsertedNote}" Name="SelectLastInsertedNoteMenuItem"
+                                  BorderThickness="0" IsHitTestVisible="False" />
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="Show Gimmicks In Circle View" Command="{Binding ToggleGimmicksInCircleViewCommand}">
+                <MenuItem Header="{DynamicResource L.ShowGimmicksInCircleViewMenuOption}"
+                          Command="{Binding ToggleGimmicksInCircleViewCommand}">
                     <MenuItem.Icon>
                         <CheckBox IsChecked="{Binding ShowGimmicksInCircleView}"
-                                  Name="ShowGimmicksInCircleViewMenuItem"
-                                  BorderThickness="0"
-                                  IsHitTestVisible="False" />
+                                  Name="ShowGimmicksInCircleViewMenuItem" BorderThickness="0" IsHitTestVisible="False" />
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="Show Gimmicks During Playback"
+                <MenuItem Header="{DynamicResource L.ShowGimmicksDuringPlaybackMenuOption}"
                           Command="{Binding ToggleShowGimmicksDuringPlaybackInCircleViewCommand}">
                     <MenuItem.Icon>
                         <CheckBox IsChecked="{Binding ShowGimmicksDuringPlaybackInCircleView}"
-                                  Name="ShowGimmicksDuringPlaybackInCircleViewMenuItem"
-                                  BorderThickness="0"
+                                  Name="ShowGimmicksDuringPlaybackInCircleViewMenuItem" BorderThickness="0"
                                   IsHitTestVisible="False" />
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="Dark Mode" Command="{Binding ToggleDarkModeViewCommand}">
+                <MenuItem Header="{DynamicResource L.DarkModeMenuOption}" Command="{Binding ToggleDarkModeViewCommand}">
                     <MenuItem.Icon>
-                        <CheckBox IsChecked="{Binding DarkMode}"
-                                  Name="ToggleDarkModeMenuItem"
-                                  BorderThickness="0"
+                        <CheckBox IsChecked="{Binding DarkMode}" Name="ToggleDarkModeMenuItem" BorderThickness="0"
                                   IsHitTestVisible="False" />
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="Show Measure Movement Buttons" Command="{Binding ToggleShowMeasureButtonsCommand}">
+                <MenuItem Header="{DynamicResource L.ShowMeasureMovementButtonsMenuOption}"
+                          Command="{Binding ToggleShowMeasureButtonsCommand}">
                     <MenuItem.Icon>
                         <CheckBox IsChecked="{Binding AreMeasureButtonsVisible}"
-                                  Name="ToggleShowMeasureButtonsMenuItem"
-                                  BorderThickness="0"
-                                  IsHitTestVisible="False" />
+                                  Name="ToggleShowMeasureButtonsMenuItem" BorderThickness="0" IsHitTestVisible="False" />
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="Place Note on Drag" Command="{Binding TogglePlaceNoteOnDragCommand}">
+                <MenuItem Header="{DynamicResource L.PlaceNoteOnDragMenuOption}"
+                          Command="{Binding TogglePlaceNoteOnDragCommand}">
                     <MenuItem.Icon>
-                        <CheckBox IsChecked="{Binding PlaceNoteOnDrag}"
-                                  Name="PlaceNoteOnDragMenuItem"
-                                  BorderThickness="0"
-                                  IsHitTestVisible="False" />
+                        <CheckBox IsChecked="{Binding PlaceNoteOnDrag}" Name="PlaceNoteOnDragMenuOption"
+                                  BorderThickness="0" IsHitTestVisible="False" />
                     </MenuItem.Icon>
                 </MenuItem>
             </MenuItem>
-            <MenuItem Header="_Chart">
-                <MenuItem Header="Initial Chart Settings" Command="{Binding OpenInitialChartSettings}" />
+            <MenuItem Header="{DynamicResource L.ChartMenuItem}">
+                <MenuItem Header="{DynamicResource L.InitialChartSettingsMenuOption}"
+                          Command="{Binding OpenInitialChartSettings}" />
             </MenuItem>
 			<MenuItem Header="_Options">
 				<MenuItem Header="Enable Active Cursor Tracking" Command="{Binding ToggleActiveCursorTrackingCommand}">
@@ -150,13 +142,11 @@
 				</MenuItem>
 			</MenuItem>
         </Menu>
-
         <Grid RowDefinitions="*" Margin="0,-4,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" MaxWidth="260" />
             </Grid.ColumnDefinitions>
-
             <!-- Left Side Grid -->
             <Grid RowDefinitions="*,120">
                 <!-- Top of Left Side Grid -->
@@ -165,7 +155,6 @@
                         <ColumnDefinition Width="260" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-
                     <!-- Left Stack Panel (Left Stack Panel, Canvas) -->
                     <StackPanel Name="LeftStackPanel" Orientation="Horizontal">
                         <ScrollViewer Name="LeftScrollViewer" VerticalScrollBarVisibility="Auto">
@@ -177,70 +166,53 @@
                             <!-- Left Inner Stack Panel (Notes/Gimmicks, Selection, Note Settings) -->
                             <StackPanel Name="LeftInnerStackPanel" Margin="8" Width="260">
                                 <Grid RowDefinitions="*" ColumnDefinitions="*,*">
-                                    <HeaderedContentControl Header="Note Types" Margin="0,0,8,0">
+                                    <HeaderedContentControl Header="{DynamicResource L.NoteTypesHeader}"
+                                                            Margin="0,0,8,0">
                                         <StackPanel Margin="8">
                                             <Button Name="tapButton" Classes="note" Background="Fuchsia"
-                                                    Foreground="Black"
-                                                    Click="tapButton_Click">
-                                                Touch
+                                                    Foreground="Black" Click="tapButton_Click"
+                                                    Content="{DynamicResource L.TouchNoteButton}">
                                             </Button>
                                             <Button Name="orangeButton" Classes="note" Background="Orange"
-                                                    Foreground="Black"
-                                                    Click="orangeButton_Click">
-                                                ⤾ Slide
+                                                    Foreground="Black" Click="orangeButton_Click"
+                                                    Content="{DynamicResource L.LeftArrowSlideNoteButton}">
                                             </Button>
                                             <Button Name="greenButton" Classes="note" Background="Lime"
-                                                    Foreground="Black"
-                                                    Click="greenButton_Click">
-                                                ⤿ Slide
+                                                    Foreground="Black" Click="greenButton_Click"
+                                                    Content="{DynamicResource L.RightArrowSlideNoteButton}">
                                             </Button>
                                             <Button Name="redButton" Classes="note" Background="Red" Foreground="Black"
-                                                    Click="redButton_Click">
-                                                ↑ Snap
+                                                    Click="redButton_Click"
+                                                    Content="{DynamicResource L.UpArrowSnapNoteButton}">
                                             </Button>
                                             <Button Name="blueButton" Classes="note" Background="Cyan"
-                                                    Foreground="Black"
-                                                    Click="blueButton_Click">
-                                                ↓ Snap
+                                                    Foreground="Black" Click="blueButton_Click"
+                                                    Content="{DynamicResource L.DownArrowSnapNoteButton}">
                                             </Button>
                                             <Button Name="chainButton" Classes="note" Background="rgb(204, 190, 45)"
-                                                    Foreground="Black"
-                                                    Click="chainButton_Click">
-                                                Chain
+                                                    Foreground="Black" Click="chainButton_Click"
+                                                    Content="{DynamicResource L.ChainNoteButton}">
                                             </Button>
                                             <Button Name="holdButton" Classes="note" Background="Yellow"
-                                                    Foreground="Black"
-                                                    Click="holdButton_Click">
-                                                Hold
+                                                    Foreground="Black" Click="holdButton_Click"
+                                                    Content="{DynamicResource L.HoldNoteButton}">
                                             </Button>
                                             <Button Name="endChartButton" Classes="note" Background="Black"
-                                                    Foreground="White"
-                                                    Click="endChartButton_Click">
-                                                End of Chart
+                                                    Foreground="White" Click="endChartButton_Click"
+                                                    Content="{DynamicResource L.EndOfChartNoteButton}">
                                             </Button>
-                                            <CheckBox Name="_endHoldCheck"
-                                                      IsChecked="{Binding EndHoldChecked}" Margin="0,0"
-                                                      IsCheckedChanged="EndHoldCheck_IsCheckedChanged">
-                                                End Hold
+                                            <CheckBox Name="_endHoldCheck" IsChecked="{Binding EndHoldChecked}"
+                                                      Margin="0,0" IsCheckedChanged="EndHoldCheck_IsCheckedChanged"
+                                                      Content="{DynamicResource L.EndHoldCheck}">
                                             </CheckBox>
-
-                                            <RadioButton Name="noBonusRadio"
-                                                         IsChecked="True"
-                                                         GroupName="Note Types"
-                                                         Content="No Bonus"
-                                                         Margin="0,0"
+                                            <RadioButton Name="noBonusRadio" IsChecked="True" GroupName="Note Types"
+                                                         Content="{DynamicResource L.NoBonusRadio}" Margin="0,0"
                                                          IsCheckedChanged="BonusRadioCheck" />
-                                            <RadioButton Name="bonusRadio"
-                                                         IsChecked="False"
-                                                         GroupName="Note Types"
-                                                         Content="Bonus Get"
-                                                         Margin="0,0"
+                                            <RadioButton Name="bonusRadio" IsChecked="False" GroupName="Note Types"
+                                                         Content="{DynamicResource L.BonusGetRadio}" Margin="0,0"
                                                          IsCheckedChanged="BonusRadioCheck" />
-                                            <RadioButton Name="flairRadio"
-                                                         IsChecked="False"
-                                                         GroupName="Note Types"
-                                                         Content="R Note (Flair)"
-                                                         Margin="0,0"
+                                            <RadioButton Name="flairRadio" IsChecked="False" GroupName="Note Types"
+                                                         Content="{DynamicResource L.RNoteFlairRadio}" Margin="0,0"
                                                          IsCheckedChanged="BonusRadioCheck" />
                                         </StackPanel>
                                     </HeaderedContentControl>
@@ -250,124 +222,109 @@
                                                 <Setter Property="Margin" Value="0,-1,0,-1" />
                                             </Style>
                                         </Grid.Styles>
-                                        <HeaderedContentControl Header="Gimmick Types">
+                                        <HeaderedContentControl Header="{DynamicResource L.GimmickTypesHeader}">
                                             <StackPanel Margin="8">
-                                                <Button Name="maskButton" Classes="note" Click="maskButton_Click">
-                                                    Mask
+                                                <Button Name="maskButton" Classes="note" Click="maskButton_Click"
+                                                        Content="{DynamicResource L.MaskGimmickButton}">
                                                 </Button>
                                                 <Button Name="bpmChangeButton" Classes="note"
-                                                        Click="bpmChangeButton_Click">
-                                                    BPM Change
+                                                        Click="bpmChangeButton_Click"
+                                                        Content="{DynamicResource L.BpmChangeGimmickButton}">
                                                 </Button>
-                                                <Button Name="timeSigButton" Classes="note" Click="timeSigButton_Click">
-                                                    Time Signature
+                                                <Button Name="timeSigButton" Classes="note" Click="timeSigButton_Click"
+                                                        Content="{DynamicResource L.TimeSignatureGimmickButton}">
                                                 </Button>
-                                                <Button Name="hiSpeedButton" Classes="note" Click="hiSpeedButton_Click">
-                                                    Hi-Speed
+                                                <Button Name="hiSpeedButton" Classes="note" Click="hiSpeedButton_Click"
+                                                        Content="{DynamicResource L.HiSpeedGimmickButton}">
                                                 </Button>
-                                                <Button Name="stopButton" Classes="note" Click="stopButton_Click">
-                                                    Stop
+                                                <Button Name="stopButton" Classes="note" Click="stopButton_Click"
+                                                        Content="{DynamicResource L.StopGimmickButton}">
                                                 </Button>
-                                                <Button Name="reverseButton" Classes="note" Click="reverseButton_Click">
-                                                    Reverse
+                                                <Button Name="reverseButton" Classes="note" Click="reverseButton_Click"
+                                                        Content="{DynamicResource L.ReverseGimmickButton}">
                                                 </Button>
-
-                                                <RadioButton Name="addMaskRadio"
-                                                             IsChecked="True"
+                                                <RadioButton Name="addMaskRadio" IsChecked="True"
                                                              GroupName="Gimmick Types"
-                                                             Content="Add Mask"
+                                                             Content="{DynamicResource L.AddMaskRadio}"
                                                              IsCheckedChanged="maskRatio_CheckChanged" />
-                                                <RadioButton Name="removeMaskRadio"
-                                                             IsChecked="False"
+                                                <RadioButton Name="removeMaskRadio" IsChecked="False"
                                                              GroupName="Gimmick Types"
-                                                             Content="Remove Mask"
+                                                             Content="{DynamicResource L.RemoveMaskRadio}"
                                                              IsCheckedChanged="maskRatio_CheckChanged" />
                                             </StackPanel>
                                         </HeaderedContentControl>
-
-                                        <HeaderedContentControl Grid.Row="1" Header="Mask Setting"
+                                        <HeaderedContentControl Grid.Row="1"
+                                                                Header="{DynamicResource L.MaskSettingHeader}"
                                                                 VerticalAlignment="Bottom" Margin="0,8,0,0">
                                             <StackPanel Margin="8">
-                                                <RadioButton Name="clockwiseMaskRadio"
-                                                             IsChecked="True"
+                                                <RadioButton Name="clockwiseMaskRadio" IsChecked="True"
                                                              GroupName="Mask Setting"
-                                                             Content="Clockwise"
+                                                             Content="{DynamicResource L.ClockwiseRadio}"
                                                              IsCheckedChanged="maskRatio_CheckChanged" />
-                                                <RadioButton Name="cClockwiseMaskRadio"
-                                                             IsChecked="False"
+                                                <RadioButton Name="cClockwiseMaskRadio" IsChecked="False"
                                                              GroupName="Mask Setting"
-                                                             Content="C-Clockwise"
+                                                             Content="{DynamicResource L.CClockwiseRadio}"
                                                              IsCheckedChanged="maskRatio_CheckChanged" />
-                                                <RadioButton Name="centerMaskRadio"
-                                                             IsChecked="False"
+                                                <RadioButton Name="centerMaskRadio" IsChecked="False"
                                                              GroupName="Mask Setting"
-                                                             Content="From Center"
+                                                             Content="{DynamicResource L.FromCenterRadio}"
                                                              IsCheckedChanged="maskRatio_CheckChanged" />
                                             </StackPanel>
                                         </HeaderedContentControl>
                                     </Grid>
                                 </Grid>
-
-                                <HeaderedContentControl Header="Current Selection" Margin="0,8,8,0">
-                                    <TextBlock Name="currentSelectionLabel" Margin="8">Touch</TextBlock>
+                                <HeaderedContentControl Header="{DynamicResource L.CurrentSelectionHeader}"
+                                                        Margin="0,8,8,0">
+                                    <TextBlock Name="currentSelectionLabel" Margin="8"
+                                               Text="{DynamicResource L.TouchNoteButton}">
+                                    </TextBlock>
                                 </HeaderedContentControl>
-
-                                <HeaderedContentControl Header="Current Note Settings"
+                                <HeaderedContentControl Header="{DynamicResource L.CurrentNoteSettingsHeader}"
                                                         Margin="0,8,8,0">
                                     <StackPanel Margin="8">
-                                        <TextBlock Margin="0,0,0,4">Position:</TextBlock>
+                                        <TextBlock Margin="0,0,0,4" Text="{DynamicResource L.PositionLabel}"></TextBlock>
                                         <Grid ColumnDefinitions="100*,158*">
-                                            <NumericUpDown
-                                                Value="{Binding PositionNumeric}" Increment="1"
-                                                Minimum="{Binding PositionNumericMinimum}"
-                                                Maximum="{Binding PositionNumericMaximum}"
-                                                ValueChanged="PositionNumeric_OnValueChanged" />
-                                            <Slider Grid.Column="1"
-                                                    VerticalAlignment="Center"
+                                            <NumericUpDown Value="{Binding PositionNumeric}" Increment="1"
+                                                           Minimum="{Binding PositionNumericMinimum}"
+                                                           Maximum="{Binding PositionNumericMaximum}"
+                                                           ValueChanged="PositionNumeric_OnValueChanged" />
+                                            <Slider Grid.Column="1" VerticalAlignment="Center"
                                                     Value="{Binding PositionTrackBar}"
                                                     Minimum="{Binding PositionTrackBarMinimum}"
-                                                    Maximum="{Binding PositionTrackBarMaximum}"
-                                                    SmallChange="1" LargeChange="5"
-                                                    Padding="8,0,0,0"
+                                                    Maximum="{Binding PositionTrackBarMaximum}" SmallChange="1"
+                                                    LargeChange="5" Padding="8,0,0,0"
                                                     ValueChanged="PositionTrackBar_OnValueChanged"
                                                     PointerWheelChanged="PositionTrackBar_OnPointerWheelChanged" />
                                         </Grid>
-                                        <TextBlock Margin="0,4">Size:</TextBlock>
+                                        <TextBlock Margin="0,4" Text="{DynamicResource L.SizeLabel}"></TextBlock>
                                         <Grid ColumnDefinitions="100*,158*">
-                                            <NumericUpDown
-                                                Value="{Binding SizeNumeric}" Increment="1"
-                                                Minimum="{Binding SizeNumericMinimum}"
-                                                Maximum="{Binding SizeNumericMaximum}"
-                                                ValueChanged="SizeNumeric_OnValueChanged" />
-                                            <Slider Grid.Column="1"
-                                                    VerticalAlignment="Center"
+                                            <NumericUpDown Value="{Binding SizeNumeric}" Increment="1"
+                                                           Minimum="{Binding SizeNumericMinimum}"
+                                                           Maximum="{Binding SizeNumericMaximum}"
+                                                           ValueChanged="SizeNumeric_OnValueChanged" />
+                                            <Slider Grid.Column="1" VerticalAlignment="Center"
                                                     Value="{Binding SizeTrackBar}"
                                                     Minimum="{Binding SizeTrackBarMinimum}"
-                                                    Maximum="{Binding SizeTrackBarMaximum}"
-                                                    SmallChange="1" LargeChange="5"
-                                                    Padding="8,0,0,0"
+                                                    Maximum="{Binding SizeTrackBarMaximum}" SmallChange="1"
+                                                    LargeChange="5" Padding="8,0,0,0"
                                                     ValueChanged="SizeTrackBar_OnValueChanged"
                                                     PointerWheelChanged="SizeTrackBar_OnPointerWheelChanged" />
                                         </Grid>
-                                        <TextBlock Margin="0,4">Measure:</TextBlock>
+                                        <TextBlock Margin="0,4" Text="{DynamicResource L.MeasureLabel}"></TextBlock>
                                         <Grid ColumnDefinitions="8*,4*,*,4*">
-                                            <NumericUpDown Grid.Column="0"
-                                                           HorizontalAlignment="Stretch"
+                                            <NumericUpDown Grid.Column="0" HorizontalAlignment="Stretch"
                                                            Value="{Binding MeasureNumeric}" Increment="1"
                                                            Minimum="{Binding MeasureNumericMinimum}"
-                                                           Maximum="{Binding MeasureNumericMaximum}"
-                                                           Margin="0,0,8,0"
+                                                           Maximum="{Binding MeasureNumericMaximum}" Margin="0,0,8,0"
                                                            ValueChanged="MeasureNumeric_OnValueChanged" />
-                                            <NumericUpDown Grid.Column="1"
-                                                           HorizontalAlignment="Stretch"
+                                            <NumericUpDown Grid.Column="1" HorizontalAlignment="Stretch"
                                                            Value="{Binding Beat1Numeric}" Increment="1"
                                                            Minimum="{Binding Beat1NumericMinimum}"
                                                            Maximum="{Binding Beat1NumericMaximum}"
                                                            ValueChanged="Beat1Numeric_OnValueChanged" />
                                             <TextBlock Grid.Column="2" Text="/" Width="8" Margin="8,0,8,0"
                                                        VerticalAlignment="Center" />
-                                            <NumericUpDown Grid.Column="3"
-                                                           HorizontalAlignment="Stretch"
+                                            <NumericUpDown Grid.Column="3" HorizontalAlignment="Stretch"
                                                            Value="{Binding Beat2Numeric}" Increment="1"
                                                            Minimum="{Binding Beat2NumericMinimum}"
                                                            Maximum="{Binding Beat2NumericMaximum}"
@@ -375,131 +332,151 @@
                                         </Grid>
                                     </StackPanel>
                                 </HeaderedContentControl>
-
                                 <Button Name="insertButton" Click="insertButton_Click" HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Center" Margin="0,4,8,0" Height="28"
                                         Content="{Binding InsertButtonText}" />
                             </StackPanel>
                         </ScrollViewer>
                     </StackPanel>
-
                     <!-- Canvas Stack Panel -->
                     <StackPanel Grid.Column="1" Name="CanvasStackPanel">
-                        <controls:SkiaCanvas
-                            Name="CircleControl"
-                            Background="Transparent"
-                            RenderSkia="RenderCanvas"
-                            HorizontalAlignment="Center" VerticalAlignment="Center"
-                            PointerPressed="CircleControl_OnPointerPressed"
-                            PointerReleased="CircleControl_OnPointerReleased"
-                            PointerMoved="CircleControl_OnPointerMoved"
-                            PointerWheelChanged="CircleControl_OnWheel" />
+                        <controls:SkiaCanvas Name="CircleControl" Background="Transparent" RenderSkia="RenderCanvas"
+                                             HorizontalAlignment="Center" VerticalAlignment="Center"
+                                             PointerPressed="CircleControl_OnPointerPressed"
+                                             PointerReleased="CircleControl_OnPointerReleased"
+                                             PointerMoved="CircleControl_OnPointerMoved"
+                                             PointerWheelChanged="CircleControl_OnWheel" />
                     </StackPanel>
                 </Grid>
-
                 <!-- Bottom -->
                 <Grid Grid.Row="1" Name="BottomStackPanel">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" MaxWidth="160" />
                     </Grid.ColumnDefinitions>
-
-                    <HeaderedContentControl Header="Playback" Margin="8,0,8,8" VerticalAlignment="Stretch"
-                                            HorizontalAlignment="Stretch">
+                    <HeaderedContentControl Header="{DynamicResource L.PlaybackHeader}" Margin="8,0,8,8"
+                                            VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                         <StackPanel Margin="8">
                             <Grid ColumnDefinitions="130,*">
                                 <StackPanel Margin="8,0">
                                     <Button Name="playButton" Classes="center-text stretch" Click="PlayButton_OnClick"
-                                            Margin="0,0,0,4">
-                                        Play
+                                            Margin="0,0,0,4" Content="{DynamicResource L.PlayButton}">
                                     </Button>
                                     <Button Name="selectSongButton" Classes="center-text stretch"
-                                            Click="SelectSongButton_OnClick">
-                                        Select Song
+                                            Click="SelectSongButton_OnClick"
+                                            Content="{DynamicResource L.SelectSongLabel}">
                                     </Button>
                                 </StackPanel>
-
                                 <StackPanel Grid.Column="1">
                                     <Slider Value="{Binding SongTrackBar}" Minimum="0"
-                                            Maximum="{Binding SongTrackBarMaximum}" SmallChange="1"
-                                            LargeChange="5" ValueChanged="SongTrackBar_OnValueChanged"
-                                            VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
-
+                                            Maximum="{Binding SongTrackBarMaximum}" SmallChange="1" LargeChange="5"
+                                            ValueChanged="SongTrackBar_OnValueChanged" VerticalAlignment="Stretch"
+                                            HorizontalAlignment="Stretch" />
                                     <!-- Speed and Volume -->
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
                                         <StackPanel Orientation="Horizontal" Margin="0,0,16,0">
                                             <TextBlock Name="LabelSpeed" HorizontalAlignment="Center"
                                                        VerticalAlignment="Center" TextAlignment="Right"
-                                                       Margin="0,0,8,0"
-                                                       Width="100">
-                                                Speed
+                                                       Margin="0,0,8,0" Width="100"
+                                                       Text="{DynamicResource L.SpeedSliderLabel}">
                                             </TextBlock>
                                             <Slider Value="{Binding SpeedTrackBar}" Minimum="0"
-                                                    Maximum="{Binding SpeedTrackBarMaximum}"
-                                                    SmallChange="1" LargeChange="5" Width="100"
-                                                    HorizontalAlignment="Center"
+                                                    Maximum="{Binding SpeedTrackBarMaximum}" SmallChange="1"
+                                                    LargeChange="5" Width="100" HorizontalAlignment="Center"
                                                     ValueChanged="TrackBarSpeed_OnValueChanged" />
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                       TextAlignment="Right" Margin="0,0,8,0" Width="60">
-                                                Volume
+                                                       TextAlignment="Right" Margin="0,0,8,0" Width="60"
+                                                       Text="{DynamicResource L.VolumeLabel}">
                                             </TextBlock>
                                             <Slider Name="trackBarVolume" Value="{Binding VolumeTrackBar}" Minimum="0"
-                                                    Maximum="{Binding VolumeTrackBarMaximum}"
-                                                    SmallChange="1" LargeChange="5" Width="100"
-                                                    HorizontalAlignment="Center"
+                                                    Maximum="{Binding VolumeTrackBarMaximum}" SmallChange="1"
+                                                    LargeChange="5" Width="100" HorizontalAlignment="Center"
                                                     ValueChanged="TrackBarVolume_OnValueChanged" />
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal" Name="HitsoundPanel">
                                             <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                       TextAlignment="Right" Margin="0,0,8,0" Width="60">
-                                                Hitsounds
+                                                       TextAlignment="Right" Margin="0,0,8,0" Width="60"
+                                                       Text="{DynamicResource L.HitsoundsLabel}">
                                             </TextBlock>
                                             <Slider Value="{Binding HitsoundVolumeTrackBar}" Minimum="0"
-                                                    Maximum="{Binding HitsoundVolumeMaximum}"
-                                                    SmallChange="1" LargeChange="5" Width="50"
-                                                    HorizontalAlignment="Center"
+                                                    Maximum="{Binding HitsoundVolumeMaximum}" SmallChange="1"
+                                                    LargeChange="5" Width="50" HorizontalAlignment="Center"
                                                     ValueChanged="TrackBarHitsounds_OnValueChanged" />
                                         </StackPanel>
                                     </StackPanel>
                                 </StackPanel>
                             </Grid>
                             <StackPanel Orientation="Horizontal" Margin="10,4,0,0">
-                                <TextBlock FontWeight="Bold" Margin="0,0,8,0">Song File:</TextBlock>
-                                <TextBlock Name="songFileLabel">Select File (*.ogg, *.wav, *.flac)</TextBlock>
+                                <TextBlock FontWeight="Bold" Margin="0,0,8,0"
+                                           Text="{DynamicResource L.SongFileLabel}">
+                                </TextBlock>
+                                <TextBlock Name="songFileLabel" Text="{DynamicResource L.SelectFileDefaultLabel}"></TextBlock>
                             </StackPanel>
                         </StackPanel>
                     </HeaderedContentControl>
-                    <HeaderedContentControl Grid.Column="1" Header="Visual Settings" Margin="0,0,0,8"
-                                            HorizontalAlignment="Stretch">
-                        <StackPanel Margin="8">
-                            <TextBlock Margin="0,0,0,8">Hi-Speed:</TextBlock>
-                            <NumericUpDown Minimum="{Binding VisualHiSpeedNumericMinimum}"
+
+                  <!-- Visual Settings-->
+                    <HeaderedContentControl Grid.Column="1" Header="{DynamicResource L.VisualSettingsHeader}"
+                                            Margin="0,0,0,8" HorizontalAlignment="Stretch">
+                        <StackPanel Margin="0,4,0,0">
+                            <Grid RowDefinitions="*,*" ColumnDefinitions="*,*" Margin="4,0,4,0" IsVisible="{Binding AppSettings.ShowBeatVisualSettings}">
+                                <StackPanel Margin="0,0,2,0">
+                                    <TextBlock
+                                               Text="{DynamicResource L.MainView.Labels.GuideLine}"/>
+                                    <ComboBox
+                                              SelectionChanged="GuideLine_OnSelectionChanged"
+                                              SelectedIndex="0"
+                                              HorizontalAlignment="Stretch">
+                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.None}"/>
+                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.A}"/>
+                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.B}"/>
+                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.C}"/>
+                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.D}"/>
+                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.E}"/>
+                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.F}"/>
+                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.G}"/>
+                                    </ComboBox>
+                                </StackPanel>
+                                <StackPanel Grid.Row="0" Grid.Column="1">
+                                    <TextBlock
+                                               Text="{DynamicResource L.MainView.Labels.BeatDivision}"></TextBlock>
+                                    <NumericUpDown
+                                                   Minimum="{Binding VisualBeatDivisionNumericMinimum}"
+                                                   Maximum="{Binding VisualBeatDivisionNumericMaximum}"
+                                                   Value="{Binding VisualBeatDivisionNumeric}"
+                                                   Increment="1.00"
+                                                   ValueChanged="VisualBeatDivisionNumeric_OnValueChanged"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock Margin="4,2,4,0" Grid.Row="1"
+                                       Text="{DynamicResource L.HiSpeedLabel}"></TextBlock>
+                            <NumericUpDown Margin="4,0,4,0"
+                                           Minimum="{Binding VisualHiSpeedNumericMinimum}"
                                            Maximum="{Binding VisualHiSpeedNumericMaximum}"
-                                           Value="{Binding VisualHiSpeedNumeric}" Increment="0.05"
-                                           ValueChanged="VisualHispeedNumeric_OnValueChanged" />
+                                           Value="{Binding VisualHiSpeedNumeric}"
+                                           Increment="0.05"
+                                           ValueChanged="VisualHispeedNumeric_OnValueChanged"/>
                         </StackPanel>
                     </HeaderedContentControl>
                 </Grid>
             </Grid>
-
             <!-- Right Side Stack Panel (Note View, Gimmick View) -->
             <StackPanel Name="RightStackPanel" Grid.Column="1" VerticalAlignment="Bottom" Margin="8">
                 <!-- TODO: move this shit out!!!!!!!! -->
-                <HeaderedContentControl Header="Notes on Beat" Margin="0,0,0,8" IsVisible="{Binding ShowNotesOnBeat}">
+                <HeaderedContentControl Header="{DynamicResource L.NotesOnBeatHeader}" Margin="0,0,0,8"
+                                        IsVisible="{Binding ShowNotesOnBeat}">
                     <Grid RowDefinitions="Auto,Auto">
                         <!-- Headers -->
                         <Grid ColumnDefinitions="10*,5*,5*" Margin="0,8,0,4">
-                            <TextBlock Padding="16,0,0,0">Type</TextBlock>
-                            <TextBlock Grid.Column="1">Position</TextBlock>
-                            <TextBlock Grid.Column="2">Size</TextBlock>
+                            <TextBlock Padding="16,0,0,0" Text="{DynamicResource L.TypeLabel}"></TextBlock>
+                            <TextBlock Grid.Column="1" Text="{DynamicResource L.PositionLabel}"></TextBlock>
+                            <TextBlock Grid.Column="2" Text="{DynamicResource L.SizeLabel}"></TextBlock>
                         </Grid>
-
-                        <ListBox Grid.Row="1" Name="NotesOnBeatListBox"
-                                 ItemsSource="{Binding NotesOnBeatList}"
-                                 SelectionChanged="NotesOnBeatListBox_OnSelectionChanged"
-                                 Height="160"
+                        <ListBox Grid.Row="1" Name="NotesOnBeatListBox" ItemsSource="{Binding NotesOnBeatList}"
+                                 SelectionChanged="NotesOnBeatListBox_OnSelectionChanged" Height="160"
                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
@@ -515,151 +492,139 @@
                         </ListBox>
                     </Grid>
                 </HeaderedContentControl>
-
-                <HeaderedContentControl Header="Note View" Margin="0,0,0,8">
+                <HeaderedContentControl Header="{DynamicResource L.NoteViewHeader}" Margin="0,0,0,8">
                     <StackPanel Margin="8">
                         <Grid RowDefinitions="*,Auto,*" ColumnDefinitions="*,*">
                             <Button Grid.Row="0" Grid.Column="0" Name="notePrevButton" Margin="0,0,2,4"
-                                    Classes="center-text stretch" Click="NotePrevButton_OnClick">
-                                &lt; Previous Note
+                                    Classes="center-text stretch" Click="NotePrevButton_OnClick"
+                                    Content="{DynamicResource L.PreviousNoteButton}">
                             </Button>
                             <Button Grid.Row="0" Grid.Column="1" Name="noteNextButton" Margin="0,0,0,4"
-                                    Classes="center-text stretch" Click="NoteNextButton_OnClick">
-                                Next Note &gt;
+                                    Classes="center-text stretch" Click="NoteNextButton_OnClick"
+                                    Content="{DynamicResource L.NextNoteButton}">
                             </Button>
                             <Button Grid.Row="1" Grid.Column="0" Name="measurePrevButton" Margin="0,0,2,4"
                                     Classes="center-text stretch" Click="MeasurePrevButton_OnClick"
-                                    IsVisible="{Binding AreMeasureButtonsVisible}">
-                                &lt; Measure
+                                    IsVisible="{Binding AreMeasureButtonsVisible}"
+                                    Content="{DynamicResource L.PreviousMeasureButton}">
                             </Button>
                             <Button Grid.Row="1" Grid.Column="1" Name="measureNextButton" Margin="0,0,0,4"
                                     Classes="center-text stretch" Click="MeasureNextButton_OnClick"
-                                    IsVisible="{Binding AreMeasureButtonsVisible}">
-                                Measure &gt;
+                                    IsVisible="{Binding AreMeasureButtonsVisible}"
+                                    Content="{DynamicResource L.NextMeasureButton}">
                             </Button>
                             <Button Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Name="notePrevMeasureButton"
-                                    Margin="0,0,2,4"
-                                    Classes="center-text stretch" Click="NoteJumpToCurrTimeButton_Click">
-                                Jump To Nearest Note
+                                    Margin="0,0,2,4" Classes="center-text stretch"
+                                    Click="NoteJumpToCurrTimeButton_Click"
+                                    Content="{DynamicResource L.JumpToNearestNoteButton}">
                             </Button>
                         </Grid>
                         <Grid RowDefinitions="*,*,*" ColumnDefinitions="*,*">
                             <Grid Grid.Row="0" Grid.Column="0" RowDefinitions="*" ColumnDefinitions="*,*"
                                   Margin="0,0,0,4">
-                                <TextBlock Text="Measure:" FontWeight="Bold" />
-                                <TextBlock Grid.Column="1" Name="noteMeasureLabel" Text="None" />
+                                <TextBlock Text="{DynamicResource L.MeasureLabel}" FontWeight="Bold" />
+                                <TextBlock Grid.Column="1" Name="noteMeasureLabel"
+                                           Text="{DynamicResource L.None}" />
                             </Grid>
-
                             <Grid Grid.Row="0" Grid.Column="1" RowDefinitions="*" ColumnDefinitions="*,*"
                                   Margin="0,0,0,4">
-                                <TextBlock Text="Beat:" FontWeight="Bold" />
-                                <TextBlock Grid.Column="1" Name="noteBeatLabel" Text="None" />
+                                <TextBlock Text="{DynamicResource L.BeatLabel}" FontWeight="Bold" />
+                                <TextBlock Grid.Column="1" Name="noteBeatLabel" Text="{DynamicResource L.None}" />
                             </Grid>
-
                             <Grid Grid.Row="1" Grid.Column="0" RowDefinitions="*" ColumnDefinitions="*,*"
                                   Margin="0,0,0,4">
-                                <TextBlock Text="Type:" FontWeight="Bold" />
+                                <TextBlock Text="{DynamicResource L.TypeLabel}" FontWeight="Bold" />
                                 <TextBlock Grid.Column="1" Name="noteTypeLabel" Width="170" HorizontalAlignment="Left"
-                                           Text="None" />
+                                           Text="{DynamicResource L.None}" />
                             </Grid>
-
                             <Grid Grid.Row="2" Grid.Column="0" RowDefinitions="*" ColumnDefinitions="*,*"
                                   Margin="0,0,0,4">
-                                <TextBlock Text="Position:" FontWeight="Bold" />
-                                <TextBlock Grid.Column="1" Name="notePositionLabel" Text="None" />
+                                <TextBlock Text="{DynamicResource L.PositionLabel}" FontWeight="Bold" />
+                                <TextBlock Grid.Column="1" Name="notePositionLabel"
+                                           Text="{DynamicResource L.None}" />
                             </Grid>
-
                             <Grid Grid.Row="2" Grid.Column="1" RowDefinitions="*" ColumnDefinitions="*,*">
-                                <TextBlock Text="Size:" FontWeight="Bold" />
-                                <TextBlock Grid.Column="1" Name="noteSizeLabel" Text="None" />
+                                <TextBlock Text="{DynamicResource L.SizeLabel}" FontWeight="Bold" />
+                                <TextBlock Grid.Column="1" Name="noteSizeLabel" Text="{DynamicResource L.None}" />
                             </Grid>
                         </Grid>
-
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                            <TextBlock Text="Mask Value:" FontWeight="Bold" Margin="60,0,4,0" />
-                            <TextBlock Name="noteMaskLabel" Text="N/A" />
+                            <TextBlock Text="{DynamicResource L.MaskValueLabel}" FontWeight="Bold" Margin="60,0,4,0" />
+                            <TextBlock Name="noteMaskLabel" Text="{DynamicResource L.NA}" />
                         </StackPanel>
-
                         <Grid RowDefinitions="*" ColumnDefinitions="*,*">
                             <Button Grid.Column="0" Name="noteEditSelectedButton" Margin="0,4,1,0"
                                     Classes="center-text stretch" Height="48" Click="NoteEditSelectedButton_OnClick">
                                 <StackPanel>
-                                    <TextBlock HorizontalAlignment="Center">
-                                        Edit Selected
-                                    </TextBlock>
-                                    <TextBlock HorizontalAlignment="Center">
-                                        Note
+                                    <TextBlock HorizontalAlignment="Center"
+                                               TextAlignment="Center"
+                                               TextWrapping="Wrap"
+                                               Text="{DynamicResource L.EditSelectedNoteButton}">
                                     </TextBlock>
                                 </StackPanel>
                             </Button>
-                            <Button Grid.Column="1" Name="noteDeleteSelectedButton" Foreground="Red"
-                                    Margin="1,4,0,0"
+                            <Button Grid.Column="1" Name="noteDeleteSelectedButton" Foreground="Red" Margin="1,4,0,0"
                                     Classes="center-text stretch" Height="48" Click="NoteDeleteSelectedButton_OnClick">
                                 <StackPanel>
-                                    <TextBlock HorizontalAlignment="Center">
-                                        Delete Selected
-                                    </TextBlock>
-                                    <TextBlock HorizontalAlignment="Center">
-                                        Note
+                                    <TextBlock HorizontalAlignment="Center"
+                                               TextAlignment="Center"
+                                               TextWrapping="Wrap"
+                                               Text="{DynamicResource L.DeleteSelectedNoteButton}">
                                     </TextBlock>
                                 </StackPanel>
                             </Button>
                         </Grid>
                     </StackPanel>
                 </HeaderedContentControl>
-
-                <HeaderedContentControl Header="Gimmick View">
+                <HeaderedContentControl Header="{DynamicResource L.GimmickViewHeader}">
                     <StackPanel Margin="8">
                         <Grid RowDefinitions="*,*,*" ColumnDefinitions="*,*">
                             <Button Grid.Row="0" Grid.Column="0" Name="gimmickPrevButton" Margin="0,0,1,4"
-                                    Padding="0,4" Classes="center-text stretch" Click="GimmickPrevButton_OnClick">
-                                Previous Gimmick
+                                    Padding="0,4" Classes="center-text stretch" Click="GimmickPrevButton_OnClick"
+                                    Content="{DynamicResource L.PreviousGimmickButton}">
                             </Button>
                             <Button Grid.Row="0" Grid.Column="1" Name="gimmickNextButton" Margin="1,0,0,4"
-                                    Padding="0,4" Classes="center-text stretch" Click="GimmickNextButton_OnClick">
-                                Next Gimmick
+                                    Padding="0,4" Classes="center-text stretch" Click="GimmickNextButton_OnClick"
+                                    Content="{DynamicResource L.NextGimmickButton}">
                             </Button>
-
                             <Button Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Name="gimmickJumpToCurrTimeButton"
-                                    Margin="1,0,0,4"
-                                    Classes="center-text stretch" Click="GimmickJumpToCurrTimeButton_OnClick">
-                                Jump To Nearest Gimmick
+                                    Margin="1,0,0,4" Classes="center-text stretch"
+                                    Click="GimmickJumpToCurrTimeButton_OnClick"
+                                    Content="{DynamicResource L.JumpToNearestGimmickButton}">
                             </Button>
-
                             <Grid Grid.Row="2" Grid.Column="0" RowDefinitions="*" ColumnDefinitions="*,*"
                                   Margin="0,0,0,4">
-                                <TextBlock Text="Measure:" FontWeight="Bold" />
-                                <TextBlock Grid.Column="1" Name="gimmickMeasureLabel" Text="None" />
+                                <TextBlock Text="{DynamicResource L.MeasureLabel}" FontWeight="Bold" />
+                                <TextBlock Grid.Column="1" Name="gimmickMeasureLabel"
+                                           Text="{DynamicResource L.None}" />
                             </Grid>
-
                             <Grid Grid.Row="2" Grid.Column="1" RowDefinitions="*" ColumnDefinitions="*,*">
-                                <TextBlock Text="Beat:" FontWeight="Bold" />
-                                <TextBlock Grid.Column="1" Name="gimmickBeatLabel" Text="None" />
+                                <TextBlock Text="{DynamicResource L.BeatLabel}" FontWeight="Bold" />
+                                <TextBlock Grid.Column="1" Name="gimmickBeatLabel"
+                                           Text="{DynamicResource L.None}" />
                             </Grid>
                         </Grid>
-
                         <Grid RowDefinitions="*,*" ColumnDefinitions="*">
                             <Grid Grid.Row="0" Grid.Column="0" RowDefinitions="*" ColumnDefinitions="*,3*"
                                   Margin="0,0,0,4">
-                                <TextBlock Text="Type:" FontWeight="Bold" />
-                                <TextBlock Grid.Column="1" Name="gimmickTypeLabel" Text="None" />
+                                <TextBlock Text="{DynamicResource L.TypeLabel}" FontWeight="Bold" />
+                                <TextBlock Grid.Column="1" Name="gimmickTypeLabel"
+                                           Text="{DynamicResource L.None}" />
                             </Grid>
-
                             <Grid Grid.Row="1" Grid.Column="0" RowDefinitions="*" ColumnDefinitions="*,3*">
-                                <TextBlock Text="Value:" FontWeight="Bold" />
-                                <TextBlock Grid.Column="1" Name="gimmickValueLabel" Text="None" />
+                                <TextBlock Text="{DynamicResource L.ValueLabel}" FontWeight="Bold" />
+                                <TextBlock Grid.Column="1" Name="gimmickValueLabel"
+                                           Text="{DynamicResource L.None}" />
                             </Grid>
                         </Grid>
-
                         <Grid ColumnDefinitions="*,*">
                             <Button Grid.Row="4" Grid.Column="0" Name="gimmickEditButton" Margin="0,4,1,0"
-                                    Classes="center-text stretch" Click="GimmickEditButton_OnClick">
-                                Edit Gimmick
+                                    Classes="center-text stretch" Click="GimmickEditButton_OnClick"
+                                    Content="{DynamicResource L.EditGimmickButton}">
                             </Button>
                             <Button Grid.Row="4" Grid.Column="1" Name="gimmickDeleteButton" Foreground="Red"
-                                    Margin="1,4,0,0"
-                                    Classes="center-text stretch" Click="GimmickDeleteButton_OnClick">
-                                Delete Gimmick
+                                    Margin="1,4,0,0" Classes="center-text stretch" Click="GimmickDeleteButton_OnClick"
+                                    Content="{DynamicResource L.DeleteGimmickButton}">
                             </Button>
                         </Grid>
                     </StackPanel>
