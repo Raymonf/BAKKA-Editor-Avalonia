@@ -2249,6 +2249,25 @@ public partial class MainView : UserControl
             case NoteType.SlideOrangeBonusFlair:
                 newNote.NoteType = NoteType.SlideGreenBonusFlair;
                 break;
+
+            case NoteType.Chain:
+            case NoteType.ChainBonusFlair:
+            case NoteType.TouchNoBonus:
+            case NoteType.TouchBonus:
+            case NoteType.TouchBonusFlair:
+            case NoteType.HoldStartNoBonus:
+            case NoteType.HoldStartBonusFlair:
+            case NoteType.HoldJoint:
+            case NoteType.HoldEnd:
+            case NoteType.SnapBlueNoBonus:
+            case NoteType.SnapBlueBonusFlair:
+            case NoteType.SnapRedNoBonus:
+            case NoteType.SnapRedBonusFlair:
+            case NoteType.MaskAdd:
+            case NoteType.MaskRemove:
+                newNote.NoteType = currentNote.NoteType;
+                break;
+                   
         }
 
         opManager.InvokeAndPush(new MirrorNote(currentNote, newNote));
