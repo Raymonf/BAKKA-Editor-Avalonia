@@ -417,7 +417,7 @@
                                                Text="{DynamicResource L.MainView.Labels.GuideLine}"/>
                                     <ComboBox
                                               SelectionChanged="GuideLine_OnSelectionChanged"
-                                              SelectedIndex="0"
+                                              SelectedIndex="{Binding GuideLineSelectedIndex}"
                                               HorizontalAlignment="Stretch">
                                         <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.None}"/>
                                         <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.A}"/>
@@ -542,9 +542,42 @@
                             <TextBlock Text="{DynamicResource L.MaskValueLabel}" FontWeight="Bold" Margin="60,0,4,0" />
                             <TextBlock Name="noteMaskLabel" Text="{DynamicResource L.NA}" />
                         </StackPanel>
-                        <Grid RowDefinitions="*" ColumnDefinitions="*,*">
-                            <Button Grid.Column="0" Name="noteEditSelectedButton" Margin="0,4,1,0"
-                                    Classes="center-text stretch" Height="48" Click="NoteEditSelectedButton_OnClick">
+                      
+                      
+                      
+                        <Grid RowDefinitions="*,*" ColumnDefinitions="*,*,*,*,*,*">
+                          
+
+                          
+                          
+                          <TextBlock Text="Mirror Axis" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" TextAlignment="Center" VerticalAlignment="Center"/>
+                          
+                          
+                          <NumericUpDown Grid.Row="0" Grid.Column="2" Grid.ColumnSpan="2" Margin="0,0,20,4" Height="30"
+                                         VerticalContentAlignment="Center"
+                                         Minimum="{Binding MirrorAxisNumericMinimum}"
+                                         Maximum="{Binding MirrorAxisNumericMaximum}"
+                                         Value="{Binding MirrorAxisNumeric}" Increment="1"
+                                         ValueChanged="MirrorAxisNumeric_OnValueChanged"
+                                         PointerEntered="MirrorAxisNumeric_PointerEntered"
+                                         PointerExited="MirrorAxisNumeric_PointerExited"/>
+
+                          <Button Grid.Row="0" Grid.Column="4" Grid.ColumnSpan="3" Name="noteMirrorSelectedButton" Margin="-18,0,1,4" Height="32"
+                                Classes="center-text stretch" Click="NoteMirrorSelectedButton_OnClick">
+                            <StackPanel>
+                              <TextBlock HorizontalAlignment="Center"
+                                         TextAlignment="Center"
+                                         TextWrapping="Wrap"
+                                         Text="Mirror Note">
+                              </TextBlock>
+                            </StackPanel>
+                          </Button>
+                          
+                          
+                          
+                          
+                            <Button Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Name="noteEditSelectedButton" Margin="0,4,1,0"
+                                    Classes="center-text stretch" Height="40" Click="NoteEditSelectedButton_OnClick">
                                 <StackPanel>
                                     <TextBlock HorizontalAlignment="Center"
                                                TextAlignment="Center"
@@ -553,8 +586,11 @@
                                     </TextBlock>
                                 </StackPanel>
                             </Button>
-                            <Button Grid.Column="1" Name="noteDeleteSelectedButton" Foreground="Red" Margin="1,4,0,0"
-                                    Classes="center-text stretch" Height="48" Click="NoteDeleteSelectedButton_OnClick">
+                        
+                          
+                          
+                            <Button Grid.Row="1" Grid.Column="3" Grid.ColumnSpan="3" Name="noteDeleteSelectedButton" Foreground="Red" Margin="1,4,0,0"
+                                    Classes="center-text stretch" Height="40" Click="NoteDeleteSelectedButton_OnClick">
                                 <StackPanel>
                                     <TextBlock HorizontalAlignment="Center"
                                                TextAlignment="Center"
@@ -563,7 +599,12 @@
                                     </TextBlock>
                                 </StackPanel>
                             </Button>
+                          
+                          
                         </Grid>
+                      
+                      
+                      
                     </StackPanel>
                 </HeaderedContentControl>
                 <HeaderedContentControl Header="{DynamicResource L.GimmickViewHeader}">

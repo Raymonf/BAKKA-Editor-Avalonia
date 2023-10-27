@@ -52,6 +52,7 @@ internal partial class SkCircleView
     public SKPaint? TickMinorPen { get; set; }
     public SKPaint? TickMediumPen { get; set; }
     public SKPaint? TickMajorPen { get; set; }
+    public SKPaint? MirrorAxisPen { get; set; }
 
     public SKPaint? HoldBrush { get; set; } = new()
     {
@@ -89,6 +90,7 @@ internal partial class SkCircleView
         TickMinorPen = Utils.CreateStrokeBrush(SKColors.Black, PanelSize.Width * 2.0f / 600.0f);
         TickMediumPen = Utils.CreateStrokeBrush(SKColors.Black, PanelSize.Width * 4.0f / 600.0f);
         TickMajorPen = Utils.CreateStrokeBrush(SKColors.Black, PanelSize.Width * 7.0f / 600.0f);
+        MirrorAxisPen = Utils.CreateStrokeBrush(SKColors.Cyan, PanelSize.Width * 1.0f / 600.0f);
         HighlightPen = Utils.CreateStrokeBrush(SKColors.LightPink.WithAlpha((byte) SelectTransparency),
             PanelSize.Width * 8.0f / 600.0f);
         FlairPen = Utils.CreateStrokeBrush(SKColors.Yellow.WithAlpha((byte) FlairTransparency),
@@ -489,13 +491,13 @@ internal partial class SkCircleView
                     canvas.DrawOval(beatArcInfo.Rect, BeatPen);
             }
         }
-
-        // Draw base circle
-        canvas.DrawOval(DrawRect, TickMediumPen);
     }
     
-    public void DrawDegreeLines()
+    public void DrawDegreeCircle()
     {
+        // Draw base circle
+        canvas.DrawOval(DrawRect, TickMediumPen);
+
         for (var i = 0; i < 360; i += 6)
         {
             var startPoint = new SKPoint(
@@ -888,6 +890,21 @@ internal partial class SkCircleView
             false,
             GetNotePaint(noteType)
         );
+    }
+    
+    public void DrawMirrorAxis(int axis)
+    {
+        var axisAngle = -axis * 3;
+
+        var startPoint = new SKPoint(
+                (float)(Radius * Math.Cos(Utils.DegToRad(axisAngle)) + CenterPoint.X),
+                (float)(Radius * Math.Sin(Utils.DegToRad(axisAngle)) + CenterPoint.Y));
+
+        var endPoint = new SKPoint(
+                (float)(Radius * Math.Cos(Utils.DegToRad(axisAngle + 180)) + CenterPoint.X),
+                (float)(Radius * Math.Sin(Utils.DegToRad(axisAngle + 180)) + CenterPoint.Y));
+
+        canvas.DrawLine(startPoint, endPoint, MirrorAxisPen);
     }
 
     private SKPaint GetNotePaint(Note note, float noteScale = 1.0f)

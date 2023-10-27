@@ -97,6 +97,37 @@ internal class EditNote : IOperation
     }
 }
 
+internal class MirrorNote : IOperation
+{
+    public MirrorNote(Note baseNote, Note newNote)
+    {
+        Base = baseNote;
+        OldNote = new Note(baseNote);
+        NewNote = new Note(newNote);
+    }
+
+    protected Note Base { get; }
+    protected Note OldNote { get; }
+    protected Note NewNote { get; }
+    public string Description => "Edit note";
+
+    public void Redo()
+    {
+        Base.BeatInfo = new BeatInfo(NewNote.BeatInfo);
+        Base.Position = NewNote.Position;
+        Base.Size = NewNote.Size;
+        Base.NoteType = NewNote.NoteType;
+    }
+
+    public void Undo()
+    {
+        Base.BeatInfo = new BeatInfo(OldNote.BeatInfo);
+        Base.Position = OldNote.Position;
+        Base.Size = OldNote.Size;
+        Base.NoteType = OldNote.NoteType;
+    }
+}
+
 internal class InsertHoldNote : NoteOperation
 {
     private Note prevNote;
