@@ -10,7 +10,6 @@ public partial class AppSettingsViewModel : ViewModelBase
 {
     private UserSettings? UserSettings { get; }
     private Localizer? Localizer { get; }
-
     public ContentDialog? Dialog { get; set; }
 
     private Dictionary<string, string> SupportedLanguages { get; } = new()
@@ -30,6 +29,16 @@ public partial class AppSettingsViewModel : ViewModelBase
         selectedLanguage = SupportedLanguages.First();
         SetLanguage(selectedLanguage.Key);
         Localizer.SetLanguage(selectedLanguage.Key); // initial call
+    }
+
+    [ObservableProperty] private bool showBeatVisualSettings = true;
+
+    partial void OnShowBeatVisualSettingsChanged(bool show)
+    {
+        if (UserSettings != null)
+        {
+            UserSettings.ViewSettings.ShowBeatVisualSettings = show;
+        }
     }
 
     [ObservableProperty] private KeyValuePair<string, string> selectedLanguage;

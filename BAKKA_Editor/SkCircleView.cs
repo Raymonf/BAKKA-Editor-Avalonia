@@ -15,7 +15,7 @@ internal struct SkArcInfo
     public float NoteScale;
 }
 
-internal class SkCircleView
+internal partial class SkCircleView
 {
     private SKCanvas canvas;
     private readonly int CursorTransparency = 110;
@@ -42,7 +42,7 @@ internal class SkCircleView
     public float CurrentMeasure { get; set; }
     public float Hispeed { get; set; } = 1.5f;
     public float BeatDivision { get; set; } = 2;
-    public string GuideLineSelection { get; set; } = "None";
+    public int GuideLineSelection { get; set; } = 0;
     public bool showHispeed { get; set; } = true;
     public bool renderNotesBeyondCircle { get; set; } = false; // temporary(?) - may be moved to settings since it's for the Settings UI, just wanted to put it here to put it in the code already.
 
@@ -464,7 +464,7 @@ internal class SkCircleView
         }
     }
 
-    public void DrawCircle(Chart chart)
+    public void DrawCircleWithDividers(Chart chart)
     {
         // Draw measure circles
         var totalMeasureShowNotes = GetTotalMeasureShowNotes2(chart);
@@ -543,49 +543,44 @@ internal class SkCircleView
 
         switch (GuideLineSelection)
         {
-            case "None":
+            default:
                 offset = 0;
                 interval = 0;
                 break;
 
-            case "A":
+            case 1:
                 offset = 0;
                 interval = 6;
                 break;
 
-            case "B":
+            case 2:
                 offset = 6;
                 interval = 12;
                 break;
 
-            case "C":
+            case 3:
                 offset = 0;
                 interval = 18;
                 break;
 
-            case "D":
+            case 4:
                 offset = 6;
                 interval = 24;
                 break;
 
-            case "E":
+            case 5:
                 offset = 0;
                 interval = 30;
                 break;
 
-            case "F":
+            case 6:
                 offset = 30;
                 interval = 60;
                 break;
 
-            case "G":
+            case 7:
                 offset = 0;
                 interval = 90;
-                break;
-
-            default: 
-                offset = 0;
-                interval = 0;
                 break;
         }
 
@@ -624,7 +619,7 @@ internal class SkCircleView
         }
     }
 
-    public void DrawGimmicks(Chart chart, bool showGimmicks, int selectedGimmickIndex)
+    public void DrawGimmicksWithVisibilityCheck(Chart chart, bool showGimmicks, int selectedGimmickIndex)
     {
         if (showGimmicks)
         {

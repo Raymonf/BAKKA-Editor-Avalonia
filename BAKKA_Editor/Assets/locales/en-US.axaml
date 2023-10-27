@@ -86,6 +86,18 @@
     <system:String x:Key="L.NextMeasureButton">Measure &gt;</system:String>
     <system:String x:Key="L.HiSpeedGimmickButton">Hi-Speed</system:String>
 
+    <system:String x:Key="L.MainView.Labels.BeatDivision">Beat Div.:</system:String>
+
+    <system:String x:Key="L.MainView.Labels.GuideLine">Guide Lines:</system:String>
+    <system:String x:Key="L.MainView.ComboBox.GuideLineTypes.None">None</system:String>
+    <system:String x:Key="L.MainView.ComboBox.GuideLineTypes.A">A</system:String>
+    <system:String x:Key="L.MainView.ComboBox.GuideLineTypes.B">B</system:String>
+    <system:String x:Key="L.MainView.ComboBox.GuideLineTypes.C">C</system:String>
+    <system:String x:Key="L.MainView.ComboBox.GuideLineTypes.D">D</system:String>
+    <system:String x:Key="L.MainView.ComboBox.GuideLineTypes.E">E</system:String>
+    <system:String x:Key="L.MainView.ComboBox.GuideLineTypes.F">F</system:String>
+    <system:String x:Key="L.MainView.ComboBox.GuideLineTypes.G">G</system:String>
+
     <system:String x:Key="L.Generic.CloseButtonText">Close</system:String>
     <system:String x:Key="L.Generic.OkButtonText">OK</system:String>
     <system:String x:Key="L.Generic.YesButtonText">Yes</system:String>
@@ -94,4 +106,5 @@
     <system:String x:Key="L.MainView.Menu.File.Settings">Settings</system:String>
     <system:String x:Key="L.Settings.SettingsHeader">Settings</system:String>
     <system:String x:Key="L.Settings.LanguageLabel">Language:</system:String>
+    <system:String x:Key="L.Settings.CheckBoxes.ShowBeatVisualSettings">Show Beat Visual Settings</system:String>
 </ResourceDictionary>

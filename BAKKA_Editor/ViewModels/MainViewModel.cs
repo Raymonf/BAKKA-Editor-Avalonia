@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -10,6 +11,8 @@ namespace BAKKA_Editor.ViewModels;
 
 public partial class MainViewModel : ViewModelBase
 {
+    [ObservableProperty] private AppSettingsViewModel appSettings = new();
+
     [ObservableProperty] private bool areMeasureButtonsVisible;
 
     [ObservableProperty] private bool darkMode;
@@ -81,8 +84,6 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty] private decimal visualBeatDivisionNumeric = 2.00m;
     [ObservableProperty] private double visualBeatDivisionNumericMinimum = 1;
     [ObservableProperty] private double visualBeatDivisionNumericMaximum = 1920;
-
-    public ObservableCollection<string> guideLineOptions { get; } = new ObservableCollection<string> { "None", "A", "B", "C", "D", "E", "F", "G" };
 
     // Commands
     public async Task<bool> NewCommand()
