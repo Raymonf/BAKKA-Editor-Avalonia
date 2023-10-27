@@ -15,6 +15,9 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty] private bool darkMode;
     [ObservableProperty] private bool highlightViewedNote = true;
 
+    // "Options" Menu States
+    [ObservableProperty] private bool isActiveCursorTrackingEnabled;
+
     // Button Text
     [ObservableProperty] private string insertButtonText = "Insert Object (I)";
     [ObservableProperty] private bool selectLastInsertedNote = true;
@@ -217,6 +220,15 @@ public partial class MainViewModel : ViewModelBase
         var mainWindow = Target();
         if (mainWindow != null)
             await mainWindow.OpenChartSettings_OnClick();
+        return true;
+    }
+
+    public bool ToggleActiveCursorTrackingCommand()
+    {
+        IsActiveCursorTrackingEnabled = !IsActiveCursorTrackingEnabled;
+
+        var mainWindow = Target();
+        mainWindow?.SetActiveCursorTracking(IsActiveCursorTrackingEnabled);
         return true;
     }
 

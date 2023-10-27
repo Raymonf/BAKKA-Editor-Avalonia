@@ -10,6 +10,7 @@ internal class UserSettings
     public SaveSettings SaveSettings { get; set; } = new();
     public HotkeySettings HotkeySettings { get; set; } = new();
     public SoundSettings SoundSettings { get; set; } = new();
+    public OptionsSettings OptionsSettings { get; set; } = new();
 }
 
 internal class ViewSettings
@@ -60,4 +61,9 @@ internal class SoundSettings
     public string HitsoundPath { get; set; } = "";
     public int HitsoundVolume { get; set; } = 50;
     public int HitsoundAdditionalOffsetMs { get; set; } = 0;
+}
+
+internal class OptionsSettings
+{
+    public bool IsActiveCursorTrackingEnabled { get; set; } = false;
 }

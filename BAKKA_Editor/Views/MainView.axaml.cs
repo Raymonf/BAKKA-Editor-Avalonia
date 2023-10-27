@@ -308,6 +308,11 @@ public partial class MainView : UserControl
         userSettings.ViewSettings.ShowMeasureButtons = value;
     }
 
+    public void SetActiveCursorTracking(bool value)
+    {
+        userSettings.OptionsSettings.IsActiveCursorTrackingEnabled = value;
+    }
+
     private void Setup()
     {
         soundEngine = new BassBakkaSoundEngine();
@@ -380,6 +385,7 @@ public partial class MainView : UserControl
         _vm.VolumeTrackBar = userSettings.ViewSettings.Volume;
         _vm.HitsoundVolumeTrackBar = Math.Clamp(userSettings.SoundSettings.HitsoundVolume, 0, 100);
         _vm.ShowNotesOnBeat = userSettings.ViewSettings.ShowNotesOnBeat;
+        _vm.IsActiveCursorTrackingEnabled = userSettings.OptionsSettings.IsActiveCursorTrackingEnabled;
         SetDarkMode(userSettings.ViewSettings.DarkMode);
 
         autoSaveTimer =
