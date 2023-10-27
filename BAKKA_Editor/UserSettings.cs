@@ -65,7 +65,7 @@ public class SoundSettings
     public int HitsoundAdditionalOffsetMs { get; set; } = 0;
 }
 
-internal class OptionsSettings
+public class OptionsSettings
 {
     public bool IsActiveCursorTrackingEnabled { get; set; } = false;
 }
