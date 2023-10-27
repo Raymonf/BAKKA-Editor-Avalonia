@@ -15,6 +15,13 @@ internal struct SkArcInfo
     public float NoteScale;
 }
 
+internal enum RolloverState
+{
+    None,
+    Counterclockwise,
+    Clockwise
+}
+
 internal class SkCircleView
 {
     private SKCanvas canvas;
@@ -25,8 +32,7 @@ internal class SkCircleView
     // Mouse information. Public so other GUI elements can be updated with their values.
     public int mouseDownPos = -1;
     public Point mouseDownPt;
-    public bool rolloverNeg;
-    public bool rolloverPos;
+    public RolloverState rolloverState = RolloverState.None;
     public int relativeMouseDragPos = 0;
     public int mouseDownSize = -1;
     private readonly int SelectTransparency = 110;
@@ -341,8 +347,7 @@ internal class SkCircleView
         mouseDownPos = (int) (theta / 6.0f);
         mouseDownPt = mousePt;
         lastMousePos = mouseDownPos;
-        rolloverPos = false;
-        rolloverNeg = false;
+        rolloverState = RolloverState.None;
         relativeMouseDragPos = 0;
         mouseDownSize = size;
     }
@@ -370,13 +375,21 @@ internal class SkCircleView
     }
 
     // Updates the mouse position and returns the new position in degrees.
-    public int UpdateMouseMove(float xCen, float yCen)
+    public int CalculateTheta(float xCen, float yCen)
     {
         var thetaCalc = (float) (Math.Atan2(yCen, xCen) * 180.0f / Math.PI);
         if (thetaCalc < 0)
             thetaCalc += 360.0f;
         var theta = (int) (thetaCalc / 6.0f);
         return theta;
+    }
+
+    public void UpdateMouseMove(int mousePosition, int relativeMousePosition, int minimumCursorSize, RolloverState state)
+    {
+        lastMousePos = mousePosition;
+        relativeMouseDragPos = relativeMousePosition;
+        mouseDownSize = minimumCursorSize;
+        rolloverState = state;
     }
 
     /*private void FillPie(SKPaint paint, SKRect rect, float startAngle, float sweepAngle)
