@@ -16,9 +16,6 @@ internal partial class SkCircleView
             var info = GetScaledRect(chart, meas);
             if (info.Rect.Width >= 1) canvas.DrawOval(info.Rect, BeatPen);
         }
-
-        // Draw base circle
-        canvas.DrawOval(DrawRect, TickMediumPen);
     }
 
     public void DrawGimmicks(Chart chart, bool showGimmicks, int selectedGimmickIndex)

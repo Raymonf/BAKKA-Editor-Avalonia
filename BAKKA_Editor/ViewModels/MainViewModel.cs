@@ -85,6 +85,12 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty] private double visualBeatDivisionNumericMinimum = 1;
     [ObservableProperty] private double visualBeatDivisionNumericMaximum = 1920;
 
+    [ObservableProperty] private int mirrorAxisNumeric = 30;
+    [ObservableProperty] private int mirrorAxisNumericMinimum = -1;
+    [ObservableProperty] private int mirrorAxisNumericMaximum = 60;
+
+    [ObservableProperty] private int guideLineSelectedIndex = 0;
+
     // Commands
     public async Task<bool> NewCommand()
     {
