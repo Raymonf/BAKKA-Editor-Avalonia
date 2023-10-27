@@ -407,48 +407,52 @@
                         </StackPanel>
                     </HeaderedContentControl>
 
-                  <!-- Visual Settings-->
+                    <!-- Visual Settings-->
                     <HeaderedContentControl Grid.Column="1" Header="{DynamicResource L.VisualSettingsHeader}"
                                             Margin="0,0,0,8" HorizontalAlignment="Stretch">
                         <StackPanel Margin="0,4,0,0">
-                            <Grid RowDefinitions="*,*" ColumnDefinitions="*,*" Margin="4,0,4,0" IsVisible="{Binding AppSettings.ShowBeatVisualSettings}">
+                            <Grid RowDefinitions="*,*" ColumnDefinitions="*,*" Margin="4,0,4,0"
+                                  IsVisible="{Binding AppSettings.ShowBeatVisualSettings}">
                                 <StackPanel Margin="0,0,2,0">
                                     <TextBlock
-                                               Text="{DynamicResource L.MainView.Labels.GuideLine}"/>
+                                        Text="{DynamicResource L.MainView.Labels.GuideLine}" />
                                     <ComboBox
-                                              SelectionChanged="GuideLine_OnSelectionChanged"
-                                              SelectedIndex="0"
-                                              HorizontalAlignment="Stretch">
-                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.None}"/>
-                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.A}"/>
-                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.B}"/>
-                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.C}"/>
-                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.D}"/>
-                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.E}"/>
-                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.F}"/>
-                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.G}"/>
+                                        SelectionChanged="GuideLine_OnSelectionChanged"
+                                        SelectedIndex="{Binding GuideLineSelectedIndex}"
+                                        HorizontalAlignment="Stretch">
+                                        <ComboBoxItem
+                                            Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.None}" />
+                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.A}" />
+                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.B}" />
+                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.C}" />
+                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.D}" />
+                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.E}" />
+                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.F}" />
+                                        <ComboBoxItem Content="{DynamicResource L.MainView.ComboBox.GuideLineTypes.G}" />
                                     </ComboBox>
                                 </StackPanel>
                                 <StackPanel Grid.Row="0" Grid.Column="1">
                                     <TextBlock
-                                               Text="{DynamicResource L.MainView.Labels.BeatDivision}"></TextBlock>
+                                        Text="{DynamicResource L.MainView.Labels.BeatDivision}">
+                                    </TextBlock>
                                     <NumericUpDown
-                                                   Minimum="{Binding VisualBeatDivisionNumericMinimum}"
-                                                   Maximum="{Binding VisualBeatDivisionNumericMaximum}"
-                                                   Value="{Binding VisualBeatDivisionNumeric}"
-                                                   Increment="1.00"
-                                                   ValueChanged="VisualBeatDivisionNumeric_OnValueChanged"/>
+                                        Minimum="{Binding VisualBeatDivisionNumericMinimum}"
+                                        Maximum="{Binding VisualBeatDivisionNumericMaximum}"
+                                        Value="{Binding VisualBeatDivisionNumeric}"
+                                        Increment="1.00"
+                                        ValueChanged="VisualBeatDivisionNumeric_OnValueChanged" />
                                 </StackPanel>
                             </Grid>
 
                             <TextBlock Margin="4,2,4,0" Grid.Row="1"
-                                       Text="{DynamicResource L.HiSpeedLabel}"></TextBlock>
+                                       Text="{DynamicResource L.HiSpeedLabel}">
+                            </TextBlock>
                             <NumericUpDown Margin="4,0,4,0"
                                            Minimum="{Binding VisualHiSpeedNumericMinimum}"
                                            Maximum="{Binding VisualHiSpeedNumericMaximum}"
                                            Value="{Binding VisualHiSpeedNumeric}"
                                            Increment="0.05"
-                                           ValueChanged="VisualHispeedNumeric_OnValueChanged"/>
+                                           ValueChanged="VisualHispeedNumeric_OnValueChanged" />
                         </StackPanel>
                     </HeaderedContentControl>
                 </Grid>
@@ -542,26 +546,46 @@
                             <TextBlock Text="{DynamicResource L.MaskValueLabel}" FontWeight="Bold" Margin="60,0,4,0" />
                             <TextBlock Name="noteMaskLabel" Text="{DynamicResource L.NA}" />
                         </StackPanel>
-                        <Grid RowDefinitions="*" ColumnDefinitions="*,*">
-                            <Button Grid.Column="0" Name="noteEditSelectedButton" Margin="0,4,1,0"
-                                    Classes="center-text stretch" Height="48" Click="NoteEditSelectedButton_OnClick">
-                                <StackPanel>
-                                    <TextBlock HorizontalAlignment="Center"
-                                               TextAlignment="Center"
-                                               TextWrapping="Wrap"
-                                               Text="{DynamicResource L.EditSelectedNoteButton}">
-                                    </TextBlock>
-                                </StackPanel>
+                        <Grid RowDefinitions="*" ColumnDefinitions="Auto,*,*" Margin="0,2,0,2">
+                            <TextBlock Grid.Column="0" Text="{DynamicResource L.MainView.Labels.MirrorAxis}"
+                                       TextAlignment="Left" VerticalAlignment="Center" Margin="0,0,2,0" />
+                            <NumericUpDown Grid.Column="1" Margin="2,0"
+                                           Height="30"
+                                           VerticalContentAlignment="Center"
+                                           Minimum="{Binding MirrorAxisNumericMinimum}"
+                                           Maximum="{Binding MirrorAxisNumericMaximum}"
+                                           Value="{Binding MirrorAxisNumeric}" Increment="1"
+                                           ValueChanged="MirrorAxisNumeric_OnValueChanged"
+                                           PointerEntered="MirrorAxisNumeric_PointerEntered"
+                                           PointerExited="MirrorAxisNumeric_PointerExited" />
+                            <Button Grid.Column="2" Name="noteMirrorSelectedButton"
+                                    Margin="2,0" Height="32"
+                                    Classes="center-text stretch" Click="NoteMirrorSelectedButton_OnClick">
+                                <TextBlock HorizontalAlignment="Center"
+                                           TextAlignment="Center"
+                                           TextWrapping="Wrap"
+                                           Text="{DynamicResource L.MainView.Buttons.MirrorNote}">
+                                </TextBlock>
                             </Button>
-                            <Button Grid.Column="1" Name="noteDeleteSelectedButton" Foreground="Red" Margin="1,4,0,0"
-                                    Classes="center-text stretch" Height="48" Click="NoteDeleteSelectedButton_OnClick">
-                                <StackPanel>
-                                    <TextBlock HorizontalAlignment="Center"
-                                               TextAlignment="Center"
-                                               TextWrapping="Wrap"
-                                               Text="{DynamicResource L.DeleteSelectedNoteButton}">
-                                    </TextBlock>
-                                </StackPanel>
+                        </Grid>
+                        <Grid ColumnDefinitions="*,*">
+                            <Button Grid.Column="0"
+                                    Margin="0,4,1,0"
+                                    Classes="center-text stretch" Height="40" Click="NoteEditSelectedButton_OnClick">
+                                <TextBlock HorizontalAlignment="Center"
+                                           TextAlignment="Center"
+                                           TextWrapping="Wrap"
+                                           Text="{DynamicResource L.EditSelectedNoteButton}">
+                                </TextBlock>
+                            </Button>
+                            <Button Grid.Column="1"
+                                    Foreground="Red" Margin="1,4,0,0"
+                                    Classes="center-text stretch" Height="40" Click="NoteDeleteSelectedButton_OnClick">
+                                <TextBlock HorizontalAlignment="Center"
+                                           TextAlignment="Center"
+                                           TextWrapping="Wrap"
+                                           Text="{DynamicResource L.DeleteSelectedNoteButton}">
+                                </TextBlock>
                             </Button>
                         </Grid>
                     </StackPanel>

@@ -115,6 +115,10 @@ public partial class MainView : UserControl
 
     private EventSource valueTriggerEvent = EventSource.None;
 
+    // Note Mirroring
+    private int mirrorAxis = 30;
+    private bool isHoveringOverMirrorAxis = false;
+
     public MainView()
     {
         Application.Current.RequestedThemeVariant = ThemeVariant.Dark; //.Light;
@@ -416,6 +420,8 @@ public partial class MainView : UserControl
         _vm.ShowNotesOnBeat = userSettings.ViewSettings.ShowNotesOnBeat;
         SetDarkMode(userSettings.ViewSettings.DarkMode);
         appSettingsVm.ShowBeatVisualSettings = userSettings.ViewSettings.ShowBeatVisualSettings;
+        _vm.VisualBeatDivisionNumeric = (decimal) userSettings.ViewSettings.BeatDivision;
+        _vm.GuideLineSelectedIndex = userSettings.ViewSettings.GuideLineSelection;
         appSettingsVm.IsActiveCursorTrackingEnabled = userSettings.CursorSettings.IsActiveCursorTrackingEnabled;
 
         autoSaveTimer =
@@ -811,7 +817,11 @@ public partial class MainView : UserControl
             }
 
             // Draw degree lines
-            skCircleView.DrawDegreeLines();
+            skCircleView.DrawDegreeCircle();
+
+                        // Draw mirror axis
+            if (isHoveringOverMirrorAxis)
+                skCircleView.DrawMirrorAxis(mirrorAxis);
 
             // Draw Gimmicks
             skCircleView.DrawGimmicks(chart, userSettings.ViewSettings.ShowGimmicks, selectedGimmickIndex);
@@ -2360,6 +2370,106 @@ public partial class MainView : UserControl
         UpdateNoteLabels();
     }
 
+    private void MirrorAxisNumeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
+    {
+        var value = (int)(e.NewValue ?? _vm.MirrorAxisNumeric);
+
+        // loop value
+        value = (value + 60) % 60;
+
+        if (value >= _vm.MirrorAxisNumericMinimum + 1 && value <= _vm.MirrorAxisNumericMaximum - 1)
+        {
+            // update values
+            _vm.MirrorAxisNumeric = value;
+            mirrorAxis = value;
+        }
+        else
+            // revert value
+            _vm.MirrorAxisNumeric = mirrorAxis;
+    }
+
+    private void MirrorAxisNumeric_PointerEntered(object? sender, PointerEventArgs e)
+    {
+        isHoveringOverMirrorAxis = true;
+    }
+
+     private void MirrorAxisNumeric_PointerExited(object? sender, PointerEventArgs e)
+    {
+        isHoveringOverMirrorAxis = false;
+    }
+
+    private void NoteMirrorSelectedButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (selectedNoteIndex == -1)
+            return;
+
+        var currentNote = chart.Notes[selectedNoteIndex];
+
+        var mirroredPosition = ((mirrorAxis - currentNote.Size) - currentNote.Position) % 60;
+        if (mirroredPosition < 0)
+            mirroredPosition += 60;
+        if (mirroredPosition >= 60)
+            mirroredPosition -= 60;
+
+        // create new note with flipped position
+        var newNote = new Note
+        {
+            BeatInfo = currentNote.BeatInfo,
+            Position = mirroredPosition,
+            Size = currentNote.Size
+        };
+
+        // swap slide directions when mirroring
+        switch (currentNote.NoteType)
+        {
+            case NoteType.SlideGreenNoBonus:
+                newNote.NoteType = NoteType.SlideOrangeNoBonus;
+                break;
+
+            case NoteType.SlideGreenBonus:
+                newNote.NoteType = NoteType.SlideOrangeBonus;
+                break;
+
+            case NoteType.SlideGreenBonusFlair:
+                newNote.NoteType = NoteType.SlideOrangeBonusFlair;
+                break;
+
+            case NoteType.SlideOrangeNoBonus:
+                newNote.NoteType = NoteType.SlideGreenNoBonus;
+                break;
+
+            case NoteType.SlideOrangeBonus:
+                newNote.NoteType = NoteType.SlideGreenBonus;
+                break;
+
+            case NoteType.SlideOrangeBonusFlair:
+                newNote.NoteType = NoteType.SlideGreenBonusFlair;
+                break;
+
+            case NoteType.Chain:
+            case NoteType.ChainBonusFlair:
+            case NoteType.TouchNoBonus:
+            case NoteType.TouchBonus:
+            case NoteType.TouchBonusFlair:
+            case NoteType.HoldStartNoBonus:
+            case NoteType.HoldStartBonusFlair:
+            case NoteType.HoldJoint:
+            case NoteType.HoldEnd:
+            case NoteType.SnapBlueNoBonus:
+            case NoteType.SnapBlueBonusFlair:
+            case NoteType.SnapRedNoBonus:
+            case NoteType.SnapRedBonusFlair:
+            case NoteType.MaskAdd:
+            case NoteType.MaskRemove:
+                newNote.NoteType = currentNote.NoteType;
+                break;
+                   
+        }
+
+        opManager.InvokeAndPush(new MirrorNote(currentNote, newNote));
+        UpdateNoteLabels();
+    }
+
     private void NoteDeleteSelectedButton_OnClick(object? sender, RoutedEventArgs e)
     {
         if (selectedNoteIndex == -1)
@@ -2911,18 +3021,26 @@ public partial class MainView : UserControl
 
         var value = (float) (e.NewValue ?? _vm.VisualBeatDivisionNumeric);
         if (value >= (float) _vm.VisualBeatDivisionNumericMinimum && value <= (float) _vm.VisualBeatDivisionNumericMaximum)
+        {
             // update
+            userSettings.ViewSettings.BeatDivision = value;
             skCircleView.BeatDivision = value;
+        }
         else
+        {
             // revert
-            _vm.VisualBeatDivisionNumeric = (decimal) skCircleView.BeatDivision;
+            _vm.VisualBeatDivisionNumeric = (decimal)skCircleView.BeatDivision;
+        }
     }
 
     private void GuideLine_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         if (skCircleView != null && sender != null)
         {
-            skCircleView.GuideLineSelection = ((ComboBox) sender).SelectedIndex;
+            var value = ((ComboBox)sender).SelectedIndex;
+
+            userSettings.ViewSettings.GuideLineSelection = value;
+            skCircleView.GuideLineSelection = value;
         }
     }
 
