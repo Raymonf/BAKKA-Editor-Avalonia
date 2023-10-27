@@ -323,11 +323,6 @@ public partial class MainView : UserControl
         userSettings.ViewSettings.ShowMeasureButtons = value;
     }
 
-    public void SetActiveCursorTracking(bool value)
-    {
-        userSettings.OptionsSettings.IsActiveCursorTrackingEnabled = value;
-    }
-
     private void Setup()
     {
         soundEngine = new BassBakkaSoundEngine();
@@ -419,9 +414,9 @@ public partial class MainView : UserControl
         _vm.VolumeTrackBar = userSettings.ViewSettings.Volume;
         _vm.HitsoundVolumeTrackBar = Math.Clamp(userSettings.SoundSettings.HitsoundVolume, 0, 100);
         _vm.ShowNotesOnBeat = userSettings.ViewSettings.ShowNotesOnBeat;
-        _vm.IsActiveCursorTrackingEnabled = userSettings.OptionsSettings.IsActiveCursorTrackingEnabled;
         SetDarkMode(userSettings.ViewSettings.DarkMode);
         appSettingsVm.ShowBeatVisualSettings = userSettings.ViewSettings.ShowBeatVisualSettings;
+        appSettingsVm.IsActiveCursorTrackingEnabled = userSettings.CursorSettings.IsActiveCursorTrackingEnabled;
 
         autoSaveTimer =
             new DispatcherTimer(TimeSpan.FromMilliseconds(userSettings.SaveSettings.AutoSaveInterval * 60000),
@@ -1752,7 +1747,7 @@ public partial class MainView : UserControl
                     return;
                 }
 
-                if (userSettings.OptionsSettings.IsActiveCursorTrackingEnabled)
+                if (userSettings.CursorSettings.IsActiveCursorTrackingEnabled)
                 {
                     InsertObject();
                 }
@@ -1795,7 +1790,7 @@ public partial class MainView : UserControl
         var theta = skCircleView.CalculateTheta((float)xCen, (float)yCen);
         var rolloverState = skCircleView.rolloverState;
 
-        if (userSettings.OptionsSettings.IsActiveCursorTrackingEnabled)
+        if (userSettings.CursorSettings.IsActiveCursorTrackingEnabled)
         {
             var relativeMousePosition = skCircleView.relativeMouseDragPos;
             var mouseDownSize = skCircleView.mouseDownSize;

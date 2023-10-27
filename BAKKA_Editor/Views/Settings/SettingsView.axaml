@@ -24,5 +24,6 @@
         </ComboBox>
 
         <CheckBox IsChecked="{Binding ShowBeatVisualSettings}" Content="{DynamicResource L.Settings.CheckBoxes.ShowBeatVisualSettings}" />
+		<CheckBox IsChecked="{Binding IsActiveCursorTrackingEnabled}" Content="{DynamicResource L.Settings.CheckBoxes.IsActiveCursorTrackingEnabled}" />
     </StackPanel>
 </UserControl>

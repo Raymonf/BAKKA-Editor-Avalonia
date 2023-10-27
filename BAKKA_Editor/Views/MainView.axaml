@@ -131,16 +131,6 @@
                 <MenuItem Header="{DynamicResource L.InitialChartSettingsMenuOption}"
                           Command="{Binding OpenInitialChartSettings}" />
             </MenuItem>
-			<MenuItem Header="_Options">
-				<MenuItem Header="Enable Active Cursor Tracking" Command="{Binding ToggleActiveCursorTrackingCommand}">
-					<MenuItem.Icon>
-						<CheckBox IsChecked="{Binding IsActiveCursorTrackingEnabled}"
-                                  Name="ToggleActiveCursorTrackingMenuItem"
-                                  BorderThickness="0"
-                                  IsHitTestVisible="False" />
-					</MenuItem.Icon>
-				</MenuItem>
-			</MenuItem>
         </Menu>
         <Grid RowDefinitions="*" Margin="0,-4,0,0">
             <Grid.ColumnDefinitions>

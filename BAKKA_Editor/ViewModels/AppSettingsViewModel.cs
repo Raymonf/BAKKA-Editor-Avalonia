@@ -41,6 +41,16 @@ public partial class AppSettingsViewModel : ViewModelBase
         }
     }
 
+    [ObservableProperty]
+    private bool isActiveCursorTrackingEnabled = false;
+    partial void OnIsActiveCursorTrackingEnabledChanged(bool value)
+    {
+        if (UserSettings != null)
+        {
+            UserSettings.CursorSettings.IsActiveCursorTrackingEnabled = value;
+        }
+    }
+
     [ObservableProperty] private KeyValuePair<string, string> selectedLanguage;
 
     partial void OnSelectedLanguageChanged(KeyValuePair<string, string> kv)

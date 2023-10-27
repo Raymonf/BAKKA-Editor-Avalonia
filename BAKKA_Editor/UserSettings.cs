@@ -10,7 +10,7 @@ public class UserSettings
     public SaveSettings SaveSettings { get; set; } = new();
     public HotkeySettings HotkeySettings { get; set; } = new();
     public SoundSettings SoundSettings { get; set; } = new();
-    public OptionsSettings OptionsSettings { get; set; } = new();
+    public CursorSettings CursorSettings { get; set; } = new();
 }
 
 public class ViewSettings
@@ -65,7 +65,7 @@ public class SoundSettings
     public int HitsoundAdditionalOffsetMs { get; set; } = 0;
 }
 
-public class OptionsSettings
+public class CursorSettings
 {
     public bool IsActiveCursorTrackingEnabled { get; set; } = false;
 }
