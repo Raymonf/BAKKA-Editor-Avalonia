@@ -103,6 +103,16 @@ public partial class MainView : UserControl
     private UserSettings userSettings = new();
     private AppSettingsViewModel appSettingsVm;
 
+    // Editor
+    private enum EditorMode
+    {
+        None,
+        PlaceNoteMode,
+        AdjustSizeMode
+    }
+
+    private EditorMode editorMode = EditorMode.None;
+
     private EventSource valueTriggerEvent = EventSource.None;
 
     // Note Mirroring
@@ -412,6 +422,7 @@ public partial class MainView : UserControl
         appSettingsVm.ShowBeatVisualSettings = userSettings.ViewSettings.ShowBeatVisualSettings;
         _vm.VisualBeatDivisionNumeric = (decimal) userSettings.ViewSettings.BeatDivision;
         _vm.GuideLineSelectedIndex = userSettings.ViewSettings.GuideLineSelection;
+        appSettingsVm.IsActiveCursorTrackingEnabled = userSettings.CursorSettings.IsActiveCursorTrackingEnabled;
 
         autoSaveTimer =
             new DispatcherTimer(TimeSpan.FromMilliseconds(userSettings.SaveSettings.AutoSaveInterval * 60000),
@@ -876,6 +887,17 @@ public partial class MainView : UserControl
         }
         else if ((e.KeyModifiers & KeyModifiers.Control) != 0)
         {
+        }
+        else if (editorMode == EditorMode.AdjustSizeMode)
+        {
+            if (delta > 0)
+            {
+                _vm.SizeNumeric = Math.Min(_vm.SizeNumeric + 1, 60);
+            }
+            else
+            {
+                _vm.SizeNumeric = Math.Max(_vm.SizeNumeric - 1, _vm.SizeNumericMinimum);
+            }
         }
         else
         {
@@ -1687,14 +1709,34 @@ public partial class MainView : UserControl
         }
 
         var point = e.GetCurrentPoint(CircleControl);
-        if (point.Properties.PointerUpdateKind != PointerUpdateKind.LeftButtonPressed) return;
+        switch (point.Properties.PointerUpdateKind)
+        {
+            case PointerUpdateKind.LeftButtonPressed:
+            {
+                if (editorMode != EditorMode.None)
+                {
+                    return;
+                }
 
-        // X and Y are relative to the upper left of the panel
-        var xCen = point.Position.X - CircleControl.DesiredSize.Width / 2;
-        var yCen = -(point.Position.Y - CircleControl.DesiredSize.Height / 2);
-        // Update the location of mouse click inside the circle
-        skCircleView.UpdateMouseDown((float) xCen, (float) yCen, point.Position.ToSystemDrawing());
-        _vm.PositionNumeric = skCircleView.mouseDownPos;
+                // X and Y are relative to the upper left of the panel
+                var xCen = point.Position.X - CircleControl.DesiredSize.Width / 2;
+                var yCen = -(point.Position.Y - CircleControl.DesiredSize.Height / 2);
+                // Update the location of mouse click inside the circle
+                skCircleView.UpdateMouseDown((float)xCen, (float)yCen, point.Position.ToSystemDrawing(), (int)_vm.SizeNumeric);
+                _vm.PositionNumeric = skCircleView.mouseDownPos;
+                editorMode = EditorMode.PlaceNoteMode;
+            }
+            break;
+
+            case PointerUpdateKind.RightButtonPressed:
+            {
+                if (editorMode == EditorMode.None)
+                {
+                    editorMode = EditorMode.AdjustSizeMode;
+                }
+            }
+            break;
+        }
     }
 
     private void CircleControl_OnPointerReleased(object? sender, PointerReleasedEventArgs e)
@@ -1705,14 +1747,41 @@ public partial class MainView : UserControl
         }
 
         var point = e.GetCurrentPoint(CircleControl);
-        if (point.Properties.PointerUpdateKind != PointerUpdateKind.LeftButtonReleased ||
-            skCircleView.mouseDownPos <= -1)
-            return;
 
-        var dist = Utils.GetDist(point.Position.ToSystemDrawing(), skCircleView.mouseDownPt);
-        if (dist > 5.0f && userSettings.ViewSettings.PlaceNoteOnDrag)
-            InsertObject();
-        skCircleView.UpdateMouseUp();
+        switch (point.Properties.PointerUpdateKind)
+        {
+            case PointerUpdateKind.LeftButtonReleased:
+            {
+                if (editorMode != EditorMode.PlaceNoteMode)
+                {
+                    return;
+                }
+
+                if (userSettings.CursorSettings.IsActiveCursorTrackingEnabled)
+                {
+                    InsertObject();
+                }
+                else
+                {
+                    var dist = Utils.GetDist(point.Position.ToSystemDrawing(), skCircleView.mouseDownPt);
+                    if (dist > 5.0f && userSettings.ViewSettings.PlaceNoteOnDrag)
+                        InsertObject();
+                }
+
+                skCircleView.UpdateMouseUp();
+                editorMode = EditorMode.None;
+            }
+            break;
+
+            case PointerUpdateKind.RightButtonReleased:
+            {
+                if (editorMode == EditorMode.AdjustSizeMode)
+                {
+                    editorMode = EditorMode.None;
+                }
+            }
+            break;
+        }
     }
 
     private void CircleControl_OnPointerMoved(object? sender, PointerEventArgs e)
@@ -1723,35 +1792,159 @@ public partial class MainView : UserControl
         }
 
         var point = e.GetCurrentPoint(CircleControl);
-        // Mouse down position wasn't within the window or wasn't a left click, do nothing.
-        if (!point.Properties.IsLeftButtonPressed || skCircleView.mouseDownPos <= -1) return;
 
-        var initialSize = (int) _vm.SizeNumeric;
+        // X and Y are relative to the upper left of the panel
+        var xCen = point.Position.X - CircleControl.DesiredSize.Width / 2;
+        var yCen = -(point.Position.Y - CircleControl.DesiredSize.Height / 2);
 
+        var theta = skCircleView.CalculateTheta((float)xCen, (float)yCen);
+        var rolloverState = skCircleView.rolloverState;
+
+        if (userSettings.CursorSettings.IsActiveCursorTrackingEnabled)
         {
-            // X and Y are relative to the upper left of the panel
-            var xCen = point.Position.X - CircleControl.DesiredSize.Width / 2;
-            var yCen = -(point.Position.Y - CircleControl.DesiredSize.Height / 2);
-            // Update the location of mouse click inside the circle.
-            var theta = skCircleView.UpdateMouseMove((float) xCen, (float) yCen);
+            var relativeMousePosition = skCircleView.relativeMouseDragPos;
+            var mouseDownSize = skCircleView.mouseDownSize;
+
+            if (skCircleView.mouseDownPos == -1)
+            {
+                _vm.PositionNumeric = theta;
+            }
+            else if (skCircleView.mouseDownPos != -1 && theta != skCircleView.lastMousePos)
+            {
+                if (editorMode != EditorMode.PlaceNoteMode)
+                {
+                    return;
+                }
+
+                // Rollover calculation is tricky. You could move the mouse through the center of the circle
+                // which technically isn't moving clockwise or counterclockwise. Assume that the shorter of
+                // clockwise vs counterclockwise deltas is the direction we moved in. If we moved perfectly
+                // through the center of the circle such that the deltas are equal, choose counterclockwise.
+                var deltaClockwise = (skCircleView.lastMousePos - theta + 60) % 60;
+                var deltaCounterclockwise = (theta - skCircleView.lastMousePos + 60) % 60;
+                bool movedClockwise = deltaClockwise < deltaCounterclockwise;
+                int minSize = Math.Max(mouseDownSize, _vm.SizeNumericMinimum);
+
+                switch (rolloverState)
+                {
+                    case RolloverState.Counterclockwise:
+                    {
+                        // If rolled over counterclockwise, the mouse moved clockwise, and mouse down position
+                        // is between the delta, we are no longer rolled over
+                        var delta = ((skCircleView.mouseDownPos - theta + 60) % 60);
+                        if (movedClockwise && delta <= deltaClockwise)
+                        {
+                            rolloverState = RolloverState.None;
+                            relativeMousePosition -= delta;
+                        }
+                    }
+                    break;
+
+                    case RolloverState.Clockwise:
+                    {
+                        // If rolled over clockwise, the mouse moved counterclockwise, and mouse down position
+                        // plus the minimum size is between the delta, we are no longer rolled over
+                        var delta = ((theta - (skCircleView.mouseDownPos + minSize) + 60) % 60);
+                        if (!movedClockwise && delta <= deltaCounterclockwise)
+                        {
+                            rolloverState = RolloverState.None;
+                            relativeMousePosition += delta;
+                        }
+                    }
+                    break;
+
+                    default:
+                    {
+                        if (movedClockwise)
+                        {
+                            relativeMousePosition = Math.Max(relativeMousePosition - deltaClockwise, minSize - 60);
+
+                            if (relativeMousePosition <= minSize - 60)
+                            {
+                                rolloverState = RolloverState.Clockwise;
+                            }
+                        }
+                        else
+                        {
+                            relativeMousePosition = Math.Min(relativeMousePosition + deltaCounterclockwise, 60);
+
+                            if (relativeMousePosition >= 60)
+                            {
+                                rolloverState = RolloverState.Counterclockwise;
+                            }
+
+                            // If the mouse moved counterclockwise of the mouse down position
+                            // and the mouse down position plus the starting size is between the
+                            // delta, we can start decreasing the size.
+                            var delta = ((theta - (skCircleView.mouseDownPos + minSize - 1) + 120) % 60);
+                            if (delta <= deltaCounterclockwise)
+                            {
+                                mouseDownSize = -1;
+                                minSize = _vm.SizeNumericMinimum;
+                            }
+                        }
+                    }
+                    break;
+                }
+
+                // Calculate size and position based on mouse click position and relative drag position
+                if (relativeMousePosition >= 0)
+                {
+                    _vm.PositionNumeric = skCircleView.mouseDownPos;
+                    _vm.SizeNumeric = Math.Min(Math.Max(minSize, relativeMousePosition + 1), 60);
+                }
+                else
+                {
+                    _vm.PositionNumeric = (skCircleView.mouseDownPos + relativeMousePosition + 60) % 60;
+                    _vm.SizeNumeric = Math.Max(minSize, minSize - relativeMousePosition);
+                }
+            }
+
+            skCircleView.UpdateMouseMove(theta, relativeMousePosition, mouseDownSize, rolloverState);
+        }
+        else
+        {
+            // If no left click was performed within the circle view, do nothing.
+            if (skCircleView.mouseDownPos == -1) return;
+
+            var initialSize = (int)_vm.SizeNumeric;
+            var delta = theta - skCircleView.lastMousePos;
+
+            // Handle rollover
+            if (delta == -59)
+            {
+                if (rolloverState == RolloverState.Clockwise)
+                    rolloverState = RolloverState.None;
+                else
+                    rolloverState = RolloverState.Counterclockwise;
+            }
+            else if (delta == 59)
+            {
+                if (rolloverState == RolloverState.Counterclockwise)
+                    rolloverState = RolloverState.None;
+                else
+                    rolloverState = RolloverState.Clockwise;
+            }
+
             // Left click will alter the note width and possibly position depending on which direction we move
             if (theta == skCircleView.mouseDownPos)
             {
                 _vm.PositionNumeric = skCircleView.mouseDownPos;
                 initialSize = 1;
             }
-            else if ((theta > skCircleView.mouseDownPos || skCircleView.rolloverPos) && !skCircleView.rolloverNeg)
+            else if ((theta > skCircleView.mouseDownPos || rolloverState == RolloverState.Counterclockwise) && 
+                rolloverState != RolloverState.Clockwise)
             {
                 _vm.PositionNumeric = skCircleView.mouseDownPos;
-                if (skCircleView.rolloverPos)
+                if (rolloverState == RolloverState.Counterclockwise)
                     initialSize = Math.Min(theta + 60 - skCircleView.mouseDownPos + 1, 60);
                 else
                     initialSize = theta - skCircleView.mouseDownPos + 1;
             }
-            else if (theta < skCircleView.mouseDownPos || skCircleView.rolloverNeg)
+            else if (theta < skCircleView.mouseDownPos || rolloverState == RolloverState.Clockwise)
             {
                 _vm.PositionNumeric = theta;
-                if (skCircleView.rolloverNeg)
+                if (rolloverState == RolloverState.Clockwise)
                     initialSize = Math.Min(skCircleView.mouseDownPos + 60 - theta + 1, 60);
                 else
                     initialSize = skCircleView.mouseDownPos - theta + 1;
@@ -1760,6 +1953,9 @@ public partial class MainView : UserControl
             if (initialSize < _vm.SizeNumericMinimum) _vm.SizeNumeric = _vm.SizeNumericMinimum;
             else if (initialSize > 60) _vm.SizeNumeric = 60;
             else _vm.SizeNumeric = initialSize;
+
+            // Only theta and rollover state matter if active cursor tracking is disabled
+            skCircleView.UpdateMouseMove(theta, 0, -1, rolloverState);
         }
     }
 

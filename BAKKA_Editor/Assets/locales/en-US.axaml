@@ -110,4 +110,7 @@
     <system:String x:Key="L.Settings.SettingsHeader">Settings</system:String>
     <system:String x:Key="L.Settings.LanguageLabel">Language:</system:String>
     <system:String x:Key="L.Settings.CheckBoxes.ShowBeatVisualSettings">Show Beat Visual Settings</system:String>
+
+    <system:String x:Key="L.Settings.CheckBoxes.IsActiveCursorTrackingEnabled">Enable Active Cursor Tracking</system:String>
+    <system:String x:Key="L.Settings.Labels.ActiveCursorTrackingHelp">Note: When this option is enabled, hold right click and scroll to adjust the note size.</system:String>
 </ResourceDictionary>

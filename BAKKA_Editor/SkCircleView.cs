@@ -15,6 +15,13 @@ internal struct SkArcInfo
     public float NoteScale;
 }
 
+internal enum RolloverState
+{
+    None,
+    Counterclockwise,
+    Clockwise
+}
+
 internal partial class SkCircleView
 {
     private SKCanvas canvas;
@@ -25,8 +32,9 @@ internal partial class SkCircleView
     // Mouse information. Public so other GUI elements can be updated with their values.
     public int mouseDownPos = -1;
     public Point mouseDownPt;
-    public bool rolloverNeg;
-    public bool rolloverPos;
+    public RolloverState rolloverState = RolloverState.None;
+    public int relativeMouseDragPos = 0;
+    public int mouseDownSize = -1;
     private readonly int SelectTransparency = 110;
 
     public SkCircleView(SizeF size)
@@ -351,7 +359,7 @@ internal partial class SkCircleView
     }
 
     // Updates the mouse down position within the circle, and returns the new position.
-    public void UpdateMouseDown(float xCen, float yCen, Point mousePt)
+    public void UpdateMouseDown(float xCen, float yCen, Point mousePt, int size)
     {
         var theta = (float) (Math.Atan2(yCen, xCen) * 180.0f / Math.PI);
         if (theta < 0)
@@ -359,9 +367,10 @@ internal partial class SkCircleView
         // Left click moves the cursor
         mouseDownPos = (int) (theta / 6.0f);
         mouseDownPt = mousePt;
-        lastMousePos = -1;
-        rolloverPos = false;
-        rolloverNeg = false;
+        lastMousePos = mouseDownPos;
+        rolloverState = RolloverState.None;
+        relativeMouseDragPos = 0;
+        mouseDownSize = size;
     }
 
     public void UpdateMouseUp()
@@ -386,34 +395,23 @@ internal partial class SkCircleView
         canvas.Clear(color);
     }
 
-    // Updates the mouse position and returns the new position in degrees.
-    public int UpdateMouseMove(float xCen, float yCen)
+    // Returns the new position in degrees.
+    public int CalculateTheta(float xCen, float yCen)
     {
         var thetaCalc = (float) (Math.Atan2(yCen, xCen) * 180.0f / Math.PI);
         if (thetaCalc < 0)
             thetaCalc += 360.0f;
         var theta = (int) (thetaCalc / 6.0f);
-
-        var delta = theta - lastMousePos;
-        // Handle rollover
-        if (delta == -59)
-        {
-            if (rolloverNeg)
-                rolloverNeg = false;
-            else
-                rolloverPos = true;
-        }
-        else if (delta == 59)
-        {
-            if (rolloverPos)
-                rolloverPos = false;
-            else
-                rolloverNeg = true;
-        }
-
-        lastMousePos = theta;
-
         return theta;
+    }
+
+    // Updates cursor states.
+    public void UpdateMouseMove(int mousePosition, int relativeMousePosition, int minimumCursorSize, RolloverState state)
+    {
+        lastMousePos = mousePosition;
+        relativeMouseDragPos = relativeMousePosition;
+        mouseDownSize = minimumCursorSize;
+        rolloverState = state;
     }
 
     /*private void FillPie(SKPaint paint, SKRect rect, float startAngle, float sweepAngle)
