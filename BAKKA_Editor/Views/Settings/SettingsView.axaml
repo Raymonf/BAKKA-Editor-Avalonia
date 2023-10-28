@@ -12,7 +12,9 @@
 
 
     <StackPanel>
-        <TextBlock TextWrapping="Wrap" Text="can we just pretend this looks good and correct for the time being? thanks :)" Margin="0,0,0,8" />
+        <TextBlock TextWrapping="Wrap"
+                   Text="can we just pretend this looks good and correct for the time being? thanks :)"
+                   Margin="0,0,0,8" />
 
         <TextBlock Text="{DynamicResource L.Settings.LanguageLabel}" />
         <ComboBox SelectedItem="{Binding SelectedLanguage}" ItemsSource="{Binding SupportedLanguages}">
@@ -23,7 +25,10 @@
             </ComboBox.ItemTemplate>
         </ComboBox>
 
-        <CheckBox IsChecked="{Binding ShowBeatVisualSettings}" Content="{DynamicResource L.Settings.CheckBoxes.ShowBeatVisualSettings}" />
-		<CheckBox IsChecked="{Binding IsActiveCursorTrackingEnabled}" Content="{DynamicResource L.Settings.CheckBoxes.IsActiveCursorTrackingEnabled}" />
+        <CheckBox IsChecked="{Binding ShowBeatVisualSettings}"
+                  Content="{DynamicResource L.Settings.CheckBoxes.ShowBeatVisualSettings}" />
+        <CheckBox IsChecked="{Binding IsActiveCursorTrackingEnabled}"
+                  Content="{DynamicResource L.Settings.CheckBoxes.IsActiveCursorTrackingEnabled}" />
+        <TextBlock Text="{DynamicResource L.Settings.Labels.ActiveCursorTrackingHelp}" />
     </StackPanel>
 </UserControl>

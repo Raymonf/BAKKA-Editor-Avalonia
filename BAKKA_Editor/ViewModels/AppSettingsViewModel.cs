@@ -41,8 +41,8 @@ public partial class AppSettingsViewModel : ViewModelBase
         }
     }
 
-    [ObservableProperty]
-    private bool isActiveCursorTrackingEnabled = false;
+    [ObservableProperty] private bool isActiveCursorTrackingEnabled = false;
+
     partial void OnIsActiveCursorTrackingEnabledChanged(bool value)
     {
         if (UserSettings != null)
