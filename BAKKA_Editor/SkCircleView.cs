@@ -30,6 +30,7 @@ internal partial class SkCircleView
     private readonly int CursorTransparency = 110;
     private readonly int FlairTransparency = 75;
     public int lastMousePos = -1;
+    public bool Playing { get; set; } = false; // TODO: move out
 
     // Mouse information. Public so other GUI elements can be updated with their values.
     public int mouseDownPos = -1;
@@ -66,7 +67,7 @@ internal partial class SkCircleView
 
     public SKPaint? HoldBrush { get; set; } = new()
     {
-        IsAntialias = true,
+        IsAntialias = false,
         Color = SKColors.Yellow.WithAlpha(170),
         Style = SKPaintStyle.Fill
     };
@@ -848,7 +849,8 @@ internal partial class SkCircleView
             // Draw note
             if (info.Rect.Width >= 1)
             {
-                canvas.DrawArc(info.Rect, info.StartAngle, info.ArcLength, false, GetNotePaint(note));
+                if (!Playing || note.NoteType is NoteType.HoldStartNoBonus or NoteType.HoldStartBonusFlair or NoteType.HoldEnd)
+                    canvas.DrawArc(info.Rect, info.StartAngle, info.ArcLength, false, GetNotePaint(note));
 
                 // Draw bonus
                 if (note.IsFlair)

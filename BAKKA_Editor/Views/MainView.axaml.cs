@@ -2800,6 +2800,7 @@ public partial class MainView : UserControl
     private void OnPauseSong()
     {
         currentNoteIndex = 0;
+        skCircleView.Playing = false;
         Dispatcher.UIThread.Invoke(() =>
         {
             playButton.Content = "Play";
@@ -2811,6 +2812,7 @@ public partial class MainView : UserControl
 
     private void OnPlaySong()
     {
+        skCircleView.Playing = true;
         Dispatcher.UIThread.Invoke(() =>
         {
             playButton.Content = "Pause";
