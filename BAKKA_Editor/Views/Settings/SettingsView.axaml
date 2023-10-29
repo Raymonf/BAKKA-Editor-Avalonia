@@ -27,6 +27,8 @@
 
         <CheckBox IsChecked="{Binding ShowBeatVisualSettings}"
                   Content="{DynamicResource L.Settings.CheckBoxes.ShowBeatVisualSettings}" />
+        <CheckBox IsChecked="{Binding ShowSlideSnapArrows}"
+                  Content="{DynamicResource L.Settings.CheckBoxes.ShowSlideSnapArrows}"/>
         <CheckBox IsChecked="{Binding IsActiveCursorTrackingEnabled}"
                   Content="{DynamicResource L.Settings.CheckBoxes.IsActiveCursorTrackingEnabled}" />
         <TextBlock Text="{DynamicResource L.Settings.Labels.ActiveCursorTrackingHelp}" />

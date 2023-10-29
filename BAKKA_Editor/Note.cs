@@ -116,6 +116,43 @@ internal class Note : NoteBase
     }
 
     [Browsable(false)]
+    public bool IsSlide
+    {
+        get
+        {
+            switch (NoteType)
+            {
+                case NoteType.SlideGreenNoBonus:
+                case NoteType.SlideGreenBonus:
+                case NoteType.SlideGreenBonusFlair:
+                case NoteType.SlideOrangeNoBonus:
+                case NoteType.SlideOrangeBonus:
+                case NoteType.SlideOrangeBonusFlair:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+    }
+
+    public bool IsSnap
+    {
+        get
+        {
+            switch (NoteType)
+            {
+                case NoteType.SnapBlueNoBonus:
+                case NoteType.SnapBlueBonusFlair:
+                case NoteType.SnapRedNoBonus:
+                case NoteType.SnapRedBonusFlair:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+    }
+
+    [Browsable(false)]
     public bool IsMask
     {
         get

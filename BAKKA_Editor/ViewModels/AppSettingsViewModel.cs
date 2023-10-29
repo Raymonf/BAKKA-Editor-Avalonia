@@ -41,6 +41,16 @@ public partial class AppSettingsViewModel : ViewModelBase
         }
     }
 
+    [ObservableProperty] private bool showSlideSnapArrows = true;
+
+    partial void OnShowSlideSnapArrowsChanged(bool value)
+    {
+        if (UserSettings != null)
+        {
+            UserSettings.ViewSettings.ShowSlideSnapArrows = value;
+        }
+    }
+
     [ObservableProperty] private bool isActiveCursorTrackingEnabled = false;
 
     partial void OnIsActiveCursorTrackingEnabledChanged(bool value)

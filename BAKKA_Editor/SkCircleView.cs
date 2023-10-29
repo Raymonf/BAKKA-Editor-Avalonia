@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using Avalonia.Styling;
 using BAKKA_Editor.Enums;
+using Microsoft.VisualBasic;
 using SkiaSharp;
 
 namespace BAKKA_Editor;
@@ -72,6 +74,7 @@ internal partial class SkCircleView
     public SKPaint MaskBrush { get; set; } = Utils.CreateFillBrush(SKColors.Black.WithAlpha(90), false);
     public SKPaint? BackgroundBrush { get; set; }
     public SKPaint? HighlightPen { get; set; }
+    public SKPaint? RoundHighlightPen { get; set; }
     public SKPaint? FlairPen { get; set; }
 
     public void SetCanvas(SKCanvas canvas)
@@ -101,6 +104,8 @@ internal partial class SkCircleView
         MirrorAxisPen = Utils.CreateStrokeBrush(SKColors.Cyan, PanelSize.Width * 1.0f / 600.0f);
         HighlightPen = Utils.CreateStrokeBrush(SKColors.LightPink.WithAlpha((byte) SelectTransparency),
             PanelSize.Width * 8.0f / 600.0f);
+        RoundHighlightPen = Utils.CreateStrokeBrush(SKColors.LightPink.WithAlpha((byte)SelectTransparency),
+            PanelSize.Width * 8.0f / 600.0f, SKStrokeCap.Round);
         FlairPen = Utils.CreateStrokeBrush(SKColors.Yellow.WithAlpha((byte) FlairTransparency),
             PanelSize.Width * 8.0f / 600.0f);
     }
@@ -323,23 +328,23 @@ internal partial class SkCircleView
         return notescaleInit;
     }
 
-    private SkArcInfo GetScaledRect(Chart chart, float objectTime)
+    private SkArcInfo  GetScaledRect(Chart chart, float objectTime, float scale = 1)
     {
         SkArcInfo info = new();
         info.NoteScale = GetNoteScaleFromMeasure2(chart, objectTime);
         var scaledRectSize = DrawRect.Width * info.NoteScale;
         var scaledRadius = scaledRectSize / 2.0f;
         info.Rect = SKRect.Create(
-            CenterPoint.X - scaledRadius,
-            CenterPoint.Y - scaledRadius,
-            scaledRectSize,
-            scaledRectSize);
+            CenterPoint.X - scaledRadius * scale,
+            CenterPoint.Y - scaledRadius * scale,
+            scaledRectSize * scale,
+            scaledRectSize * scale);
         return info;
     }
 
-    private SkArcInfo GetSkArcInfo(Chart chart, Note note)
+    private SkArcInfo GetSkArcInfo(Chart chart, Note note, float scale = 1)
     {
-        var info = GetScaledRect(chart, note.Measure);
+        var info = GetScaledRect(chart, note.Measure, scale);
         info.StartAngle = -note.Position * 6;
         info.ArcLength = -note.Size * 6;
 
@@ -356,6 +361,15 @@ internal partial class SkCircleView
         }
 
         return info;
+    }
+
+    private SKPoint GetPointOnArc(float x, float y, float radius, float angle)
+    {
+        var point = new SKPoint(
+            (float)(radius * Math.Cos(Utils.DegToRad(angle)) + x),
+            (float)(radius * Math.Sin(Utils.DegToRad(angle)) + y));
+
+        return point;
     }
 
     // Updates the mouse down position within the circle, and returns the new position.
@@ -597,13 +611,8 @@ internal partial class SkCircleView
                 var tickLength = PanelSize.Width * 110.0f / 285.0f;
                 var innerRad = Radius - tickLength;
 
-                var startPoint = new SKPoint(
-                    (float)(Radius * Math.Cos(Utils.DegToRad(i)) + CenterPoint.X),
-                    (float)(Radius * Math.Sin(Utils.DegToRad(i)) + CenterPoint.Y));
-
-                var endPoint = new SKPoint(
-                    (float)(innerRad * Math.Cos(Utils.DegToRad(i)) + CenterPoint.X),
-                    (float)(innerRad * Math.Sin(Utils.DegToRad(i)) + CenterPoint.Y));
+                var startPoint = GetPointOnArc(CenterPoint.X, CenterPoint.Y, Radius, i);
+                var endPoint = GetPointOnArc(CenterPoint.X, CenterPoint.Y, innerRad, i);
 
                 var shader = SKShader.CreateLinearGradient(
                     new SKPoint(startPoint.X, startPoint.Y),
@@ -877,6 +886,154 @@ internal partial class SkCircleView
                         canvas.DrawArc(info.Rect, info.StartAngle + 2, info.ArcLength - 4, false, HighlightPen);
                 //if (note.Measure < CurrentMeasure)
                     //canvas.DrawArc(info.Rect, info.StartAngle, info.ArcLength, false, HitPen);
+            }
+        }
+    }
+
+    public void DrawSlideArrows(Chart chart, bool highlightSelectedNote, int selectedNoteIndex)
+    {
+        var totalMeasureShowNotes = GetTotalMeasureShowNotes2(chart);
+        var drawNotes = chart.Notes.Where(
+            x => x.Measure >= CurrentMeasure - 1
+                 && x.Measure <= CurrentMeasure + totalMeasureShowNotes
+                 && x.IsSlide);
+        foreach (var note in drawNotes)
+        {
+            var info = GetSkArcInfo(chart, note);
+            var paint = GetNotePaint(note, info.NoteScale);
+            paint.StrokeCap = SKStrokeCap.Round;
+
+            int arrowDirection;
+            switch (note.NoteType)
+            {
+                case NoteType.SlideOrangeNoBonus:
+                case NoteType.SlideOrangeBonus:
+                case NoteType.SlideOrangeBonusFlair:
+                    arrowDirection = 1;
+                    break;
+                case NoteType.SlideGreenNoBonus:
+                case NoteType.SlideGreenBonus:
+                case NoteType.SlideGreenBonusFlair:
+                    arrowDirection = -1;
+                    break;
+                default:
+                    arrowDirection = 0;
+                    break;
+            }
+            
+            var radius = info.Rect.Width * 0.53f;
+
+            var radiusOffset = 0.79f;
+            var arrowMinWidth = 0.02f;
+            var arrowMaxWidth = 0.07f;
+            var arrowLength = 3.5f;
+
+            var startPoint = info.StartAngle - 6;
+            var endPoint = info.StartAngle + info.ArcLength + 6;
+            var interval = 12;
+
+
+            for (var i = startPoint; i > endPoint; i -= interval)
+            {
+                var progress = arrowDirection != 1 ? (i - startPoint) / (endPoint - startPoint) : 1 - (i - startPoint) / (endPoint - startPoint);
+                var scaledArrowWidth = (1 - progress) * arrowMinWidth + arrowMaxWidth * progress;
+
+                var p1 = GetPointOnArc(CenterPoint.X, CenterPoint.Y, radius * (radiusOffset + scaledArrowWidth), i - arrowLength * arrowDirection * 0.5f);
+                var p2 = GetPointOnArc(CenterPoint.X, CenterPoint.Y, radius * radiusOffset, i + arrowLength * arrowDirection);
+                var p3 = GetPointOnArc(CenterPoint.X, CenterPoint.Y, radius * (radiusOffset - scaledArrowWidth), i - arrowLength * arrowDirection * 0.5f);
+
+                if (info.Rect.Width >= 1 && GetObjectVisibility(note.Measure))
+                {
+                    canvas.DrawLine(p1, p2, paint);
+                    canvas.DrawLine(p2, p3, paint);
+
+                    if(highlightSelectedNote)
+                        if (selectedNoteIndex != -1 && note == chart.Notes[selectedNoteIndex])
+                        {
+                            canvas.DrawLine(p1, p2, RoundHighlightPen);
+                            canvas.DrawLine(p2, p3, RoundHighlightPen);
+                        }
+                }
+            }
+        }
+    }
+
+    public void DrawSnapArrows(Chart chart, bool highlightSelectedNote, int selectedNoteIndex)
+    {
+        var totalMeasureShowNotes = GetTotalMeasureShowNotes2(chart);
+        var drawNotes = chart.Notes.Where(
+            x => x.Measure >= CurrentMeasure - 1
+                 && x.Measure <= CurrentMeasure + totalMeasureShowNotes
+                 && x.IsSnap);
+        foreach (var note in drawNotes)
+        {
+            var info = GetSkArcInfo(chart, note);
+            var paint = GetNotePaint(note, info.NoteScale);
+            paint.StrokeCap = SKStrokeCap.Round;
+            paint.StrokeWidth *= 0.8f;
+
+            int arrowDirection;
+            switch (note.NoteType)
+            {
+                case NoteType.SnapRedNoBonus:
+                case NoteType.SnapRedBonusFlair:
+                    arrowDirection = 1;
+                    break;
+                case NoteType.SnapBlueNoBonus:
+                case NoteType.SnapBlueBonusFlair:
+                    arrowDirection = -1;
+                    break;
+                default:
+                    arrowDirection = 0;
+                    break;
+            }
+
+            var radius = info.Rect.Width * 0.53f;
+            var radiusOffset = arrowDirection == 1 ? 0.8f : 0.7f;
+
+            // arrow settings
+            // offset = how far apart the two rows of arrows are
+            // length = how long arrows are
+            // width = how wide arrows are
+            var arrowOffset = info.Rect.Width * 0.045f;
+            var arrowLength = 0.1f;
+            var arrowWidth = 3f;
+
+            var startPoint = (float) -note.Position * 6;
+            var endPoint = startPoint + (float) -note.Size * 6;
+
+            var arrowCount = MathF.Floor((note.Size / 3));
+            var interval = (endPoint - startPoint) / arrowCount;
+            var offset = interval / 2;
+
+            for (var i = startPoint + offset; i > endPoint; i += interval)
+            {
+                var p1 = GetPointOnArc(CenterPoint.X, CenterPoint.Y, radius * radiusOffset, i + arrowWidth);
+                var p2 = GetPointOnArc(CenterPoint.X, CenterPoint.Y, radius * (radiusOffset - arrowLength * arrowDirection), i);
+                var p3 = GetPointOnArc(CenterPoint.X, CenterPoint.Y, radius * radiusOffset, i - arrowWidth);
+
+                var p4 = GetPointOnArc(CenterPoint.X, CenterPoint.Y, arrowOffset + radius * radiusOffset, i + arrowWidth);
+                var p5 = GetPointOnArc(CenterPoint.X, CenterPoint.Y, arrowOffset + radius * (radiusOffset - arrowLength * arrowDirection), i);
+                var p6 = GetPointOnArc(CenterPoint.X, CenterPoint.Y, arrowOffset + radius * radiusOffset, i - arrowWidth);
+
+                if (info.Rect.Width >= 1 && GetObjectVisibility(note.Measure))
+                {
+                    canvas.DrawLine(p1, p2, paint);
+                    canvas.DrawLine(p2, p3, paint);
+
+                    canvas.DrawLine(p4, p5, paint);
+                    canvas.DrawLine(p5, p6, paint);
+
+                    if (highlightSelectedNote)
+                        if (selectedNoteIndex != -1 && note == chart.Notes[selectedNoteIndex])
+                        {
+                            canvas.DrawLine(p1, p2, RoundHighlightPen);
+                            canvas.DrawLine(p2, p3, RoundHighlightPen);
+
+                            canvas.DrawLine(p4, p5, RoundHighlightPen);
+                            canvas.DrawLine(p5, p6, RoundHighlightPen);
+                        }
+                }
             }
         }
     }

@@ -832,6 +832,12 @@ public partial class MainView : UserControl
 
             // Draw notes
             skCircleView.DrawNotes(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex);
+
+            if (appSettingsVm.ShowSlideSnapArrows)
+            {
+                skCircleView.DrawSlideArrows(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex);
+                skCircleView.DrawSnapArrows(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex);
+            }
         }
 
         // Determine if cursor should be showing

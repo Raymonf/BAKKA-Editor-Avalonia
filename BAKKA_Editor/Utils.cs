@@ -231,14 +231,15 @@ internal static class Utils
         button.Content += $" ({KeyIntToString(key)})";
     }
 
-    internal static SKPaint CreateStrokeBrush(SKColor color, float strokeWidth)
+    internal static SKPaint CreateStrokeBrush(SKColor color, float strokeWidth, SKStrokeCap strokeCap = SKStrokeCap.Butt)
     {
         return new SKPaint
         {
             IsAntialias = true,
             Color = color,
             Style = SKPaintStyle.Stroke,
-            StrokeWidth = strokeWidth
+            StrokeWidth = strokeWidth,
+            StrokeCap = strokeCap
         };
     }
 

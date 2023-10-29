@@ -34,6 +34,7 @@ public class ViewSettings
     public bool ShowNotesOnBeat { get; set; } = false;
     public string Language { get; set; } = "en-US";
     public bool ShowBeatVisualSettings { get; set; } = true;
+    public bool ShowSlideSnapArrows { get; set; } = true;
     public int GuideLineSelection { get; set; } = 1;
     public float BeatDivision { get; set; } = 1;
 }
