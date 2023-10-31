@@ -1,0 +1,41 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:BAKKA_Editor.ViewModels"
+             xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             xmlns:settings="clr-namespace:BAKKA_Editor.Views.Settings"
+             mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="280"
+             Width="600"
+             Height="280"
+             x:Class="BAKKA_Editor.Views.Settings.SettingsWindow">
+
+    <UserControl.DataContext>
+        <vm:AppSettingsViewModel />
+    </UserControl.DataContext>
+
+    <controls:NavigationView
+        Name="Navigation"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch"
+        IsPaneToggleButtonVisible="False"
+        IsPaneOpen="True"
+        PaneDisplayMode="Left"
+        OpenPaneLength="150"
+        IsSettingsVisible="False"
+        SelectionChanged="NavigationView_OnSelectionChanged"
+        Width="530"
+        Margin="-5,0,0,0">
+        <controls:NavigationView.MenuItems>
+            <controls:NavigationViewItem
+                IsSelected="True"
+                Content="{DynamicResource L.Settings.Tabs.General}"
+                Tag="General"
+                IconSource="Star" />
+            <controls:NavigationViewItem
+                Content="{DynamicResource L.Settings.Tabs.Visual}"
+                Tag="Visual"
+                IconSource="New" />
+        </controls:NavigationView.MenuItems>
+    </controls:NavigationView>
+</UserControl>

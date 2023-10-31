@@ -3371,7 +3371,7 @@ public partial class MainView : UserControl
 
     public async Task OpenSettings_OnClick()
     {
-        var window = new SettingsView();
+        var window = new SettingsWindow();
         window.DataContext = appSettingsVm;
 
         var dialog = new ContentDialog

@@ -105,12 +105,17 @@
     <system:String x:Key="L.Generic.OkButtonText">OK</system:String>
     <system:String x:Key="L.Generic.YesButtonText">Yes</system:String>
     <system:String x:Key="L.Generic.NoButtonText">No</system:String>
+    <system:String x:Key="L.Generic.CancelButtonText">Cancel</system:String>
 
     <system:String x:Key="L.MainView.Menu.File.Settings">Settings</system:String>
     <system:String x:Key="L.Settings.SettingsHeader">Settings</system:String>
     <system:String x:Key="L.Settings.LanguageLabel">Language:</system:String>
+    <system:String x:Key="L.Settings.Buttons.Save">Save</system:String>
     <system:String x:Key="L.Settings.CheckBoxes.ShowBeatVisualSettings">Show Beat Visual Settings</system:String>
     <system:String x:Key="L.Settings.CheckBoxes.ShowSlideSnapArrows">Show Arrows on Slide- and Snap-Notes</system:String>
+    
+    <system:String x:Key="L.Settings.Tabs.General">General</system:String>
+    <system:String x:Key="L.Settings.Tabs.Visual">Visual</system:String>
 
     <system:String x:Key="L.Settings.CheckBoxes.IsActiveCursorTrackingEnabled">Enable Active Cursor Tracking</system:String>
     <system:String x:Key="L.Settings.Labels.ActiveCursorTrackingHelp">Note: When this option is enabled, hold right click and scroll to adjust the note size.</system:String>
