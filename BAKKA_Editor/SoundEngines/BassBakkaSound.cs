@@ -17,6 +17,8 @@ public class BassBakkaSound : IBakkaSound
     public BassBakkaSound(int channel)
     {
         bassChannel = channel;
+        
+        Bass.ChannelSetAttribute(bassChannel, ChannelAttribute.TempoPreventClick, 1);
 
         // set play length
         var length = Bass.ChannelBytes2Seconds(bassChannel, Bass.ChannelGetLength(bassChannel));
