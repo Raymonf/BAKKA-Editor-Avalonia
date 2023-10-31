@@ -12,6 +12,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using Avalonia.Threading;
@@ -160,6 +161,11 @@ public partial class MainView : UserControl
         {
             if (File.Exists("settings.toml"))
                 File.WriteAllText("settings.toml", Toml.FromModel(userSettings));
+            else
+            {
+                File.Create("settings.toml");
+                File.WriteAllText("settings.toml", Toml.FromModel(userSettings));
+            }
         }
         catch (Exception ex)
         {
@@ -234,7 +240,7 @@ public partial class MainView : UserControl
                 //check for if it's a segment hold, if so treat them as 1 object by doing everything twice
                 if (op.GetType() == typeof(RemoveHoldNote))
                     foreach (var note in chart.Notes)
-                        if (note.IsHold && note.NextNote == null && note.PrevNote == null)
+                        if (note.IsHold && note.NextReferencedNote == null && note.PrevReferencedNote == null)
                         {
                             if (opManager.CanUndo)
                             {
@@ -264,7 +270,7 @@ public partial class MainView : UserControl
                 //check for if it's a segment hold, if so treat them as 1 object by doing everything twice
                 if (op.GetType() == typeof(RemoveHoldNote))
                     foreach (var note in chart.Notes)
-                        if (note.IsHold && note.NextNote == null && note.PrevNote == null)
+                        if (note.IsHold && note.NextReferencedNote == null && note.PrevReferencedNote == null)
                         {
                             if (opManager.CanRedo)
                             {
@@ -391,10 +397,14 @@ public partial class MainView : UserControl
             File.WriteAllText("settings.toml", Toml.FromModel(userSettings));
         }
 
+        // wacky solution but should work to give the brushes class a reference to userSettings.
+        skCircleView.InitializeBrushes(userSettings);
+
         // Apply settings
         // TODO: REFACTOR THIS SHIT!!!!!!!!!
         _vm = (MainViewModel) DataContext!;
-        appSettingsVm = new(userSettings);
+        appSettingsVm = new(userSettings, _vm);
+
         _vm.AppSettings = appSettingsVm;
         if (!appSettingsVm.SetLanguage(userSettings.ViewSettings.Language))
         {
@@ -423,6 +433,38 @@ public partial class MainView : UserControl
         _vm.VisualBeatDivisionNumeric = (decimal) userSettings.ViewSettings.BeatDivision;
         _vm.GuideLineSelectedIndex = userSettings.ViewSettings.GuideLineSelection;
         appSettingsVm.IsActiveCursorTrackingEnabled = userSettings.CursorSettings.IsActiveCursorTrackingEnabled;
+        appSettingsVm.ShowSlideSnapArrows = userSettings.ViewSettings.ShowSlideSnapArrows;
+        appSettingsVm.SlideNoteRotationSpeedNumeric = userSettings.ViewSettings.SlideNoteRotationSpeed;
+
+        var colorTap = Avalonia.Media.Color.Parse(userSettings.ColorSettings.colorNoteTap);
+        var colorChain = Avalonia.Media.Color.Parse(userSettings.ColorSettings.colorNoteChain); 
+        var colorSlideCW = Avalonia.Media.Color.Parse(userSettings.ColorSettings.colorNoteSlideCW);
+        var colorSlideCCW = Avalonia.Media.Color.Parse(userSettings.ColorSettings.colorNoteSlideCCW);
+        var colorSnapFW = Avalonia.Media.Color.Parse(userSettings.ColorSettings.colorNoteSnapFW);
+        var colorSnapBW = Avalonia.Media.Color.Parse(userSettings.ColorSettings.colorNoteSnapBW);
+        var colorHoldStart = Avalonia.Media.Color.Parse(userSettings.ColorSettings.colorNoteHoldStart);
+        var colorHoldSegment = Avalonia.Media.Color.Parse(userSettings.ColorSettings.colorNoteHoldSegment);
+        var colorHoldGradient0 = Avalonia.Media.Color.Parse(userSettings.ColorSettings.colorNoteHoldGradient0);
+        var colorHoldGradient1 = Avalonia.Media.Color.Parse(userSettings.ColorSettings.colorNoteHoldGradient1);
+
+        appSettingsVm.ColorNoteTap = colorTap;
+        appSettingsVm.ColorNoteChain = colorChain;
+        appSettingsVm.ColorNoteSlideCW = colorSlideCW;
+        appSettingsVm.ColorNoteSlideCCW = colorSlideCCW;
+        appSettingsVm.ColorNoteSnapFW = colorSnapFW;
+        appSettingsVm.ColorNoteSnapBW = colorSnapBW;
+        appSettingsVm.ColorNoteHoldStart = colorHoldStart;
+        appSettingsVm.ColorNoteHoldSegment = colorHoldSegment;
+        appSettingsVm.ColorNoteHoldGradient0 = colorHoldGradient0;
+        appSettingsVm.ColorNoteHoldGradient1 = colorHoldGradient1;
+
+        _vm.ColorNoteTap.Color = colorTap;
+        _vm.ColorNoteChain.Color = colorChain;
+        _vm.ColorNoteSlideCW.Color = colorSlideCW;
+        _vm.ColorNoteSlideCCW.Color = colorSlideCCW;
+        _vm.ColorNoteSnapFW.Color = colorSnapFW;
+        _vm.ColorNoteSnapBW.Color = colorSnapBW;
+        _vm.ColorNoteHoldSegment.Color = colorHoldSegment;
 
         autoSaveTimer =
             new DispatcherTimer(TimeSpan.FromMilliseconds(userSettings.SaveSettings.AutoSaveInterval * 60000),
@@ -501,6 +543,15 @@ public partial class MainView : UserControl
     {
         if (currentSong == null)
             return;
+
+        // make arrows spin
+        if (skCircleView != null && userSettings.ViewSettings.ShowSlideSnapArrows)
+        {
+            if (userSettings.ViewSettings.SlideNoteRotationSpeed == 0)
+                skCircleView.arrowMovementOffset = 0;
+            else
+                skCircleView.arrowMovementOffset += userSettings.ViewSettings.SlideNoteRotationSpeed;
+        }
 
         // actually pause the song if we're at the end
         if (currentSong.PlayPosition >= currentSong.PlayLength && !currentSong.Paused)
@@ -795,12 +846,12 @@ public partial class MainView : UserControl
 
         skCircleView.SetCanvas(canvas);
 
-        skCircleView.DrawBackground(BackColor, ResetBackColor);
+        skCircleView.DrawBackground(userSettings.ViewSettings.DarkMode);
 
         lock (chart)
         {
             // Draw masks
-            skCircleView.DrawMasks(chart);
+            skCircleView.DrawMasks(chart, userSettings.ViewSettings.DarkMode);
 
             if (appSettingsVm.ShowBeatVisualSettings)
             {
@@ -819,19 +870,23 @@ public partial class MainView : UserControl
             // Draw degree lines
             skCircleView.DrawDegreeCircle();
 
-                        // Draw mirror axis
+            // Draw mirror axis
             if (isHoveringOverMirrorAxis)
                 skCircleView.DrawMirrorAxis(mirrorAxis);
 
             // Draw Gimmicks
             skCircleView.DrawGimmicks(chart, userSettings.ViewSettings.ShowGimmicks, selectedGimmickIndex);
 
+            // Draw Links connecting simultaneous notes
+            // WIP for now.
+            //skCircleView.DrawNoteLinks(chart, userSettings.ViewSettings.NoteScaleMultiplier);
+
             // Draw holds
             //skCircleView.DrawHolds(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex);
-            skCircleView.DrawHoldsSingle(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex);
+            skCircleView.DrawHoldsSingle(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex, userSettings.ViewSettings.NoteScaleMultiplier);
 
             // Draw notes
-            skCircleView.DrawNotes(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex);
+            skCircleView.DrawNotes(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex, userSettings.ViewSettings.NoteScaleMultiplier);
 
             if (appSettingsVm.ShowSlideSnapArrows)
             {
@@ -1579,9 +1634,9 @@ public partial class MainView : UserControl
                     break;
                 case NoteType.HoldJoint:
                 case NoteType.HoldEnd:
-                    tempNote.PrevNote = lastNote;
+                    tempNote.PrevReferencedNote = lastNote;
                     if (lastNote != null)
-                        tempNote.PrevNote.NextNote = tempNote;
+                        tempNote.PrevReferencedNote.NextReferencedNote = tempNote;
                     if (_vm.EndHoldChecked)
                     {
                         tempNote.NoteType = NoteType.HoldEnd;
@@ -2488,14 +2543,14 @@ public partial class MainView : UserControl
         NoteOperation op2 = null;
         if (chart.Notes[selectedNoteIndex].NoteType == NoteType.HoldStartBonusFlair ||
             chart.Notes[selectedNoteIndex].NoteType == NoteType.HoldStartNoBonus)
-            if (chart.Notes[selectedNoteIndex].NextNote != null)
-                if (chart.Notes[selectedNoteIndex].NextNote.NoteType == NoteType.HoldEnd)
-                    op2 = new RemoveHoldNote(chart, chart.Notes[selectedNoteIndex].NextNote);
+            if (chart.Notes[selectedNoteIndex].NextReferencedNote != null)
+                if (chart.Notes[selectedNoteIndex].NextReferencedNote.NoteType == NoteType.HoldEnd)
+                    op2 = new RemoveHoldNote(chart, chart.Notes[selectedNoteIndex].NextReferencedNote);
         if (chart.Notes[selectedNoteIndex].NoteType == NoteType.HoldEnd)
-            if (chart.Notes[selectedNoteIndex].PrevNote != null)
-                if (chart.Notes[selectedNoteIndex].PrevNote.NoteType == NoteType.HoldStartBonusFlair ||
-                    chart.Notes[selectedNoteIndex].PrevNote.NoteType == NoteType.HoldStartNoBonus)
-                    op2 = new RemoveHoldNote(chart, chart.Notes[selectedNoteIndex].PrevNote);
+            if (chart.Notes[selectedNoteIndex].PrevReferencedNote != null)
+                if (chart.Notes[selectedNoteIndex].PrevReferencedNote.NoteType == NoteType.HoldStartBonusFlair ||
+                    chart.Notes[selectedNoteIndex].PrevReferencedNote.NoteType == NoteType.HoldStartNoBonus)
+                    op2 = new RemoveHoldNote(chart, chart.Notes[selectedNoteIndex].PrevReferencedNote);
         opManager.InvokeAndPush(op);
         if (op2 != null) opManager.InvokeAndPush(op2);
         UpdateControlsFromOperation(op, OperationDirection.Redo);
@@ -2520,7 +2575,7 @@ public partial class MainView : UserControl
                     }
 
                     if (isRemoveHold)
-                        if (note.NextNote == null)
+                        if (note.NextReferencedNote == null)
                         {
                             SetNonHoldButtonState(true);
                             SetSelectedObject(note.NoteType);
@@ -2528,7 +2583,7 @@ public partial class MainView : UserControl
                 }
                 else if (note.NoteType == NoteType.HoldJoint)
                 {
-                    if (isInsertHold) lastNote = note.PrevNote;
+                    if (isInsertHold) lastNote = note.PrevReferencedNote;
                 }
                 else if (note.NoteType == NoteType.HoldEnd)
                 {
@@ -2536,7 +2591,7 @@ public partial class MainView : UserControl
                     {
                         SetNonHoldButtonState(false);
                         SetSelectedObject(NoteType.HoldJoint);
-                        lastNote = note.PrevNote;
+                        lastNote = note.PrevReferencedNote;
                     }
                 }
 

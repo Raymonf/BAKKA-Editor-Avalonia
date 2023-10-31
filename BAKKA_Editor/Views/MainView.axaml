@@ -159,31 +159,31 @@
                                     <HeaderedContentControl Header="{DynamicResource L.NoteTypesHeader}"
                                                             Margin="0,0,8,0">
                                         <StackPanel Margin="8">
-                                            <Button Name="tapButton" Classes="note" Background="Fuchsia"
+                                            <Button Name="tapButton" Classes="note" Background="{Binding ColorNoteTap}"
                                                     Foreground="Black" Click="tapButton_Click"
                                                     Content="{DynamicResource L.TouchNoteButton}">
                                             </Button>
-                                            <Button Name="orangeButton" Classes="note" Background="Orange"
+                                            <Button Name="orangeButton" Classes="note" Background="{Binding ColorNoteSlideCW}"
                                                     Foreground="Black" Click="orangeButton_Click"
                                                     Content="{DynamicResource L.LeftArrowSlideNoteButton}">
                                             </Button>
-                                            <Button Name="greenButton" Classes="note" Background="Lime"
+                                            <Button Name="greenButton" Classes="note" Background="{Binding ColorNoteSlideCCW}"
                                                     Foreground="Black" Click="greenButton_Click"
                                                     Content="{DynamicResource L.RightArrowSlideNoteButton}">
                                             </Button>
-                                            <Button Name="redButton" Classes="note" Background="Red" Foreground="Black"
+                                            <Button Name="redButton" Classes="note" Background="{Binding ColorNoteSnapFW}" Foreground="Black"
                                                     Click="redButton_Click"
                                                     Content="{DynamicResource L.UpArrowSnapNoteButton}">
                                             </Button>
-                                            <Button Name="blueButton" Classes="note" Background="Cyan"
+                                            <Button Name="blueButton" Classes="note" Background="{Binding ColorNoteSnapBW}"
                                                     Foreground="Black" Click="blueButton_Click"
                                                     Content="{DynamicResource L.DownArrowSnapNoteButton}">
                                             </Button>
-                                            <Button Name="chainButton" Classes="note" Background="rgb(204, 190, 45)"
+                                            <Button Name="chainButton" Classes="note" Background="{Binding ColorNoteChain}"
                                                     Foreground="Black" Click="chainButton_Click"
                                                     Content="{DynamicResource L.ChainNoteButton}">
                                             </Button>
-                                            <Button Name="holdButton" Classes="note" Background="Yellow"
+                                            <Button Name="holdButton" Classes="note" Background="{Binding ColorNoteHoldSegment}"
                                                     Foreground="Black" Click="holdButton_Click"
                                                     Content="{DynamicResource L.HoldNoteButton}">
                                             </Button>

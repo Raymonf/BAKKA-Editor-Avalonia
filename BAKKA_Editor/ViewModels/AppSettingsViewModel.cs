@@ -1,14 +1,21 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.Utilities;
+using BAKKA_Editor;
 using BAKKA_Editor.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
+using SkiaSharp;
+using BAKKA_Editor.Rendering;
 
 namespace BAKKA_Editor.ViewModels;
 
 public partial class AppSettingsViewModel : ViewModelBase
 {
     private UserSettings? UserSettings { get; }
+    private MainViewModel? MainViewModel { get; }
     private Localizer? Localizer { get; }
     public ContentDialog? Dialog { get; set; }
 
@@ -22,9 +29,10 @@ public partial class AppSettingsViewModel : ViewModelBase
     {
     }
 
-    public AppSettingsViewModel(UserSettings userSettings)
+    public AppSettingsViewModel(UserSettings userSettings, MainViewModel mainVM)
     {
         UserSettings = userSettings;
+        MainViewModel = mainVM; // grab main view model to set colors. janky but again i have no idea how to do this more nicely
         Localizer = new Localizer();
         selectedLanguage = SupportedLanguages.First();
         SetLanguage(selectedLanguage.Key);
@@ -51,7 +59,31 @@ public partial class AppSettingsViewModel : ViewModelBase
         }
     }
 
+    [ObservableProperty] private float noteScaleMultiplierNumeric = 1.0f;
+    [ObservableProperty] private float noteScaleMultiplierNumericMaximum = 3.0f;
+    [ObservableProperty] private float noteScaleMultiplierNumericMinimum = 0.5f;
+
+    partial void OnNoteScaleMultiplierNumericChanged(float value)
+    {
+        if (UserSettings != null)
+        {
+            UserSettings.ViewSettings.NoteScaleMultiplier = value;
+        }
+    }
+
     [ObservableProperty] private bool isActiveCursorTrackingEnabled = false;
+
+    [ObservableProperty] private float slideNoteRotationSpeedNumeric = 1.0f;
+    [ObservableProperty] private float slideNoteRotationSpeedNumericMaximum = 3.0f;
+    [ObservableProperty] private float slideNoteRotationSpeedNumericMinimum = 0.0f;
+
+    partial void OnSlideNoteRotationSpeedNumericChanged(float value)
+    {
+        if (UserSettings != null)
+        {
+            UserSettings.ViewSettings.SlideNoteRotationSpeed = value;
+        }
+    }
 
     partial void OnIsActiveCursorTrackingEnabledChanged(bool value)
     {
@@ -85,5 +117,91 @@ public partial class AppSettingsViewModel : ViewModelBase
 
         SelectedLanguage = SupportedLanguages.First(x => x.Key == language);
         return true;
+    }
+
+    [ObservableProperty] private static IColorPalette notePalette = new NoteColorPalette();
+    [ObservableProperty] private Color colorNoteTap = notePalette.GetColor(0, 0);
+    [ObservableProperty] private Color colorNoteChain = notePalette.GetColor(0, 1);
+    [ObservableProperty] private Color colorNoteSlideCW = notePalette.GetColor(0, 2);
+    [ObservableProperty] private Color colorNoteSlideCCW = notePalette.GetColor(0, 3);
+    [ObservableProperty] private Color colorNoteSnapFW = notePalette.GetColor(0, 4);
+    [ObservableProperty] private Color colorNoteSnapBW = notePalette.GetColor(0, 5);
+    [ObservableProperty] private Color colorNoteHoldStart = notePalette.GetColor(1, 0);
+    [ObservableProperty] private Color colorNoteHoldSegment = notePalette.GetColor(1, 1);
+    [ObservableProperty] private Color colorNoteHoldGradient0 = notePalette.GetColor(1, 2);
+    [ObservableProperty] private Color colorNoteHoldGradient1 = notePalette.GetColor(1, 3);
+
+    partial void OnColorNoteTapChanged(Color value)
+    {
+        if (UserSettings != null)
+            UserSettings.ColorSettings.colorNoteTap = "#" + value.ToUInt32().ToString("X8");
+        if (MainViewModel != null)
+            MainViewModel.ColorNoteTap.Color = value;
+    }
+
+    partial void OnColorNoteChainChanged(Color value)
+    {
+        if (UserSettings != null)
+            UserSettings.ColorSettings.colorNoteChain = "#" + value.ToUInt32().ToString("X8");
+        if (MainViewModel != null)
+            MainViewModel.ColorNoteChain.Color = value;
+    }
+
+    partial void OnColorNoteSlideCWChanged(Color value)
+    {
+        if (UserSettings != null)
+            UserSettings.ColorSettings.colorNoteSlideCW = "#" + value.ToUInt32().ToString("X8");
+        if (MainViewModel != null)
+            MainViewModel.ColorNoteSlideCW.Color = value;
+    }
+
+    partial void OnColorNoteSlideCCWChanged(Color value)
+    {
+        if (UserSettings != null)
+            UserSettings.ColorSettings.colorNoteSlideCCW = "#" + value.ToUInt32().ToString("X8");
+        if (MainViewModel != null)
+            MainViewModel.ColorNoteSlideCCW.Color = value;
+    }
+
+    partial void OnColorNoteSnapFWChanged(Color value)
+    {
+        if (UserSettings != null)
+            UserSettings.ColorSettings.colorNoteSnapFW = "#" + value.ToUInt32().ToString("X8");
+        if (MainViewModel != null)
+            MainViewModel.ColorNoteSnapFW.Color = value;
+    }
+
+    partial void OnColorNoteSnapBWChanged(Color value)
+    {
+        if (UserSettings != null)
+            UserSettings.ColorSettings.colorNoteSnapBW = "#" + value.ToUInt32().ToString("X8");
+        if (MainViewModel != null)
+            MainViewModel.ColorNoteSnapBW.Color = value;
+    }
+
+    partial void OnColorNoteHoldStartChanged(Color value)
+    {
+        if (UserSettings != null)
+            UserSettings.ColorSettings.colorNoteHoldStart = "#" + value.ToUInt32().ToString("X8");
+    }
+
+    partial void OnColorNoteHoldSegmentChanged(Color value)
+    {
+        if (UserSettings != null)
+            UserSettings.ColorSettings.colorNoteHoldSegment = "#" + value.ToUInt32().ToString("X8");
+        if (MainViewModel != null)
+            MainViewModel.ColorNoteHoldSegment.Color = value;
+    }
+
+    partial void OnColorNoteHoldGradient0Changed(Color value)
+    {
+        if (UserSettings != null) 
+            UserSettings.ColorSettings.colorNoteHoldGradient0 = "#" + value.ToUInt32().ToString("X8");
+    }
+
+    partial void OnColorNoteHoldGradient1Changed(Color value)
+    {
+        if (UserSettings != null)
+            UserSettings.ColorSettings.colorNoteHoldGradient1 = "#" + value.ToUInt32().ToString("X8");
     }
 }

@@ -113,10 +113,19 @@
     <system:String x:Key="L.Settings.Buttons.Save">Save</system:String>
     <system:String x:Key="L.Settings.CheckBoxes.ShowBeatVisualSettings">Show Beat Visual Settings</system:String>
     <system:String x:Key="L.Settings.CheckBoxes.ShowSlideSnapArrows">Show Arrows on Slide- and Snap-Notes</system:String>
-    
+
+    <system:String x:Key="L.Settings.Tabs.Color">Note Colors</system:String>
     <system:String x:Key="L.Settings.Tabs.General">General</system:String>
     <system:String x:Key="L.Settings.Tabs.Visual">Visual</system:String>
 
+    <system:String x:Key="L.Settings.ColorLabels.HoldStart">Hold Start</system:String>
+    <system:String x:Key="L.Settings.ColorLabels.HoldSegment">Hold Segment/End</system:String>
+    <system:String x:Key="L.Settings.ColorLabels.HoldGradient0">Hold Gradient Far</system:String>
+    <system:String x:Key="L.Settings.ColorLabels.HoldGradient1">Hold Gradient Near</system:String>
+
     <system:String x:Key="L.Settings.CheckBoxes.IsActiveCursorTrackingEnabled">Enable Active Cursor Tracking</system:String>
     <system:String x:Key="L.Settings.Labels.ActiveCursorTrackingHelp">Note: When this option is enabled, hold right click and scroll to adjust the note size.</system:String>
+    <system:String x:Key="L.Settings.Labels.NoteScale">Note Scale:</system:String>
+    <system:String x:Key="L.Settings.Labels.SlideNoteRotationSpeed">Slide Note Rotation Speed:</system:String>
+    <system:String x:Key="L.Settings.Labels.ColorHint">To revert- or choose a game-accurate color, check the palette tab :)</system:String>
 </ResourceDictionary>

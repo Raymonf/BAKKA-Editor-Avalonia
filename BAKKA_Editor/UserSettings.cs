@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Globalization;
 using Avalonia.Input;
+using BAKKA_Editor.Views.Settings;
+using DynamicData;
 
 namespace BAKKA_Editor;
 
@@ -11,6 +13,7 @@ public class UserSettings
     public HotkeySettings HotkeySettings { get; set; } = new();
     public SoundSettings SoundSettings { get; set; } = new();
     public CursorSettings CursorSettings { get; set; } = new();
+    public ColorSettings ColorSettings { get; set; } = new();
 }
 
 public class ViewSettings
@@ -37,6 +40,8 @@ public class ViewSettings
     public bool ShowSlideSnapArrows { get; set; } = true;
     public int GuideLineSelection { get; set; } = 1;
     public float BeatDivision { get; set; } = 1;
+    public float NoteScaleMultiplier { get; set; } = 1;
+    public float SlideNoteRotationSpeed { get; set; } = 1;
 }
 
 public class SaveSettings
@@ -71,4 +76,18 @@ public class SoundSettings
 public class CursorSettings
 {
     public bool IsActiveCursorTrackingEnabled { get; set; } = false;
+}
+
+public class ColorSettings
+{
+    public string colorNoteTap { get; set; } = "#FFFF00FF";
+    public string colorNoteChain { get; set; } = "#FFCCBE2D";
+    public string colorNoteSlideCW { get; set; } = "#FFFF8000";
+    public string colorNoteSlideCCW { get; set; } = "#FF32CD32";
+    public string colorNoteSnapFW { get; set; } = "#FFFF0000";
+    public string colorNoteSnapBW { get; set; } = "#FF00FFFF";
+    public string colorNoteHoldStart { get; set; } = "#FF8C6400";
+    public string colorNoteHoldSegment { get; set; } = "#FFDCB932";
+    public string colorNoteHoldGradient0 { get; set; } = "#BEDCA000";
+    public string colorNoteHoldGradient1 { get; set; } = "#BEDCB932";
 }
