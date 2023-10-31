@@ -67,10 +67,11 @@ public class BassBakkaSound : IBakkaSound
         }
         set
         {
-            if (paused)
-                _playPosition = value;
-            else if (!SetPosition(value))
-                throw new Exception($"bruh: {Bass.LastError}");
+            _playPosition = value;
+            if (!paused)
+            {
+                SetPosition(value);
+            }
         }
     }
 
