@@ -1,0 +1,88 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:BAKKA_Editor.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="530" d:DesignHeight="280"
+             x:Class="BAKKA_Editor.Views.Settings.ColorSettingsView">
+    <UserControl.DataContext>
+        <vm:AppSettingsViewModel />
+    </UserControl.DataContext>
+
+    <ScrollViewer Padding="10,10">
+      <StackPanel>
+        <Grid ColumnDefinitions="2*, 1*" HorizontalAlignment="Left" VerticalAlignment="Stretch">
+
+          <StackPanel Grid.Column="0" Margin="0,0,8,0">
+            <StackPanel Orientation="Horizontal">
+              <ColorPicker Name="Color_Note_Tap" Width="80"
+                         Palette="{Binding NotePalette}"
+                         Color="{Binding ColorNoteTap}"/>
+              <TextBlock Text="{DynamicResource L.TouchNoteButton}" VerticalAlignment="Center" Margin="8,0,0,0"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+              <ColorPicker Name="Color_Note_Chain" Width="80"
+                           Palette="{Binding NotePalette}"
+                           Color="{Binding ColorNoteChain}"/>
+              <TextBlock Text="{DynamicResource L.ChainNoteButton}" VerticalAlignment="Center" Margin="8,0,0,0"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+              <ColorPicker Name="Color_Note_SlideCW" Width="80"
+                           Palette="{Binding NotePalette}"
+                           Color="{Binding ColorNoteSlideCw}"/>
+              <TextBlock Text="{DynamicResource L.LeftArrowSlideNoteButton}" VerticalAlignment="Center" Margin="8,0,0,0"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+              <ColorPicker Name="Color_Note_SlideCCW" Width="80"
+                           Palette="{Binding NotePalette}"
+                           Color="{Binding ColorNoteSlideCcw}"/>
+              <TextBlock Text="{DynamicResource L.RightArrowSlideNoteButton}" VerticalAlignment="Center" Margin="8,0,0,0"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+              <ColorPicker Name="Color_Note_SnapFW" Width="80"
+                           Palette="{Binding NotePalette}"
+                           Color="{Binding ColorNoteSnapFw}"/>
+              <TextBlock Text="{DynamicResource L.UpArrowSnapNoteButton}" VerticalAlignment="Center" Margin="8,0,0,0"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+              <ColorPicker Name="Color_Note_SnapBW" Width="80"
+                           Palette="{Binding NotePalette}"
+                           Color="{Binding ColorNoteSnapBw}"/>
+              <TextBlock Text="{DynamicResource L.DownArrowSnapNoteButton}" VerticalAlignment="Center" Margin="8,0,0,0"/>
+            </StackPanel>
+          </StackPanel>
+          
+          <StackPanel Grid.Column="1" Margin="16,0,0,0">
+            <StackPanel Orientation="Horizontal">
+              <ColorPicker Name="Color_Note_HoldStart" Width="80"
+                           Palette="{Binding NotePalette}"
+                           Color="{Binding ColorNoteHoldStart}"/>
+              <TextBlock Text="{DynamicResource L.Settings.ColorLabels.HoldStart}" VerticalAlignment="Center" Margin="8,0,0,0"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+              <ColorPicker Name="Color_Note_HoldSegment" Width="80"
+                           Palette="{Binding NotePalette}"
+                           Color="{Binding ColorNoteHoldSegment}"/>
+              <TextBlock Text="{DynamicResource L.Settings.ColorLabels.HoldSegment}" VerticalAlignment="Center" Margin="8,0,0,0"/>
+            </StackPanel>
+          
+            <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+              <ColorPicker Name="Color_Note_HoldGradient0" Width="80"
+                           Palette="{Binding NotePalette}"
+                           Color="{Binding ColorNoteHoldGradient0}"/>
+              <TextBlock Text="{DynamicResource L.Settings.ColorLabels.HoldGradient0}" VerticalAlignment="Center" Margin="8,0,0,0"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+              <ColorPicker Name="Color_Note_HoldGradient1" Width="80"
+                           Palette="{Binding NotePalette}"
+                           Color="{Binding ColorNoteHoldGradient1}"/>
+              <TextBlock Text="{DynamicResource L.Settings.ColorLabels.HoldGradient1}" VerticalAlignment="Center" Margin="8,0,0,0"/>
+            </StackPanel>
+          </StackPanel>
+        </Grid>
+        <TextBlock Margin="0,16,0,0" Text="{DynamicResource L.Settings.Labels.ColorHint}"/>      
+      </StackPanel>
+    </ScrollViewer>
+</UserControl>

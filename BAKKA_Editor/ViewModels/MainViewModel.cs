@@ -2,9 +2,12 @@
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
 using Avalonia.Controls.ApplicationLifetimes;
 using BAKKA_Editor.Data;
 using BAKKA_Editor.Views;
+using BAKKA_Editor.Rendering;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace BAKKA_Editor.ViewModels;

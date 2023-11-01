@@ -36,6 +36,10 @@
                 Content="{DynamicResource L.Settings.Tabs.Visual}"
                 Tag="Visual"
                 IconSource="New" />
+            <controls:NavigationViewItem
+                Content="{DynamicResource L.Settings.Tabs.Color}"
+                Tag="Color"
+                IconSource="ColorFill" />
         </controls:NavigationView.MenuItems>
     </controls:NavigationView>
 </UserControl>

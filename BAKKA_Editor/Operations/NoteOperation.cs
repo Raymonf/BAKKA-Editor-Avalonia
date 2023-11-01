@@ -134,15 +134,15 @@ internal class InsertHoldNote : NoteOperation
 
     public InsertHoldNote(Chart chart, Note item) : base(chart, item)
     {
-        prevNote = item.PrevNote;
+        prevNote = item.PrevReferencedNote;
     }
 
     public override string Description => "Insert hold note";
 
     public override void Redo()
     {
-        if (Note.PrevNote != null)
-            Note.PrevNote.NextNote = Note;
+        if (Note.PrevReferencedNote != null)
+            Note.PrevReferencedNote.NextReferencedNote = Note;
 
         lock (Chart)
             Chart.Notes.Add(Note);
@@ -150,8 +150,8 @@ internal class InsertHoldNote : NoteOperation
 
     public override void Undo()
     {
-        if (Note.PrevNote != null)
-            Note.PrevNote.NextNote = null;
+        if (Note.PrevReferencedNote != null)
+            Note.PrevReferencedNote.NextReferencedNote = null;
 
         lock (Chart)
             Chart.Notes.Remove(Note);
@@ -167,10 +167,10 @@ internal class RemoveHoldNote : NoteOperation
 
     public RemoveHoldNote(Chart chart, Note item) : base(chart, item)
     {
-        prevNote = item.PrevNote;
+        prevNote = item.PrevReferencedNote;
         if (prevNote != null)
             prevNoteType = prevNote.NoteType;
-        nextNote = item.NextNote;
+        nextNote = item.NextReferencedNote;
         if (nextNote != null)
             nextNoteType = nextNote.NoteType;
     }
@@ -185,21 +185,21 @@ internal class RemoveHoldNote : NoteOperation
             case NoteType.HoldStartBonusFlair:
                 if (nextNote != null)
                 {
-                    nextNote.PrevNote = null;
+                    nextNote.PrevReferencedNote = null;
                     if (nextNote.NoteType == NoteType.HoldJoint)
                         nextNote.NoteType = Note.NoteType;
                 }
 
                 break;
             case NoteType.HoldJoint:
-                prevNote.NextNote = nextNote;
+                prevNote.NextReferencedNote = nextNote;
                 if (nextNote != null)
-                    nextNote.PrevNote = prevNote;
+                    nextNote.PrevReferencedNote = prevNote;
                 break;
             case NoteType.HoldEnd:
                 if (prevNote != null)
                 {
-                    prevNote.NextNote = null;
+                    prevNote.NextReferencedNote = null;
                     prevNote.NoteType = NoteType.HoldEnd;
                 }
 
@@ -218,20 +218,20 @@ internal class RemoveHoldNote : NoteOperation
             case NoteType.HoldStartBonusFlair:
                 if (nextNote != null)
                 {
-                    nextNote.PrevNote = Note;
+                    nextNote.PrevReferencedNote = Note;
                     nextNote.NoteType = nextNoteType;
                 }
 
                 break;
             case NoteType.HoldJoint:
-                prevNote.NextNote = Note;
+                prevNote.NextReferencedNote = Note;
                 if (nextNote != null)
-                    nextNote.PrevNote = Note;
+                    nextNote.PrevReferencedNote = Note;
                 break;
             case NoteType.HoldEnd:
                 if (prevNote != null)
                 {
-                    prevNote.NextNote = Note;
+                    prevNote.NextReferencedNote = Note;
                     prevNote.NoteType = prevNoteType;
                 }
 

@@ -19,6 +19,7 @@ public partial class SettingsWindow : UserControl
         {
             "General" => (UserControl) new GeneralSettingsView(),
             "Visual" => new VisualSettingsView(),
+            "Color" => new ColorSettingsView(),
             _ => throw new ArgumentOutOfRangeException()
         };
         view.DataContext = DataContext;

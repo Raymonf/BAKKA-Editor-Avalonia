@@ -26,6 +26,7 @@ using DynamicData;
 using FluentAvalonia.UI.Controls;
 using SkiaSharp;
 using Tomlyn;
+using AvColor = Avalonia.Media.Color;
 
 namespace BAKKA_Editor.Views;
 
@@ -158,13 +159,11 @@ public partial class MainView : UserControl
         // Update user settings.toml
         try
         {
-            if (File.Exists("settings.toml"))
-                File.WriteAllText("settings.toml", Toml.FromModel(userSettings));
+            File.WriteAllText("settings.toml", Toml.FromModel(userSettings));
         }
         catch (Exception ex)
         {
-            await ShowBlockingMessageBox("Warning",
-                $"Settings failed to save: {ex}");
+            // await ShowBlockingMessageBox("Warning", $"Settings failed to save: {ex}");
         }
 
         CanShutdown = true;
@@ -234,7 +233,7 @@ public partial class MainView : UserControl
                 //check for if it's a segment hold, if so treat them as 1 object by doing everything twice
                 if (op.GetType() == typeof(RemoveHoldNote))
                     foreach (var note in chart.Notes)
-                        if (note.IsHold && note.NextNote == null && note.PrevNote == null)
+                        if (note.IsHold && note.NextReferencedNote == null && note.PrevReferencedNote == null)
                         {
                             if (opManager.CanUndo)
                             {
@@ -264,7 +263,7 @@ public partial class MainView : UserControl
                 //check for if it's a segment hold, if so treat them as 1 object by doing everything twice
                 if (op.GetType() == typeof(RemoveHoldNote))
                     foreach (var note in chart.Notes)
-                        if (note.IsHold && note.NextNote == null && note.PrevNote == null)
+                        if (note.IsHold && note.NextReferencedNote == null && note.PrevReferencedNote == null)
                         {
                             if (opManager.CanRedo)
                             {
@@ -329,9 +328,11 @@ public partial class MainView : UserControl
 
     private void Setup()
     {
+        LoadInitialSettingsFile();
+
         soundEngine = new BassBakkaSoundEngine();
         chartSettingsViewModel = new ChartSettingsViewModel();
-        skCircleView = new SkCircleView(new SizeF(611, 611));
+        skCircleView = new SkCircleView(userSettings, new SizeF(611, 611));
         opManager = new OperationManager();
 
         SetInitialSong();
@@ -372,29 +373,11 @@ public partial class MainView : UserControl
              SetText();
          }*/
 
-        // Look for user settings
-        if (File.Exists("settings.toml"))
-        {
-            try
-            {
-                userSettings = Toml.ToModel<UserSettings>(File.ReadAllText("settings.toml"));
-            }
-            catch (Exception e)
-            {
-                Dispatcher.UIThread.Post(
-                    async () => await ShowBlockingMessageBox("Error",
-                        $"Failed to load settings.toml. Default settings will be used.\n\n{e.Message}"));
-            }
-        }
-        else
-        {
-            File.WriteAllText("settings.toml", Toml.FromModel(userSettings));
-        }
-
         // Apply settings
         // TODO: REFACTOR THIS SHIT!!!!!!!!!
         _vm = (MainViewModel) DataContext!;
         appSettingsVm = new(userSettings);
+
         _vm.AppSettings = appSettingsVm;
         if (!appSettingsVm.SetLanguage(userSettings.ViewSettings.Language))
         {
@@ -423,6 +406,20 @@ public partial class MainView : UserControl
         _vm.VisualBeatDivisionNumeric = (decimal) userSettings.ViewSettings.BeatDivision;
         _vm.GuideLineSelectedIndex = userSettings.ViewSettings.GuideLineSelection;
         appSettingsVm.IsActiveCursorTrackingEnabled = userSettings.CursorSettings.IsActiveCursorTrackingEnabled;
+        appSettingsVm.ShowSlideSnapArrows = userSettings.ViewSettings.ShowSlideSnapArrows;
+        appSettingsVm.SlideNoteRotationSpeedNumeric = userSettings.ViewSettings.SlideNoteRotationSpeed;
+
+        // colors
+        appSettingsVm.ColorNoteTap = AvColor.Parse(userSettings.ColorSettings.ColorNoteTap);
+        appSettingsVm.ColorNoteChain = AvColor.Parse(userSettings.ColorSettings.ColorNoteChain);
+        appSettingsVm.ColorNoteSlideCw = AvColor.Parse(userSettings.ColorSettings.ColorNoteSlideCw);
+        appSettingsVm.ColorNoteSlideCcw = AvColor.Parse(userSettings.ColorSettings.ColorNoteSlideCcw);
+        appSettingsVm.ColorNoteSnapFw = AvColor.Parse(userSettings.ColorSettings.ColorNoteSnapFw);
+        appSettingsVm.ColorNoteSnapBw = AvColor.Parse(userSettings.ColorSettings.ColorNoteSnapBw);
+        appSettingsVm.ColorNoteHoldStart = AvColor.Parse(userSettings.ColorSettings.ColorNoteHoldStart);
+        appSettingsVm.ColorNoteHoldSegment = AvColor.Parse(userSettings.ColorSettings.ColorNoteHoldSegment);
+        appSettingsVm.ColorNoteHoldGradient0 = AvColor.Parse(userSettings.ColorSettings.ColorNoteHoldGradient0);
+        appSettingsVm.ColorNoteHoldGradient1 = AvColor.Parse(userSettings.ColorSettings.ColorNoteHoldGradient1);
 
         autoSaveTimer =
             new DispatcherTimer(TimeSpan.FromMilliseconds(userSettings.SaveSettings.AutoSaveInterval * 60000),
@@ -454,6 +451,28 @@ public partial class MainView : UserControl
         Dispatcher.UIThread.Post(OnResize, DispatcherPriority.Render);
 
         HitsoundSetup();
+    }
+
+    private void LoadInitialSettingsFile()
+    {
+        // Look for user settings
+        if (File.Exists("settings.toml"))
+        {
+            try
+            {
+                userSettings = Toml.ToModel<UserSettings>(File.ReadAllText("settings.toml"));
+            }
+            catch (Exception e)
+            {
+                Dispatcher.UIThread.Post(
+                    async () => await ShowBlockingMessageBox("Error",
+                        $"Failed to load settings.toml. Default settings will be used.\n\n{e.Message}"));
+            }
+        }
+        else
+        {
+            File.WriteAllText("settings.toml", Toml.FromModel(userSettings));
+        }
     }
 
     private void HitsoundSetup()
@@ -501,6 +520,15 @@ public partial class MainView : UserControl
     {
         if (currentSong == null)
             return;
+
+        // make arrows spin
+        if (skCircleView != null && userSettings.ViewSettings.ShowSlideSnapArrows)
+        {
+            if (userSettings.ViewSettings.SlideNoteRotationSpeed == 0)
+                skCircleView.arrowMovementOffset = 0;
+            else
+                skCircleView.arrowMovementOffset += userSettings.ViewSettings.SlideNoteRotationSpeed;
+        }
 
         // actually pause the song if we're at the end
         if (currentSong.PlayPosition >= currentSong.PlayLength && !currentSong.Paused)
@@ -795,12 +823,12 @@ public partial class MainView : UserControl
 
         skCircleView.SetCanvas(canvas);
 
-        skCircleView.DrawBackground(BackColor, ResetBackColor);
+        skCircleView.DrawBackground(userSettings.ViewSettings.DarkMode);
 
         lock (chart)
         {
             // Draw masks
-            skCircleView.DrawMasks(chart);
+            skCircleView.DrawMasks(chart, userSettings.ViewSettings.DarkMode);
 
             if (appSettingsVm.ShowBeatVisualSettings)
             {
@@ -819,19 +847,23 @@ public partial class MainView : UserControl
             // Draw degree lines
             skCircleView.DrawDegreeCircle();
 
-                        // Draw mirror axis
+            // Draw mirror axis
             if (isHoveringOverMirrorAxis)
                 skCircleView.DrawMirrorAxis(mirrorAxis);
 
             // Draw Gimmicks
             skCircleView.DrawGimmicks(chart, userSettings.ViewSettings.ShowGimmicks, selectedGimmickIndex);
 
+            // Draw Links connecting simultaneous notes
+            // WIP for now.
+            //skCircleView.DrawNoteLinks(chart, userSettings.ViewSettings.NoteScaleMultiplier);
+
             // Draw holds
             //skCircleView.DrawHolds(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex);
-            skCircleView.DrawHoldsSingle(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex);
+            skCircleView.DrawHoldsSingle(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex, userSettings.ViewSettings.NoteScaleMultiplier);
 
             // Draw notes
-            skCircleView.DrawNotes(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex);
+            skCircleView.DrawNotes(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex, userSettings.ViewSettings.NoteScaleMultiplier);
 
             if (appSettingsVm.ShowSlideSnapArrows)
             {
@@ -1579,9 +1611,9 @@ public partial class MainView : UserControl
                     break;
                 case NoteType.HoldJoint:
                 case NoteType.HoldEnd:
-                    tempNote.PrevNote = lastNote;
+                    tempNote.PrevReferencedNote = lastNote;
                     if (lastNote != null)
-                        tempNote.PrevNote.NextNote = tempNote;
+                        tempNote.PrevReferencedNote.NextReferencedNote = tempNote;
                     if (_vm.EndHoldChecked)
                     {
                         tempNote.NoteType = NoteType.HoldEnd;
@@ -2488,14 +2520,14 @@ public partial class MainView : UserControl
         NoteOperation op2 = null;
         if (chart.Notes[selectedNoteIndex].NoteType == NoteType.HoldStartBonusFlair ||
             chart.Notes[selectedNoteIndex].NoteType == NoteType.HoldStartNoBonus)
-            if (chart.Notes[selectedNoteIndex].NextNote != null)
-                if (chart.Notes[selectedNoteIndex].NextNote.NoteType == NoteType.HoldEnd)
-                    op2 = new RemoveHoldNote(chart, chart.Notes[selectedNoteIndex].NextNote);
+            if (chart.Notes[selectedNoteIndex].NextReferencedNote != null)
+                if (chart.Notes[selectedNoteIndex].NextReferencedNote.NoteType == NoteType.HoldEnd)
+                    op2 = new RemoveHoldNote(chart, chart.Notes[selectedNoteIndex].NextReferencedNote);
         if (chart.Notes[selectedNoteIndex].NoteType == NoteType.HoldEnd)
-            if (chart.Notes[selectedNoteIndex].PrevNote != null)
-                if (chart.Notes[selectedNoteIndex].PrevNote.NoteType == NoteType.HoldStartBonusFlair ||
-                    chart.Notes[selectedNoteIndex].PrevNote.NoteType == NoteType.HoldStartNoBonus)
-                    op2 = new RemoveHoldNote(chart, chart.Notes[selectedNoteIndex].PrevNote);
+            if (chart.Notes[selectedNoteIndex].PrevReferencedNote != null)
+                if (chart.Notes[selectedNoteIndex].PrevReferencedNote.NoteType == NoteType.HoldStartBonusFlair ||
+                    chart.Notes[selectedNoteIndex].PrevReferencedNote.NoteType == NoteType.HoldStartNoBonus)
+                    op2 = new RemoveHoldNote(chart, chart.Notes[selectedNoteIndex].PrevReferencedNote);
         opManager.InvokeAndPush(op);
         if (op2 != null) opManager.InvokeAndPush(op2);
         UpdateControlsFromOperation(op, OperationDirection.Redo);
@@ -2520,7 +2552,7 @@ public partial class MainView : UserControl
                     }
 
                     if (isRemoveHold)
-                        if (note.NextNote == null)
+                        if (note.NextReferencedNote == null)
                         {
                             SetNonHoldButtonState(true);
                             SetSelectedObject(note.NoteType);
@@ -2528,7 +2560,7 @@ public partial class MainView : UserControl
                 }
                 else if (note.NoteType == NoteType.HoldJoint)
                 {
-                    if (isInsertHold) lastNote = note.PrevNote;
+                    if (isInsertHold) lastNote = note.PrevReferencedNote;
                 }
                 else if (note.NoteType == NoteType.HoldEnd)
                 {
@@ -2536,7 +2568,7 @@ public partial class MainView : UserControl
                     {
                         SetNonHoldButtonState(false);
                         SetSelectedObject(NoteType.HoldJoint);
-                        lastNote = note.PrevNote;
+                        lastNote = note.PrevReferencedNote;
                     }
                 }
 

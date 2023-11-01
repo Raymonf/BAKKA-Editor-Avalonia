@@ -93,9 +93,9 @@ internal class Note : NoteBase
 
     [Browsable(false)] public MaskType MaskFill { get; set; }
 
-    [Browsable(false)] public Note? NextNote { get; set; }
+    [Browsable(false)] public Note? NextReferencedNote { get; set; }
 
-    [Browsable(false)] public Note? PrevNote { get; set; }
+    [Browsable(false)] public Note? PrevReferencedNote { get; set; }
 
     [Browsable(false)]
     public bool IsHold
@@ -206,8 +206,6 @@ internal class Note : NoteBase
             }
         }
     }
-
-    [Browsable(false)] public SKColor Color => Utils.NoteTypeToColor(NoteType);
 }
 
 internal class Gimmick : NoteBase

@@ -2,6 +2,7 @@
 using System.Drawing;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Media;
 using BAKKA_Editor.Enums;
 using SkiaSharp;
 
@@ -57,40 +58,8 @@ internal static class Utils
 
     private static readonly SKColor SlideOrangeColor = new SKColor(255, 128, 0);
     private static readonly SKColor ChainColor = new SKColor(204, 190, 45);
-    internal static SKColor NoteTypeToColor(NoteType type)
-    {
-        switch (type)
-        {
-            case NoteType.TouchNoBonus:
-            case NoteType.TouchBonus:
-            case NoteType.TouchBonusFlair:
-                return SKColors.Fuchsia;
-            case NoteType.SnapRedNoBonus:
-            case NoteType.SnapRedBonusFlair:
-                return SKColors.Red;
-            case NoteType.SnapBlueNoBonus:
-            case NoteType.SnapBlueBonusFlair:
-                return SKColors.Aqua;
-            case NoteType.SlideOrangeNoBonus:
-            case NoteType.SlideOrangeBonus:
-            case NoteType.SlideOrangeBonusFlair:
-                return SlideOrangeColor;
-            case NoteType.SlideGreenNoBonus:
-            case NoteType.SlideGreenBonus:
-            case NoteType.SlideGreenBonusFlair:
-                return SKColors.LimeGreen;
-            case NoteType.HoldStartNoBonus:
-            case NoteType.HoldJoint:
-            case NoteType.HoldEnd:
-            case NoteType.HoldStartBonusFlair:
-                return SKColors.Yellow;
-            case NoteType.Chain:
-            case NoteType.ChainBonusFlair:
-                return ChainColor;
-            default:
-                return SKColors.Transparent;
-        }
-    }
+    private static readonly SKColor HoldStartColor = new SKColor(140, 100, 0);
+    private static readonly SKColor HoldColor = new SKColor(220, 185, 50);
 
     internal static int FindGcd(int a, int b)
     {
