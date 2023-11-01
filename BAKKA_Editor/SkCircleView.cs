@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using Avalonia.Styling;
 using BAKKA_Editor.Enums;
 using BAKKA_Editor.Rendering;
-using BAKKA_Editor.ViewModels;
-using Microsoft.VisualBasic;
 using SkiaSharp;
 
 namespace BAKKA_Editor;
@@ -76,9 +72,7 @@ internal partial class SkCircleView
             PanelSize.Height - basePenWidth * 8);
         Radius = DrawRect.Width / 2.0f;
         CenterPoint = new PointF(TopCorner.X + Radius, TopCorner.Y + Radius);
-
-        if (Brushes != null)
-            Brushes.UpdateBrushStrokeWidth(PanelSize.Width);
+        Brushes.UpdateBrushStrokeWidth(PanelSize.Width);
     }
 
     // lazy reduced allocation version
@@ -759,15 +753,15 @@ internal partial class SkCircleView
                                (startNoteAngle - info.ArcLength);
                 var arcLength = startAngle - endAngle;
 
-                var arc1startAngle = note.Size == 60 ? info.StartAngle : info.StartAngle + 1.5f;
-                var arc1arcLength = note.Size == 60 ? info.ArcLength : info.ArcLength - 3.0f;
+                var arc1StartAngle = note.Size == 60 ? info.StartAngle : info.StartAngle + 1.5f;
+                var arc1ArcLength = note.Size == 60 ? info.ArcLength : info.ArcLength - 3.0f;
 
-                var arc2startAngle = note.Size == 60 ? startAngle + arcLength : startAngle + arcLength - 1.5f;
-                var arc2arcLength = note.Size == 60 ? -arcLength : -arcLength + 3.0f;
+                var arc2StartAngle = note.Size == 60 ? startAngle + arcLength : startAngle + arcLength - 1.5f;
+                var arc2ArcLength = note.Size == 60 ? -arcLength : -arcLength + 3.0f;
 
                 var p = new SKPath();
-                p.ArcTo(info.Rect, arc1startAngle, arc1arcLength, true);
-                p.ArcTo(currentInfo.Rect, arc2startAngle, arc2arcLength, false);
+                p.ArcTo(info.Rect, arc1StartAngle, arc1ArcLength, true);
+                p.ArcTo(currentInfo.Rect, arc2StartAngle, arc2ArcLength, false);
                 canvas.DrawPath(p, Brushes.GetHoldFill(new SKPoint(CenterPoint.X, CenterPoint.Y), Radius));
             }
 
@@ -776,15 +770,15 @@ internal partial class SkCircleView
             {
                 var nextInfo = GetSkArcInfo(chart, note.NextReferencedNote);
 
-                var arc1startAngle = note.Size == 60 ? info.StartAngle : info.StartAngle + 1.5f;
-                var arc1arcLength = note.Size == 60 ? info.ArcLength : info.ArcLength - 3.0f;
+                var arc1StartAngle = note.Size == 60 ? info.StartAngle : info.StartAngle + 1.5f;
+                var arc1ArcLength = note.Size == 60 ? info.ArcLength : info.ArcLength - 3.0f;
 
-                var arc2startAngle = note.Size == 60 ? nextInfo.StartAngle + nextInfo.ArcLength : nextInfo.StartAngle + nextInfo.ArcLength - 1.5f;
-                var arc2arcLength = note.Size == 60 ? -nextInfo.ArcLength : -nextInfo.ArcLength + 3.0f;
+                var arc2StartAngle = note.Size == 60 ? nextInfo.StartAngle + nextInfo.ArcLength : nextInfo.StartAngle + nextInfo.ArcLength - 1.5f;
+                var arc2ArcLength = note.Size == 60 ? -nextInfo.ArcLength : -nextInfo.ArcLength + 3.0f;
 
                 var p = new SKPath();
-                p.ArcTo(info.Rect, arc1startAngle, arc1arcLength, true);
-                p.ArcTo(nextInfo.Rect, arc2startAngle, arc2arcLength, false);
+                p.ArcTo(info.Rect, arc1StartAngle, arc1ArcLength, true);
+                p.ArcTo(nextInfo.Rect, arc2StartAngle, arc2ArcLength, false);
                 canvas.DrawPath(p, Brushes.GetHoldFill(new SKPoint(CenterPoint.X, CenterPoint.Y), Radius));
             }
 
@@ -807,23 +801,22 @@ internal partial class SkCircleView
                 // slightly hacky fix to stop hold notes from overflowing the circle
                 var limitedRect = info.Rect.Width < DrawRect.Width ? info.Rect : DrawRect;
 
-                var arc1startAngle = note.Size == 60 ? startAngle : startAngle + 1.5f;
-                var arc1arcLength = note.Size == 60 ? arcLength : arcLength - 3.0f;
+                var arc1StartAngle = note.Size == 60 ? startAngle : startAngle + 1.5f;
+                var arc1ArcLength = note.Size == 60 ? arcLength : arcLength - 3.0f;
 
-                var arc2startAngle = note.Size == 60 ? info.StartAngle + info.ArcLength : info.StartAngle + info.ArcLength - 1.5f;
-                var arc2arcLength = note.Size == 60 ? -info.ArcLength : -info.ArcLength + 3.0f;
-
+                var arc2StartAngle = note.Size == 60 ? info.StartAngle + info.ArcLength : info.StartAngle + info.ArcLength - 1.5f;
+                var arc2ArcLength = note.Size == 60 ? -info.ArcLength : -info.ArcLength + 3.0f;
 
                 var p = new SKPath();
-                p.ArcTo(endInfo.Rect, arc1startAngle, arc1arcLength, true);
-                p.ArcTo(limitedRect, arc2startAngle, arc2arcLength, false);
+                p.ArcTo(endInfo.Rect, arc1StartAngle, arc1ArcLength, true);
+                p.ArcTo(limitedRect, arc2StartAngle, arc2ArcLength, false);
                 canvas.DrawPath(p, Brushes.GetHoldFill(new SKPoint(CenterPoint.X, CenterPoint.Y), Radius));
             }
 
             // Draw note
             if (info.Rect.Width >= 1 && GetObjectVisibility(note.Measure))
             {
-                // draw hold start notes with endcaps
+                // draw hold start notes with end caps
                 if (note.NoteType is NoteType.HoldStartNoBonus or NoteType.HoldStartBonusFlair)
                 {
                     if (note.Size != 60)
@@ -935,15 +928,15 @@ internal partial class SkCircleView
 
             var radius = info.Rect.Width * 0.53f;
 
-            var radiusOffset = 0.79f;
-            var arrowMinWidth = 0.02f;
-            var arrowMaxWidth = 0.07f;
-            var arrowLength = 3.5f;
+            const float radiusOffset = 0.79f;
+            const float arrowMinWidth = 0.02f;
+            const float arrowMaxWidth = 0.07f;
+            const float arrowLength = 3.5f;
 
             var startPoint = info.StartAngle - 12 - (6 * arrowDirection);
             var endPoint = startPoint + info.ArcLength + 18 + (6 * arrowDirection);
 
-            var interval = 12;
+            const int interval = 12;
 
             if (arrowMovementOffset > 12)
                 arrowMovementOffset -= 12;

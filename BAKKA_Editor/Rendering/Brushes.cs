@@ -73,11 +73,18 @@ internal class Brushes
         IsAntialias = true
     };
 
-    public SKPaint BackgroundBrush = new() {Style = SKPaintStyle.Fill, IsAntialias = false};
+    public SKPaint BackgroundBrush = new()
+    {
+        Style = SKPaintStyle.Fill,
+        IsAntialias = false
+    };
 
     public SKPaint BeatPen = new()
     {
-        Color = BeatPenColor, StrokeWidth = BeatPenStrokeWidth, Style = SKPaintStyle.Stroke, IsAntialias = true
+        Color = BeatPenColor,
+        StrokeWidth = BeatPenStrokeWidth,
+        Style = SKPaintStyle.Stroke,
+        IsAntialias = true
     };
 
     public SKPaint BonusPen = new()
@@ -91,7 +98,9 @@ internal class Brushes
 
     public SKPaint CursorPen = new()
     {
-        StrokeWidth = CursorPenStrokeWidth, Style = SKPaintStyle.Stroke, IsAntialias = true
+        StrokeWidth = CursorPenStrokeWidth,
+        Style = SKPaintStyle.Stroke,
+        IsAntialias = true
     };
 
     public SKPaint DegreeCircleMajorPen = new()
@@ -120,7 +129,10 @@ internal class Brushes
 
     public SKPaint EndCapPen = new()
     {
-        Color = EndcapPenColor, StrokeWidth = EndcapPenStrokeWidth, Style = SKPaintStyle.Stroke, IsAntialias = true
+        Color = EndcapPenColor,
+        StrokeWidth = EndcapPenStrokeWidth,
+        Style = SKPaintStyle.Stroke,
+        IsAntialias = true
     };
 
     public SKPaint FlairPen = new()
@@ -134,12 +146,16 @@ internal class Brushes
 
     public SKPaint GimmickPen = new()
     {
-        StrokeWidth = GimmickPenStrokeWidth, Style = SKPaintStyle.Stroke, IsAntialias = true
+        StrokeWidth = GimmickPenStrokeWidth,
+        Style = SKPaintStyle.Stroke,
+        IsAntialias = true
     };
 
     public SKPaint GuideLinePen = new()
     {
-        StrokeWidth = GuidelinePenStrokeWidth, Style = SKPaintStyle.Stroke, IsAntialias = true
+        StrokeWidth = GuidelinePenStrokeWidth,
+        Style = SKPaintStyle.Stroke,
+        IsAntialias = true
     };
 
     public SKPaint HighlightPen = new()
@@ -159,7 +175,11 @@ internal class Brushes
         IsAntialias = true
     };
 
-    public SKPaint HoldFill = new() {Style = SKPaintStyle.Fill, IsAntialias = false};
+    public SKPaint HoldFill = new()
+    {
+        Style = SKPaintStyle.Fill,
+        IsAntialias = false
+    };
 
     public SKPaint LinkPen = new()
     {
@@ -303,15 +323,9 @@ internal class Brushes
 
     public SKPaint GetHoldFill(SKPoint center, float radius)
     {
-        var gradientColor0 = UserSettings != null
-            ? SKColor.Parse(UserSettings.ColorSettings.ColorNoteHoldGradient0)
-            : SKColors.Transparent;
-        var gradientColor1 = UserSettings != null
-            ? SKColor.Parse(UserSettings.ColorSettings.ColorNoteHoldGradient1)
-            : SKColors.Transparent;
-
+        var gradientColor0 = SKColor.Parse(UserSettings.ColorSettings.ColorNoteHoldGradient0);
+        var gradientColor1 = SKColor.Parse(UserSettings.ColorSettings.ColorNoteHoldGradient1);
         SKColor[] holdColors = {gradientColor0, gradientColor1};
-
         var shader = SKShader.CreateRadialGradient(center, radius, holdColors, SKShaderTileMode.Clamp);
         HoldFill.Shader = shader;
         return HoldFill;

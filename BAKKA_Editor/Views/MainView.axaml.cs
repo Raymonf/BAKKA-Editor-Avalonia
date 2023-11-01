@@ -376,7 +376,7 @@ public partial class MainView : UserControl
         // Apply settings
         // TODO: REFACTOR THIS SHIT!!!!!!!!!
         _vm = (MainViewModel) DataContext!;
-        appSettingsVm = new(userSettings, _vm);
+        appSettingsVm = new(userSettings);
 
         _vm.AppSettings = appSettingsVm;
         if (!appSettingsVm.SetLanguage(userSettings.ViewSettings.Language))

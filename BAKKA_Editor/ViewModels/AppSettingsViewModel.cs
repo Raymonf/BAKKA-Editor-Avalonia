@@ -29,10 +29,9 @@ public partial class AppSettingsViewModel : ViewModelBase
     {
     }
 
-    public AppSettingsViewModel(UserSettings userSettings, MainViewModel mainVM)
+    public AppSettingsViewModel(UserSettings userSettings)
     {
         UserSettings = userSettings;
-        MainViewModel = mainVM; // grab main view model to set colors. janky but again i have no idea how to do this more nicely
         Localizer = new Localizer();
         selectedLanguage = SupportedLanguages.First();
         SetLanguage(selectedLanguage.Key);
