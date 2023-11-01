@@ -425,6 +425,8 @@ public partial class MainView : UserControl
         _vm.GuideLineSelectedIndex = userSettings.ViewSettings.GuideLineSelection;
         appSettingsVm.IsActiveCursorTrackingEnabled = userSettings.CursorSettings.IsActiveCursorTrackingEnabled;
 
+        _vm.Initialize(ref skCircleView.Cursor);
+
         autoSaveTimer =
             new DispatcherTimer(TimeSpan.FromMilliseconds(userSettings.SaveSettings.AutoSaveInterval * 60000),
                 DispatcherPriority.Background, AutoSaveTimer_Tick);
@@ -1560,14 +1562,6 @@ public partial class MainView : UserControl
         }
     }
 
-    private void CursorBeatDepthNumeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
-    {
-        if (e.NewValue == null)
-            return;
-        var newValue = Convert.ToUInt32(e.NewValue);
-        _vm.CursorBeatDepthNumeric = skCircleView.Cursor.Dive(newValue);
-    }
-
     private void insertButton_Click(object? sender, RoutedEventArgs e)
     {
         InsertObject();
@@ -1579,7 +1573,7 @@ public partial class MainView : UserControl
             return;
 
         var currentBeat = new BeatInfo((int) _vm.MeasureNumeric,
-            (int) _vm.Beat1Numeric * 1920 / (int) _vm.Beat2Numeric);
+            ((int) _vm.Beat1Numeric + (int)skCircleView.Cursor.Depth) * 1920 / (int) _vm.Beat2Numeric);
 
         if (currentGimmickType == GimmickType.NoGimmick)
         {

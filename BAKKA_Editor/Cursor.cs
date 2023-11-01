@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace BAKKA_Editor
 {
-    internal class Cursor
+    public class Cursor
     {
         private enum RolloverState
         {
@@ -134,6 +134,10 @@ namespace BAKKA_Editor
             return Size;
         }
 
+        /// <summary>
+        /// Drags the cursor which changes its size and position.
+        /// </summary>
+        /// <param name="position">Position of the cursor during the drag</param>
         public void Drag(uint position)
         {
             // There are 2 ways that we detect that a drag occurred.
