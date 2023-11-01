@@ -64,6 +64,13 @@
                 <MenuItem Header="{DynamicResource L.RedoMenuOption}" Name="RedoMenuItem"
                           Command="{Binding RedoCommand}"
                           InputGesture="Ctrl+Y" />
+                <Separator />
+                <MenuItem Header="{DynamicResource L.BakeHoldMenuOption}" Name="BakeHoldMenuItem"
+                          Command="{Binding BakeHoldCommand}"
+                          InputGesture="Ctrl+Shift+B" IsEnabled="{Binding BakeHoldMenuItemIsEnabled}"/>
+                <MenuItem Header="{DynamicResource L.InsertHoldSegmentMenuOption}" Name="InsertHoldSegmentMenuItem"
+                          Command="{Binding InsertHoldSegmentCommand}"
+                          InputGesture="Shift+H" IsEnabled="{Binding InsertHoldSegmentMenuItemIsEnabled}"/>
             </MenuItem>
             <MenuItem Header="{DynamicResource L.ViewMenuItem}">
                 <MenuItem Header="{DynamicResource L.ShowCursorMenuOption}" Command="{Binding ToggleShowCursorCommand}">

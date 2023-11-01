@@ -38,6 +38,10 @@ public partial class MainViewModel : ViewModelBase
     public ObservableCollection<NoteOnBeatItem> NotesOnBeatList { get; } = new();
     [ObservableProperty] private bool endHoldChecked = false;
 
+    // Hold note editing
+    [ObservableProperty] private bool bakeHoldMenuItemIsEnabled = false;
+    [ObservableProperty] private bool insertHoldSegmentMenuItemIsEnabled = false;
+
     // Music UI State
     // TODO: move this stuff out of here
     [ObservableProperty] private double sizeTrackBar = 0.0;
@@ -144,6 +148,20 @@ public partial class MainViewModel : ViewModelBase
     {
         var mainWindow = Target();
         mainWindow?.RedoMenuItem_OnClick();
+        return true;
+    }
+
+    public bool BakeHoldCommand()
+    {
+        var mainWindow = Target();
+        mainWindow?.BakeHoldMenuItem_OnClick();
+        return true;
+    }
+
+    public bool InsertHoldSegmentCommand()
+    {
+        var mainWindow = Target();
+        mainWindow?.InsertHoldSegmentMenuItem_OnClick();
         return true;
     }
 
