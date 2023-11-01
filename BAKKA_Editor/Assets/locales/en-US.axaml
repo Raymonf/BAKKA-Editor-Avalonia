@@ -86,6 +86,9 @@
     <system:String x:Key="L.NextMeasureButton">Measure &gt;</system:String>
     <system:String x:Key="L.HiSpeedGimmickButton">Hi-Speed</system:String>
 
+	<system:String x:Key="L.MainView.Labels.CursorViewHeader">Cursor Selection</system:String>
+	<system:String x:Key="L.MainView.Labels.CursorBeatDepthLabel">Depth:</system:String>
+
     <system:String x:Key="L.MainView.Labels.MirrorAxis">Mirror Axis:</system:String>
     <system:String x:Key="L.MainView.Buttons.MirrorNote">Mirror Note</system:String>
     

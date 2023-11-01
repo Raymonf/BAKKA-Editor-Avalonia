@@ -91,6 +91,10 @@ public partial class MainViewModel : ViewModelBase
 
     [ObservableProperty] private int guideLineSelectedIndex = 0;
 
+    [ObservableProperty] private uint cursorBeatDepthNumeric = 0;
+    [ObservableProperty] private uint cursorBeatDepthNumericMinimum = 0;
+    [ObservableProperty] private uint cursorBeatDepthNumericMaximum = 100;
+
     // Commands
     public async Task<bool> NewCommand()
     {
