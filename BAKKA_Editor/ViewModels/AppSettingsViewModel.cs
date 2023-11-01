@@ -119,89 +119,75 @@ public partial class AppSettingsViewModel : ViewModelBase
         return true;
     }
 
-    [ObservableProperty] private static IColorPalette notePalette = new NoteColorPalette();
-    [ObservableProperty] private Color colorNoteTap = notePalette.GetColor(0, 0);
-    [ObservableProperty] private Color colorNoteChain = notePalette.GetColor(0, 1);
-    [ObservableProperty] private Color colorNoteSlideCW = notePalette.GetColor(0, 2);
-    [ObservableProperty] private Color colorNoteSlideCCW = notePalette.GetColor(0, 3);
-    [ObservableProperty] private Color colorNoteSnapFW = notePalette.GetColor(0, 4);
-    [ObservableProperty] private Color colorNoteSnapBW = notePalette.GetColor(0, 5);
-    [ObservableProperty] private Color colorNoteHoldStart = notePalette.GetColor(1, 0);
-    [ObservableProperty] private Color colorNoteHoldSegment = notePalette.GetColor(1, 1);
-    [ObservableProperty] private Color colorNoteHoldGradient0 = notePalette.GetColor(1, 2);
-    [ObservableProperty] private Color colorNoteHoldGradient1 = notePalette.GetColor(1, 3);
+    [ObservableProperty] private static IColorPalette _notePalette = new NoteColorPalette();
+    [ObservableProperty] private Color colorNoteTap = _notePalette.GetColor(0, 0);
+    [ObservableProperty] private Color colorNoteChain = _notePalette.GetColor(0, 1);
+    [ObservableProperty] private Color colorNoteSlideCw = _notePalette.GetColor(0, 2);
+    [ObservableProperty] private Color colorNoteSlideCcw = _notePalette.GetColor(0, 3);
+    [ObservableProperty] private Color colorNoteSnapFw = _notePalette.GetColor(0, 4);
+    [ObservableProperty] private Color colorNoteSnapBw = _notePalette.GetColor(0, 5);
+    [ObservableProperty] private Color colorNoteHoldStart = _notePalette.GetColor(1, 0);
+    [ObservableProperty] private Color colorNoteHoldSegment = _notePalette.GetColor(1, 1);
+    [ObservableProperty] private Color colorNoteHoldGradient0 = _notePalette.GetColor(1, 2);
+    [ObservableProperty] private Color colorNoteHoldGradient1 = _notePalette.GetColor(1, 3);
 
     partial void OnColorNoteTapChanged(Color value)
     {
         if (UserSettings != null)
-            UserSettings.ColorSettings.colorNoteTap = "#" + value.ToUInt32().ToString("X8");
-        if (MainViewModel != null)
-            MainViewModel.ColorNoteTap.Color = value;
+            UserSettings.ColorSettings.ColorNoteTap = "#" + value.ToUInt32().ToString("X8");
     }
 
     partial void OnColorNoteChainChanged(Color value)
     {
         if (UserSettings != null)
-            UserSettings.ColorSettings.colorNoteChain = "#" + value.ToUInt32().ToString("X8");
-        if (MainViewModel != null)
-            MainViewModel.ColorNoteChain.Color = value;
+            UserSettings.ColorSettings.ColorNoteChain = "#" + value.ToUInt32().ToString("X8");
     }
 
-    partial void OnColorNoteSlideCWChanged(Color value)
+    partial void OnColorNoteSlideCwChanged(Color value)
     {
         if (UserSettings != null)
-            UserSettings.ColorSettings.colorNoteSlideCW = "#" + value.ToUInt32().ToString("X8");
-        if (MainViewModel != null)
-            MainViewModel.ColorNoteSlideCW.Color = value;
+            UserSettings.ColorSettings.ColorNoteSlideCw = "#" + value.ToUInt32().ToString("X8");
     }
 
-    partial void OnColorNoteSlideCCWChanged(Color value)
+    partial void OnColorNoteSlideCcwChanged(Color value)
     {
         if (UserSettings != null)
-            UserSettings.ColorSettings.colorNoteSlideCCW = "#" + value.ToUInt32().ToString("X8");
-        if (MainViewModel != null)
-            MainViewModel.ColorNoteSlideCCW.Color = value;
+            UserSettings.ColorSettings.ColorNoteSlideCcw = "#" + value.ToUInt32().ToString("X8");
     }
 
-    partial void OnColorNoteSnapFWChanged(Color value)
+    partial void OnColorNoteSnapFwChanged(Color value)
     {
         if (UserSettings != null)
-            UserSettings.ColorSettings.colorNoteSnapFW = "#" + value.ToUInt32().ToString("X8");
-        if (MainViewModel != null)
-            MainViewModel.ColorNoteSnapFW.Color = value;
+            UserSettings.ColorSettings.ColorNoteSnapFw = "#" + value.ToUInt32().ToString("X8");
     }
 
-    partial void OnColorNoteSnapBWChanged(Color value)
+    partial void OnColorNoteSnapBwChanged(Color value)
     {
         if (UserSettings != null)
-            UserSettings.ColorSettings.colorNoteSnapBW = "#" + value.ToUInt32().ToString("X8");
-        if (MainViewModel != null)
-            MainViewModel.ColorNoteSnapBW.Color = value;
+            UserSettings.ColorSettings.ColorNoteSnapBw = "#" + value.ToUInt32().ToString("X8");
     }
 
     partial void OnColorNoteHoldStartChanged(Color value)
     {
         if (UserSettings != null)
-            UserSettings.ColorSettings.colorNoteHoldStart = "#" + value.ToUInt32().ToString("X8");
+            UserSettings.ColorSettings.ColorNoteHoldStart = "#" + value.ToUInt32().ToString("X8");
     }
 
     partial void OnColorNoteHoldSegmentChanged(Color value)
     {
         if (UserSettings != null)
-            UserSettings.ColorSettings.colorNoteHoldSegment = "#" + value.ToUInt32().ToString("X8");
-        if (MainViewModel != null)
-            MainViewModel.ColorNoteHoldSegment.Color = value;
+            UserSettings.ColorSettings.ColorNoteHoldSegment = "#" + value.ToUInt32().ToString("X8");
     }
 
     partial void OnColorNoteHoldGradient0Changed(Color value)
     {
         if (UserSettings != null) 
-            UserSettings.ColorSettings.colorNoteHoldGradient0 = "#" + value.ToUInt32().ToString("X8");
+            UserSettings.ColorSettings.ColorNoteHoldGradient0 = "#" + value.ToUInt32().ToString("X8");
     }
 
     partial void OnColorNoteHoldGradient1Changed(Color value)
     {
         if (UserSettings != null)
-            UserSettings.ColorSettings.colorNoteHoldGradient1 = "#" + value.ToUInt32().ToString("X8");
+            UserSettings.ColorSettings.ColorNoteHoldGradient1 = "#" + value.ToUInt32().ToString("X8");
     }
 }

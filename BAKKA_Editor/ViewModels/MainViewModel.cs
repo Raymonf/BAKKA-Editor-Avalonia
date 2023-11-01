@@ -94,18 +94,6 @@ public partial class MainViewModel : ViewModelBase
 
     [ObservableProperty] private int guideLineSelectedIndex = 0;
 
-    // I FUCKING HATE THIS
-    // If you know how I can just get the values from AppSettingsViewModel directly then
-    // please for the love of god change this it's so fucking ugly
-    [ObservableProperty] private static IColorPalette notePalette = new NoteColorPalette();
-    [ObservableProperty] private SolidColorBrush colorNoteTap = new SolidColorBrush(notePalette.GetColor(0, 0));
-    [ObservableProperty] private SolidColorBrush colorNoteChain = new SolidColorBrush(notePalette.GetColor(0, 1));
-    [ObservableProperty] private SolidColorBrush colorNoteSlideCW = new SolidColorBrush(notePalette.GetColor(0, 2));
-    [ObservableProperty] private SolidColorBrush colorNoteSlideCCW = new SolidColorBrush(notePalette.GetColor(0, 3));
-    [ObservableProperty] private SolidColorBrush colorNoteSnapFW = new SolidColorBrush(notePalette.GetColor(0, 4));
-    [ObservableProperty] private SolidColorBrush colorNoteSnapBW = new SolidColorBrush(notePalette.GetColor(0, 5));
-    [ObservableProperty] private SolidColorBrush colorNoteHoldSegment = new SolidColorBrush(notePalette.GetColor(1, 1));
-
     // Commands
     public async Task<bool> NewCommand()
     {

@@ -12,7 +12,6 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using Avalonia.Threading;
@@ -27,6 +26,7 @@ using DynamicData;
 using FluentAvalonia.UI.Controls;
 using SkiaSharp;
 using Tomlyn;
+using AvColor = Avalonia.Media.Color;
 
 namespace BAKKA_Editor.Views;
 
@@ -159,18 +159,11 @@ public partial class MainView : UserControl
         // Update user settings.toml
         try
         {
-            if (File.Exists("settings.toml"))
-                File.WriteAllText("settings.toml", Toml.FromModel(userSettings));
-            else
-            {
-                File.Create("settings.toml");
-                File.WriteAllText("settings.toml", Toml.FromModel(userSettings));
-            }
+            File.WriteAllText("settings.toml", Toml.FromModel(userSettings));
         }
         catch (Exception ex)
         {
-            await ShowBlockingMessageBox("Warning",
-                $"Settings failed to save: {ex}");
+            // await ShowBlockingMessageBox("Warning", $"Settings failed to save: {ex}");
         }
 
         CanShutdown = true;
@@ -335,9 +328,11 @@ public partial class MainView : UserControl
 
     private void Setup()
     {
+        LoadInitialSettingsFile();
+
         soundEngine = new BassBakkaSoundEngine();
         chartSettingsViewModel = new ChartSettingsViewModel();
-        skCircleView = new SkCircleView(new SizeF(611, 611));
+        skCircleView = new SkCircleView(userSettings, new SizeF(611, 611));
         opManager = new OperationManager();
 
         SetInitialSong();
@@ -378,28 +373,6 @@ public partial class MainView : UserControl
              SetText();
          }*/
 
-        // Look for user settings
-        if (File.Exists("settings.toml"))
-        {
-            try
-            {
-                userSettings = Toml.ToModel<UserSettings>(File.ReadAllText("settings.toml"));
-            }
-            catch (Exception e)
-            {
-                Dispatcher.UIThread.Post(
-                    async () => await ShowBlockingMessageBox("Error",
-                        $"Failed to load settings.toml. Default settings will be used.\n\n{e.Message}"));
-            }
-        }
-        else
-        {
-            File.WriteAllText("settings.toml", Toml.FromModel(userSettings));
-        }
-
-        // wacky solution but should work to give the brushes class a reference to userSettings.
-        skCircleView.InitializeBrushes(userSettings);
-
         // Apply settings
         // TODO: REFACTOR THIS SHIT!!!!!!!!!
         _vm = (MainViewModel) DataContext!;
@@ -436,35 +409,17 @@ public partial class MainView : UserControl
         appSettingsVm.ShowSlideSnapArrows = userSettings.ViewSettings.ShowSlideSnapArrows;
         appSettingsVm.SlideNoteRotationSpeedNumeric = userSettings.ViewSettings.SlideNoteRotationSpeed;
 
-        var colorTap = Avalonia.Media.Color.Parse(userSettings.ColorSettings.colorNoteTap);
-        var colorChain = Avalonia.Media.Color.Parse(userSettings.ColorSettings.colorNoteChain); 
-        var colorSlideCW = Avalonia.Media.Color.Parse(userSettings.ColorSettings.colorNoteSlideCW);
-        var colorSlideCCW = Avalonia.Media.Color.Parse(userSettings.ColorSettings.colorNoteSlideCCW);
-        var colorSnapFW = Avalonia.Media.Color.Parse(userSettings.ColorSettings.colorNoteSnapFW);
-        var colorSnapBW = Avalonia.Media.Color.Parse(userSettings.ColorSettings.colorNoteSnapBW);
-        var colorHoldStart = Avalonia.Media.Color.Parse(userSettings.ColorSettings.colorNoteHoldStart);
-        var colorHoldSegment = Avalonia.Media.Color.Parse(userSettings.ColorSettings.colorNoteHoldSegment);
-        var colorHoldGradient0 = Avalonia.Media.Color.Parse(userSettings.ColorSettings.colorNoteHoldGradient0);
-        var colorHoldGradient1 = Avalonia.Media.Color.Parse(userSettings.ColorSettings.colorNoteHoldGradient1);
-
-        appSettingsVm.ColorNoteTap = colorTap;
-        appSettingsVm.ColorNoteChain = colorChain;
-        appSettingsVm.ColorNoteSlideCW = colorSlideCW;
-        appSettingsVm.ColorNoteSlideCCW = colorSlideCCW;
-        appSettingsVm.ColorNoteSnapFW = colorSnapFW;
-        appSettingsVm.ColorNoteSnapBW = colorSnapBW;
-        appSettingsVm.ColorNoteHoldStart = colorHoldStart;
-        appSettingsVm.ColorNoteHoldSegment = colorHoldSegment;
-        appSettingsVm.ColorNoteHoldGradient0 = colorHoldGradient0;
-        appSettingsVm.ColorNoteHoldGradient1 = colorHoldGradient1;
-
-        _vm.ColorNoteTap.Color = colorTap;
-        _vm.ColorNoteChain.Color = colorChain;
-        _vm.ColorNoteSlideCW.Color = colorSlideCW;
-        _vm.ColorNoteSlideCCW.Color = colorSlideCCW;
-        _vm.ColorNoteSnapFW.Color = colorSnapFW;
-        _vm.ColorNoteSnapBW.Color = colorSnapBW;
-        _vm.ColorNoteHoldSegment.Color = colorHoldSegment;
+        // colors
+        appSettingsVm.ColorNoteTap = AvColor.Parse(userSettings.ColorSettings.ColorNoteTap);
+        appSettingsVm.ColorNoteChain = AvColor.Parse(userSettings.ColorSettings.ColorNoteChain);
+        appSettingsVm.ColorNoteSlideCw = AvColor.Parse(userSettings.ColorSettings.ColorNoteSlideCw);
+        appSettingsVm.ColorNoteSlideCcw = AvColor.Parse(userSettings.ColorSettings.ColorNoteSlideCcw);
+        appSettingsVm.ColorNoteSnapFw = AvColor.Parse(userSettings.ColorSettings.ColorNoteSnapFw);
+        appSettingsVm.ColorNoteSnapBw = AvColor.Parse(userSettings.ColorSettings.ColorNoteSnapBw);
+        appSettingsVm.ColorNoteHoldStart = AvColor.Parse(userSettings.ColorSettings.ColorNoteHoldStart);
+        appSettingsVm.ColorNoteHoldSegment = AvColor.Parse(userSettings.ColorSettings.ColorNoteHoldSegment);
+        appSettingsVm.ColorNoteHoldGradient0 = AvColor.Parse(userSettings.ColorSettings.ColorNoteHoldGradient0);
+        appSettingsVm.ColorNoteHoldGradient1 = AvColor.Parse(userSettings.ColorSettings.ColorNoteHoldGradient1);
 
         autoSaveTimer =
             new DispatcherTimer(TimeSpan.FromMilliseconds(userSettings.SaveSettings.AutoSaveInterval * 60000),
@@ -496,6 +451,28 @@ public partial class MainView : UserControl
         Dispatcher.UIThread.Post(OnResize, DispatcherPriority.Render);
 
         HitsoundSetup();
+    }
+
+    private void LoadInitialSettingsFile()
+    {
+        // Look for user settings
+        if (File.Exists("settings.toml"))
+        {
+            try
+            {
+                userSettings = Toml.ToModel<UserSettings>(File.ReadAllText("settings.toml"));
+            }
+            catch (Exception e)
+            {
+                Dispatcher.UIThread.Post(
+                    async () => await ShowBlockingMessageBox("Error",
+                        $"Failed to load settings.toml. Default settings will be used.\n\n{e.Message}"));
+            }
+        }
+        else
+        {
+            File.WriteAllText("settings.toml", Toml.FromModel(userSettings));
+        }
     }
 
     private void HitsoundSetup()

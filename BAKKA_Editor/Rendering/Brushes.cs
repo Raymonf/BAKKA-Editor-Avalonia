@@ -1,277 +1,369 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Avalonia.Media;
-using BAKKA_Editor.Enums;
+﻿using BAKKA_Editor.Enums;
+using BAKKA_Editor.ViewModels;
 using SkiaSharp;
 
-namespace BAKKA_Editor.Rendering
+namespace BAKKA_Editor.Rendering;
+
+internal class Brushes
 {
-    internal class Brushes
+    public UserSettings UserSettings;
+
+    public Brushes(UserSettings userSettings)
     {
-        // measure
-        // beat
-        // degree circle
-        // mirroraxis
-        // guide lines
-        // background
-        // mask
+        UserSettings = userSettings;
+    }
 
-        // cursor
+    private static readonly SKColor MeasurePenColor = SKColors.White;
+    private const float MeasurePenStrokeWidth = 1.0f;
 
-        // note
-        // arrow
-        // gimmick
+    private static readonly SKColor BeatPenColor = SKColors.White.WithAlpha(0x80);
+    private const float BeatPenStrokeWidth = 0.5f;
 
-        // bonus
-        // flair
-        // highlight
+    private static readonly SKColor DegreeCircleColor = SKColors.Black;
+    private const float DegreeCircleMajorPenStrokeWidth = 7.0f;
+    private const float DegreeCircleMediumPenStrokeWidth = 4.0f;
+    private const float DegreeCircleMinorPenStrokeWidth = 2.0f;
 
-        // link
-        // endcaps
+    private static readonly SKColor MirrorAxisPenColor = SKColors.Cyan;
+    private const float MirrorAxisPenStrokeWidth = 0.5f;
 
-        // hold area
-        // hold end
+    private const float CursorPenStrokeWidth = 24.0f;
 
-        // A Brush can be either a pen or a fill.
-        // A Pen is a brush that creates lines of a color.
-        // A Fill is a brush that creates areas of a color.
+    private static readonly SKColor[] GuidelinePenColors =
+    {
+        SKColors.White.WithAlpha(0x20),
+        SKColors.White.WithAlpha(0x00)
+    };
 
-        public UserSettings? userSettings;
-        private float strokeWidthMultiplier = 1.0183333f;
+    private const float GuidelinePenStrokeWidth = 1.0f;
 
-        // ======= STATIC =======
+    private static readonly SKColor BackgroundFillColorDark = new(68, 68, 68);
+    private static readonly SKColor BackgroundFillColorLight = new(243, 243, 243);
 
-        private static SKColor measurePenColor = SKColors.White;
-        private static float measurePenStrokeWidth = 1.0f;
-        public SKPaint MeasurePen = new SKPaint { Color = measurePenColor, StrokeWidth = measurePenStrokeWidth, Style = SKPaintStyle.Stroke, IsAntialias = true };
+    private static readonly SKColor MaskFillColor = SKColors.Black.WithAlpha(90);
 
-        private static SKColor beatPenColor = SKColors.White.WithAlpha(0x80);
-        private static float beatPenStrokeWidth = 0.5f;
-        public SKPaint BeatPen = new SKPaint { Color = beatPenColor, StrokeWidth = beatPenStrokeWidth, Style = SKPaintStyle.Stroke, IsAntialias = true };
+    private const float NotePenStrokeWidth = 8.0f;
 
-        private static SKColor degreeCircleColor = SKColors.Black;
-        private static float degreeCircleMajorPenStrokeWidth = 7.0f;
-        private static float degreeCircleMediumPenStrokeWidth = 4.0f;
-        private static float degreeCircleMinorPenStrokeWidth = 2.0f;
-        public SKPaint DegreeCircleMajorPen = new SKPaint { Color = degreeCircleColor, StrokeWidth = degreeCircleMajorPenStrokeWidth, Style = SKPaintStyle.Stroke, IsAntialias = true };
-        public SKPaint DegreeCircleMediumPen = new SKPaint { Color = degreeCircleColor, StrokeWidth = degreeCircleMediumPenStrokeWidth, Style = SKPaintStyle.Stroke, IsAntialias = true };
-        public SKPaint DegreeCircleMinorPen = new SKPaint { Color = degreeCircleColor, StrokeWidth = degreeCircleMinorPenStrokeWidth, Style = SKPaintStyle.Stroke, IsAntialias = true };
+    private const float ArrowPenStrokeWidth = 8.0f;
 
-        private static SKColor mirrorAxisPenColor = SKColors.Cyan;
-        private static float mirrorAxisPenStrokeWidth = 0.5f;
-        public SKPaint MirrorAxisPen = new SKPaint { Color = mirrorAxisPenColor, StrokeWidth = mirrorAxisPenStrokeWidth, Style = SKPaintStyle.Stroke, IsAntialias = true };
+    private const float GimmickPenStrokeWidth = 5.0f;
 
-        private static float cursorPenStrokeWidth = 24.0f;
-        public SKPaint CursorPen = new SKPaint { StrokeWidth = cursorPenStrokeWidth, Style = SKPaintStyle.Stroke, IsAntialias = true };
+    private static readonly SKColor BonusPenColor = SKColors.LightSkyBlue.WithAlpha(0x60);
+    private const float BonusPenStrokeWidth = 15.0f;
 
-        private static SKColor[] guidelinePenColors = { SKColors.White.WithAlpha(0x20), SKColors.White.WithAlpha(0x00) };
-        private static float guidelinePenStrokeWidth = 1.0f;
-        public SKPaint GuideLinePen = new SKPaint { StrokeWidth = guidelinePenStrokeWidth, Style = SKPaintStyle.Stroke, IsAntialias = true };
+    private static readonly SKColor FlairPenColor = SKColors.Khaki.WithAlpha(0xCC);
+    private const float FlairPenStrokeWidth = 18.0f;
 
-        private static SKColor backgroundFillColorDark = new SKColor(68, 68, 68);
-        private static SKColor backgroundFillColorLight = new SKColor(243, 243, 243);
-        public SKPaint BackgroundBrush = new SKPaint { Style = SKPaintStyle.Fill, IsAntialias = false };
+    private static readonly SKColor HighlightPenColor = SKColors.LightPink.WithAlpha(0x80);
+    private const float HighlightPenStrokeWidth = 20.0f;
 
-        private static SKColor maskFillColor = SKColors.Black.WithAlpha(90);
-        public SKPaint MaskFill = new SKPaint { Color = maskFillColor, Style = SKPaintStyle.Fill, IsAntialias = false };
+    private static readonly SKColor LinkPenColor = SKColors.DeepSkyBlue.WithAlpha(0xDD);
+    private const float LinkPenStrokeWidth = 10.0f;
 
-        // ======== NON-STATIC ========
+    private static readonly SKColor EndcapPenColor = SKColors.DeepSkyBlue;
+    private const float EndcapPenStrokeWidth = 8.0f;
 
-        private static float notePenStrokeWidth = 8.0f;
-        public SKPaint NotePen = new SKPaint { StrokeWidth = notePenStrokeWidth, Style = SKPaintStyle.Stroke, IsAntialias = true };
+    private const float HoldEndPenStrokeWidth = 4.0f;
 
-        private static float arrowPenStrokeWidth = 8.0f;
-        public SKPaint ArrowPen = new SKPaint { StrokeWidth = arrowPenStrokeWidth, StrokeCap = SKStrokeCap.Round, Style = SKPaintStyle.Stroke, IsAntialias = true };
+    public SKPaint ArrowPen = new()
+    {
+        StrokeWidth = ArrowPenStrokeWidth,
+        StrokeCap = SKStrokeCap.Round,
+        Style = SKPaintStyle.Stroke,
+        IsAntialias = true
+    };
 
-        private static float gimmickPenStrokeWidth = 5.0f;
-        public SKPaint GimmickPen = new SKPaint { StrokeWidth = gimmickPenStrokeWidth, Style = SKPaintStyle.Stroke, IsAntialias = true };
+    public SKPaint BackgroundBrush = new() {Style = SKPaintStyle.Fill, IsAntialias = false};
 
-        private static SKColor bonusPenColor = SKColors.LightSkyBlue.WithAlpha(0x60);
-        private static float bonusPenStrokeWidth = 15.0f;
-        public SKPaint BonusPen = new SKPaint { Color = bonusPenColor, StrokeWidth = bonusPenStrokeWidth, StrokeCap = SKStrokeCap.Square, Style = SKPaintStyle.Stroke, IsAntialias = true };
+    public SKPaint BeatPen = new()
+    {
+        Color = BeatPenColor, StrokeWidth = BeatPenStrokeWidth, Style = SKPaintStyle.Stroke, IsAntialias = true
+    };
 
-        private static SKColor flairPenColor = SKColors.Khaki.WithAlpha(0xCC);
-        private static float flairPenStrokeWidth = 18.0f;
-        public SKPaint FlairPen = new SKPaint { Color = flairPenColor, StrokeWidth = flairPenStrokeWidth, StrokeCap = SKStrokeCap.Square, Style = SKPaintStyle.Stroke, IsAntialias = true };
+    public SKPaint BonusPen = new()
+    {
+        Color = BonusPenColor,
+        StrokeWidth = BonusPenStrokeWidth,
+        StrokeCap = SKStrokeCap.Square,
+        Style = SKPaintStyle.Stroke,
+        IsAntialias = true
+    };
 
-        private static SKColor highlightPenColor = SKColors.LightPink.WithAlpha(0x80);
-        private static float highlightPenStrokeWidth = 20.0f;
-        public SKPaint HighlightPen = new SKPaint { Color = highlightPenColor, StrokeWidth = highlightPenStrokeWidth, StrokeCap = SKStrokeCap.Square, Style = SKPaintStyle.Stroke, IsAntialias = true };
+    public SKPaint CursorPen = new()
+    {
+        StrokeWidth = CursorPenStrokeWidth, Style = SKPaintStyle.Stroke, IsAntialias = true
+    };
 
-        private static SKColor linkPenColor = SKColors.DeepSkyBlue.WithAlpha(0xDD);
-        private static float linkPenStrokeWidth = 10.0f;
-        public SKPaint LinkPen = new SKPaint { Color = linkPenColor, StrokeWidth = linkPenStrokeWidth, StrokeCap = SKStrokeCap.Square, Style = SKPaintStyle.Stroke, IsAntialias = true };
+    public SKPaint DegreeCircleMajorPen = new()
+    {
+        Color = DegreeCircleColor,
+        StrokeWidth = DegreeCircleMajorPenStrokeWidth,
+        Style = SKPaintStyle.Stroke,
+        IsAntialias = true
+    };
 
-        private static SKColor endcapPenColor = SKColors.DeepSkyBlue;
-        private static float endcapPenStrokeWidth = 8.0f;
-        public SKPaint EndcapPen = new SKPaint { Color = endcapPenColor, StrokeWidth = endcapPenStrokeWidth, Style = SKPaintStyle.Stroke, IsAntialias = true };
+    public SKPaint DegreeCircleMediumPen = new()
+    {
+        Color = DegreeCircleColor,
+        StrokeWidth = DegreeCircleMediumPenStrokeWidth,
+        Style = SKPaintStyle.Stroke,
+        IsAntialias = true
+    };
 
-        private static float holdEndPenStrokeWidth = 4.0f;
-        public SKPaint HoldEndPen = new SKPaint { StrokeWidth = holdEndPenStrokeWidth, StrokeCap = SKStrokeCap.Round, Style = SKPaintStyle.Stroke, IsAntialias = true };
+    public SKPaint DegreeCircleMinorPen = new()
+    {
+        Color = DegreeCircleColor,
+        StrokeWidth = DegreeCircleMinorPenStrokeWidth,
+        Style = SKPaintStyle.Stroke,
+        IsAntialias = true
+    };
 
-        public SKPaint HoldFill = new SKPaint { Style = SKPaintStyle.Fill, IsAntialias = false };
+    public SKPaint EndCapPen = new()
+    {
+        Color = EndcapPenColor, StrokeWidth = EndcapPenStrokeWidth, Style = SKPaintStyle.Stroke, IsAntialias = true
+    };
 
-        public void UpdateBrushStrokeWidth(float panelSize)
+    public SKPaint FlairPen = new()
+    {
+        Color = FlairPenColor,
+        StrokeWidth = FlairPenStrokeWidth,
+        StrokeCap = SKStrokeCap.Square,
+        Style = SKPaintStyle.Stroke,
+        IsAntialias = true
+    };
+
+    public SKPaint GimmickPen = new()
+    {
+        StrokeWidth = GimmickPenStrokeWidth, Style = SKPaintStyle.Stroke, IsAntialias = true
+    };
+
+    public SKPaint GuideLinePen = new()
+    {
+        StrokeWidth = GuidelinePenStrokeWidth, Style = SKPaintStyle.Stroke, IsAntialias = true
+    };
+
+    public SKPaint HighlightPen = new()
+    {
+        Color = HighlightPenColor,
+        StrokeWidth = HighlightPenStrokeWidth,
+        StrokeCap = SKStrokeCap.Square,
+        Style = SKPaintStyle.Stroke,
+        IsAntialias = true
+    };
+
+    public SKPaint HoldEndPen = new()
+    {
+        StrokeWidth = HoldEndPenStrokeWidth,
+        StrokeCap = SKStrokeCap.Round,
+        Style = SKPaintStyle.Stroke,
+        IsAntialias = true
+    };
+
+    public SKPaint HoldFill = new() {Style = SKPaintStyle.Fill, IsAntialias = false};
+
+    public SKPaint LinkPen = new()
+    {
+        Color = LinkPenColor,
+        StrokeWidth = LinkPenStrokeWidth,
+        StrokeCap = SKStrokeCap.Square,
+        Style = SKPaintStyle.Stroke,
+        IsAntialias = true
+    };
+
+    public SKPaint MaskFill = new()
+    {
+        Color = MaskFillColor,
+        Style = SKPaintStyle.Fill,
+        IsAntialias = false
+    };
+
+    public SKPaint MeasurePen = new()
+    {
+        Color = MeasurePenColor,
+        StrokeWidth = MeasurePenStrokeWidth,
+        Style = SKPaintStyle.Stroke,
+        IsAntialias = true
+    };
+
+    public SKPaint MirrorAxisPen = new()
+    {
+        Color = MirrorAxisPenColor,
+        StrokeWidth = MirrorAxisPenStrokeWidth,
+        Style = SKPaintStyle.Stroke,
+        IsAntialias = true
+    };
+
+    public SKPaint NotePen = new()
+    {
+        StrokeWidth = NotePenStrokeWidth,
+        Style = SKPaintStyle.Stroke,
+        IsAntialias = true
+    };
+
+    private float strokeWidthMultiplier = 1.0183333f;
+
+    // A Brush can be either a pen or a fill.
+    // A Pen is a brush that creates lines of a color.
+    // A Fill is a brush that creates areas of a color.
+
+    public void UpdateBrushStrokeWidth(float panelSize)
+    {
+        // update window size multiplier
+        strokeWidthMultiplier = panelSize / 600.0f;
+
+        // update "static" pens here when window is resized
+        MeasurePen.StrokeWidth = MeasurePenStrokeWidth * strokeWidthMultiplier;
+        BeatPen.StrokeWidth = BeatPenStrokeWidth * strokeWidthMultiplier;
+        DegreeCircleMajorPen.StrokeWidth = DegreeCircleMajorPenStrokeWidth * strokeWidthMultiplier;
+        DegreeCircleMediumPen.StrokeWidth = DegreeCircleMediumPenStrokeWidth * strokeWidthMultiplier;
+        DegreeCircleMinorPen.StrokeWidth = DegreeCircleMinorPenStrokeWidth * strokeWidthMultiplier;
+        MirrorAxisPen.StrokeWidth = MirrorAxisPenStrokeWidth * strokeWidthMultiplier;
+        CursorPen.StrokeWidth = CursorPenStrokeWidth * strokeWidthMultiplier;
+    }
+
+    /*public void ModifyBrush(this SKPaint brush, SKColor? newColor, float? newStrokeWidth, SKStrokeCap? newStrokeCap)
+    {
+        brush.Color = newColor ?? brush.Color;
+        brush.StrokeWidth = (newStrokeWidth ?? brush.StrokeWidth) * strokeWidthMultiplier;
+        brush.StrokeCap = newStrokeCap ?? brush.StrokeCap;
+    }*/
+
+    public SKPaint GetCursorPen(NoteType noteType)
+    {
+        CursorPen.Color = NoteTypeToColor(noteType).WithAlpha(0x80);
+        return CursorPen;
+    }
+
+    public SKPaint GetGuidelinePen(SKPoint startPoint, SKPoint endPoint)
+    {
+        var shader = SKShader.CreateLinearGradient(startPoint, endPoint, GuidelinePenColors, SKShaderTileMode.Clamp);
+        GuideLinePen.Shader = shader;
+        return GuideLinePen;
+    }
+
+    public SKPaint GetNotePen(Note note, float noteScaleMultiplier)
+    {
+        NotePen.Color = NoteTypeToColor(note.NoteType);
+        NotePen.StrokeWidth = NotePenStrokeWidth * strokeWidthMultiplier * noteScaleMultiplier;
+
+        return NotePen;
+    }
+
+    public SKPaint GetArrowPen(Note note, float noteScaleMultiplier)
+    {
+        ArrowPen.Color = NoteTypeToColor(note.NoteType);
+        ArrowPen.StrokeWidth = ArrowPenStrokeWidth * strokeWidthMultiplier * noteScaleMultiplier;
+        return ArrowPen;
+    }
+
+    public SKPaint GetGimmickPen(Gimmick gimmick, float noteScaleMultiplier)
+    {
+        GimmickPen.Color = Utils.GimmickTypeToColor(gimmick.GimmickType);
+        GimmickPen.StrokeWidth = GimmickPenStrokeWidth * strokeWidthMultiplier * noteScaleMultiplier;
+        return GimmickPen;
+    }
+
+    public SKPaint GetBonusPen(float noteScaleMultiplier)
+    {
+        BonusPen.StrokeWidth = BonusPenStrokeWidth * strokeWidthMultiplier * noteScaleMultiplier;
+        return BonusPen;
+    }
+
+    public SKPaint GetFlairPen(float noteScaleMultiplier)
+    {
+        FlairPen.StrokeWidth = FlairPenStrokeWidth * strokeWidthMultiplier * noteScaleMultiplier;
+        return FlairPen;
+    }
+
+    public SKPaint GetHighlightPen(float noteScaleMultiplier, bool round = false)
+    {
+        HighlightPen.StrokeWidth = HighlightPenStrokeWidth * strokeWidthMultiplier * noteScaleMultiplier;
+        HighlightPen.StrokeCap = round ? SKStrokeCap.Round : SKStrokeCap.Square;
+        return HighlightPen;
+    }
+
+    public SKPaint GetLinkPen(float noteScaleMultiplier)
+    {
+        LinkPen.StrokeWidth = LinkPenStrokeWidth * strokeWidthMultiplier * noteScaleMultiplier;
+        return LinkPen;
+    }
+
+    public SKPaint GetEndCapPen(float noteScaleMultiplier)
+    {
+        EndCapPen.StrokeWidth = EndcapPenStrokeWidth * strokeWidthMultiplier * noteScaleMultiplier;
+        return EndCapPen;
+    }
+
+    public SKPaint GetEndHoldPen(Note note, float noteScaleMultiplier)
+    {
+        HoldEndPen.Color = NoteTypeToColor(note.NoteType);
+        HoldEndPen.StrokeWidth = HoldEndPenStrokeWidth * strokeWidthMultiplier * noteScaleMultiplier;
+        return HoldEndPen;
+    }
+
+    public SKPaint GetHoldFill(SKPoint center, float radius)
+    {
+        var gradientColor0 = UserSettings != null
+            ? SKColor.Parse(UserSettings.ColorSettings.ColorNoteHoldGradient0)
+            : SKColors.Transparent;
+        var gradientColor1 = UserSettings != null
+            ? SKColor.Parse(UserSettings.ColorSettings.ColorNoteHoldGradient1)
+            : SKColors.Transparent;
+
+        SKColor[] holdColors = {gradientColor0, gradientColor1};
+
+        var shader = SKShader.CreateRadialGradient(center, radius, holdColors, SKShaderTileMode.Clamp);
+        HoldFill.Shader = shader;
+        return HoldFill;
+    }
+
+    public SKPaint GetBackgroundFill(bool dark)
+    {
+        BackgroundBrush.Color = dark ? BackgroundFillColorDark : BackgroundFillColorLight;
+        return BackgroundBrush;
+    }
+
+    public static SKColor GetBackgroundColor(bool dark)
+    {
+        return dark ? BackgroundFillColorDark : BackgroundFillColorLight;
+    }
+
+    private SKColor NoteTypeToColor(NoteType type)
+    {
+        if (UserSettings == null)
+            return SKColors.Black;
+
+        switch (type)
         {
-            // update window size multiplier
-            strokeWidthMultiplier = panelSize / 600.0f;
-
-            // update "static" pens here when window is resized
-            MeasurePen.StrokeWidth = measurePenStrokeWidth * strokeWidthMultiplier;
-            BeatPen.StrokeWidth = beatPenStrokeWidth * strokeWidthMultiplier;
-            DegreeCircleMajorPen.StrokeWidth = degreeCircleMajorPenStrokeWidth * strokeWidthMultiplier;
-            DegreeCircleMediumPen.StrokeWidth = degreeCircleMediumPenStrokeWidth * strokeWidthMultiplier;
-            DegreeCircleMinorPen.StrokeWidth = degreeCircleMinorPenStrokeWidth * strokeWidthMultiplier;
-            MirrorAxisPen.StrokeWidth = mirrorAxisPenStrokeWidth * strokeWidthMultiplier;
-            CursorPen.StrokeWidth = cursorPenStrokeWidth * strokeWidthMultiplier;
+            case NoteType.TouchNoBonus:
+            case NoteType.TouchBonus:
+            case NoteType.TouchBonusFlair:
+                return SKColor.Parse(UserSettings.ColorSettings.ColorNoteTap);
+            case NoteType.SnapRedNoBonus:
+            case NoteType.SnapRedBonusFlair:
+                return SKColor.Parse(UserSettings.ColorSettings.ColorNoteSnapFw);
+            case NoteType.SnapBlueNoBonus:
+            case NoteType.SnapBlueBonusFlair:
+                return SKColor.Parse(UserSettings.ColorSettings.ColorNoteSnapBw);
+            case NoteType.SlideOrangeNoBonus:
+            case NoteType.SlideOrangeBonus:
+            case NoteType.SlideOrangeBonusFlair:
+                return SKColor.Parse(UserSettings.ColorSettings.ColorNoteSlideCw);
+            case NoteType.SlideGreenNoBonus:
+            case NoteType.SlideGreenBonus:
+            case NoteType.SlideGreenBonusFlair:
+                return SKColor.Parse(UserSettings.ColorSettings.ColorNoteSlideCcw);
+            case NoteType.HoldStartNoBonus:
+            case NoteType.HoldStartBonusFlair:
+                return SKColor.Parse(UserSettings.ColorSettings.ColorNoteHoldStart);
+            case NoteType.HoldJoint:
+            case NoteType.HoldEnd:
+                return SKColor.Parse(UserSettings.ColorSettings.ColorNoteHoldSegment);
+            case NoteType.Chain:
+            case NoteType.ChainBonusFlair:
+                return SKColor.Parse(UserSettings.ColorSettings.ColorNoteChain);
+            default:
+                return SKColors.Transparent;
         }
-
-        /*public void ModifyBrush(this SKPaint brush, SKColor? newColor, float? newStrokeWidth, SKStrokeCap? newStrokeCap)
-        {
-            brush.Color = newColor ?? brush.Color;
-            brush.StrokeWidth = (newStrokeWidth ?? brush.StrokeWidth) * strokeWidthMultiplier;
-            brush.StrokeCap = newStrokeCap ?? brush.StrokeCap;
-        }*/
-
-        // ======== STATIC ========
-        public SKPaint GetCursorPen(NoteType noteType)
-        {
-            CursorPen.Color = NoteTypeToColor(noteType).WithAlpha(0x80);
-            return CursorPen;
-        }
-
-        public SKPaint GetGuidelinePen(SKPoint startPoint, SKPoint endPoint)
-        {
-            var shader = SKShader.CreateLinearGradient(startPoint, endPoint, guidelinePenColors, SKShaderTileMode.Clamp);
-            GuideLinePen.Shader = shader;
-            return GuideLinePen;
-        }
-
-        // ======== NON-STATIC ========
-        public SKPaint GetNotePen(Note note, float noteScaleMultiplier)
-        {
-            NotePen.Color = NoteTypeToColor(note.NoteType);
-            NotePen.StrokeWidth = notePenStrokeWidth * strokeWidthMultiplier * noteScaleMultiplier;
-
-            return NotePen;
-        }
-
-        public SKPaint GetArrowPen(Note note, float noteScaleMultiplier)
-        {
-            ArrowPen.Color = NoteTypeToColor(note.NoteType);
-            ArrowPen.StrokeWidth = arrowPenStrokeWidth * strokeWidthMultiplier * noteScaleMultiplier;
-            return ArrowPen;
-        }
-
-        public SKPaint GetGimmickPen(Gimmick gimmick, float noteScaleMultiplier)
-        {
-            GimmickPen.Color = Utils.GimmickTypeToColor(gimmick.GimmickType);
-            GimmickPen.StrokeWidth = gimmickPenStrokeWidth * strokeWidthMultiplier * noteScaleMultiplier;
-            return GimmickPen;
-        }
-        
-        public SKPaint GetBonusPen(float noteScaleMultiplier)
-        {
-            BonusPen.StrokeWidth = bonusPenStrokeWidth * strokeWidthMultiplier * noteScaleMultiplier;
-            return BonusPen;
-        }
-
-        public SKPaint GetFlairPen(float noteScaleMultiplier)
-        {
-            FlairPen.StrokeWidth = flairPenStrokeWidth * strokeWidthMultiplier * noteScaleMultiplier;
-            return FlairPen;
-        }
-
-        public SKPaint GetHighlightPen(float noteScaleMultiplier, bool round = false)
-        {
-            HighlightPen.StrokeWidth = highlightPenStrokeWidth * strokeWidthMultiplier * noteScaleMultiplier;
-            HighlightPen.StrokeCap = round ? SKStrokeCap.Round : SKStrokeCap.Square;
-            return HighlightPen;
-        }
-
-        public SKPaint GetLinkPen(float noteScaleMultiplier)
-        {
-            LinkPen.StrokeWidth = linkPenStrokeWidth * strokeWidthMultiplier * noteScaleMultiplier;
-            return LinkPen;
-        }
-
-        public SKPaint GetEndcapPen(float noteScaleMultiplier)
-        {
-            EndcapPen.StrokeWidth = endcapPenStrokeWidth * strokeWidthMultiplier * noteScaleMultiplier;
-            return EndcapPen;
-        }
-
-        public SKPaint GetEndHoldPen(Note note, float noteScaleMultiplier)
-        {
-            HoldEndPen.Color = NoteTypeToColor(note.NoteType);
-            HoldEndPen.StrokeWidth = holdEndPenStrokeWidth * strokeWidthMultiplier * noteScaleMultiplier;
-            return HoldEndPen;
-        }
-
-        public SKPaint GetHoldFill(SKPoint center, float radius)
-        {
-            var gradientColor0 = userSettings != null ? SKColor.Parse(userSettings.ColorSettings.colorNoteHoldGradient0) : SKColors.Transparent;
-            var gradientColor1 = userSettings != null ? SKColor.Parse(userSettings.ColorSettings.colorNoteHoldGradient1) : SKColors.Transparent;
-
-            SKColor[] holdColors = { gradientColor0, gradientColor1 };
-
-            var shader = SKShader.CreateRadialGradient(center, radius, holdColors, SKShaderTileMode.Clamp);
-            HoldFill.Shader = shader;
-            return HoldFill;
-        }
-
-        public SKPaint GetBackgroundFill(bool dark)
-        {
-            BackgroundBrush.Color = dark ? backgroundFillColorDark : backgroundFillColorLight;
-            return BackgroundBrush;
-        }
-
-        public SKColor GetBackgroundColor(bool dark)
-        {
-            return dark ? backgroundFillColorDark : backgroundFillColorLight;
-        }
-
-        private SKColor NoteTypeToColor(NoteType type)
-        {
-            if (userSettings == null)
-                return SKColors.Black;
-
-            switch (type)
-            {
-                case NoteType.TouchNoBonus:
-                case NoteType.TouchBonus:
-                case NoteType.TouchBonusFlair:
-                    return SKColor.Parse(userSettings.ColorSettings.colorNoteTap);
-                case NoteType.SnapRedNoBonus:
-                case NoteType.SnapRedBonusFlair:
-                    return SKColor.Parse(userSettings.ColorSettings.colorNoteSnapFW);
-                case NoteType.SnapBlueNoBonus:
-                case NoteType.SnapBlueBonusFlair:
-                    return SKColor.Parse(userSettings.ColorSettings.colorNoteSnapBW);
-                case NoteType.SlideOrangeNoBonus:
-                case NoteType.SlideOrangeBonus:
-                case NoteType.SlideOrangeBonusFlair:
-                    return SKColor.Parse(userSettings.ColorSettings.colorNoteSlideCW);
-                case NoteType.SlideGreenNoBonus:
-                case NoteType.SlideGreenBonus:
-                case NoteType.SlideGreenBonusFlair:
-                    return SKColor.Parse(userSettings.ColorSettings.colorNoteSlideCCW);
-                case NoteType.HoldStartNoBonus:
-                case NoteType.HoldStartBonusFlair:
-                    return SKColor.Parse(userSettings.ColorSettings.colorNoteHoldStart);
-                case NoteType.HoldJoint:
-                case NoteType.HoldEnd:
-                    return SKColor.Parse(userSettings.ColorSettings.colorNoteHoldSegment);
-                case NoteType.Chain:
-                case NoteType.ChainBonusFlair:
-                    return SKColor.Parse(userSettings.ColorSettings.colorNoteChain);
-                default:
-                    return SKColors.Transparent;
-            }
-        }
-
     }
 }

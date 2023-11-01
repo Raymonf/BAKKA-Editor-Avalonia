@@ -5,6 +5,7 @@ using System.Linq;
 using Avalonia.Styling;
 using BAKKA_Editor.Enums;
 using BAKKA_Editor.Rendering;
+using BAKKA_Editor.ViewModels;
 using Microsoft.VisualBasic;
 using SkiaSharp;
 
@@ -39,15 +40,10 @@ internal partial class SkCircleView
     public int relativeMouseDragPos = 0;
     public int mouseDownSize = -1;
 
-    public SkCircleView(SizeF size)
+    public SkCircleView(UserSettings userSettings, SizeF size)
     {
+        Brushes = new(userSettings);
         Update(size);
-    }
-
-    public void InitializeBrushes(UserSettings userSettings)
-    {
-        Brushes = new();
-        Brushes.userSettings = userSettings;
     }
 
     public SizeF PanelSize { get; private set; }
@@ -303,7 +299,7 @@ internal partial class SkCircleView
         return notescaleInit;
     }
 
-    private SkArcInfo  GetScaledRect(Chart chart, float objectTime, float scale = 1)
+    private SkArcInfo GetScaledRect(Chart chart, float objectTime, float scale = 1)
     {
         SkArcInfo info = new();
         info.NoteScale = GetNoteScaleFromMeasure2(chart, objectTime);
@@ -374,7 +370,7 @@ internal partial class SkCircleView
     /// <summary>
     ///     Creates the background brush with the passed in color if it's null.
     /// </summary>
-    /// <param name="color">SKColor</param>
+    /// <param name="dark">Is dark mode enabled?</param>
     public void DrawBackground(bool dark)
     {
         canvas.Clear(Brushes.GetBackgroundColor(dark));
@@ -831,7 +827,7 @@ internal partial class SkCircleView
                 if (note.NoteType is NoteType.HoldStartNoBonus or NoteType.HoldStartBonusFlair)
                 {
                     if (note.Size != 60)
-                        DrawEndcaps(info.Rect, info.StartAngle, info.ArcLength, info.NoteScale * noteScaleMultiplier);
+                        DrawEndCaps(info.Rect, info.StartAngle, info.ArcLength, info.NoteScale * noteScaleMultiplier);
 
                     canvas.DrawArc(info.Rect, info.StartAngle, info.ArcLength, false, Brushes.GetNotePen(note, info.NoteScale * noteScaleMultiplier));
                 }
@@ -883,7 +879,7 @@ internal partial class SkCircleView
                     canvas.DrawArc(info.Rect, info.StartAngle, info.ArcLength, false, Brushes.GetFlairPen(info.NoteScale * noteScaleMultiplier));
 
                 if (note.Size != 60)
-                    DrawEndcaps(info.Rect, info.StartAngle, info.ArcLength, info.NoteScale * noteScaleMultiplier);
+                    DrawEndCaps(info.Rect, info.StartAngle, info.ArcLength, info.NoteScale * noteScaleMultiplier);
 
                 canvas.DrawArc(info.Rect, info.StartAngle, info.ArcLength, false, Brushes.GetNotePen(note, info.NoteScale * noteScaleMultiplier));
                 
@@ -893,13 +889,13 @@ internal partial class SkCircleView
         }
     }
 
-    public void DrawEndcaps(SKRect rect, float start, float length, float noteScale)
+    public void DrawEndCaps(SKRect rect, float start, float length, float noteScale)
     {
-        var arc1start = start - 0.1f;
-        var arc2start = start + length - 1.5f;
-        var arclength = 1.6f;
-        canvas.DrawArc(rect, arc1start, arclength, false, Brushes.GetEndcapPen(noteScale));
-        canvas.DrawArc(rect, arc2start, arclength, false, Brushes.GetEndcapPen(noteScale));
+        var arc1Start = start - 0.1f;
+        var arc2Start = start + length - 1.5f;
+        const float arcLength = 1.6f;
+        canvas.DrawArc(rect, arc1Start, arcLength, false, Brushes.GetEndCapPen(noteScale));
+        canvas.DrawArc(rect, arc2Start, arcLength, false, Brushes.GetEndCapPen(noteScale));
     }
 
     public void DrawNoteLinks(Chart chart, float noteScaleMultiplier)

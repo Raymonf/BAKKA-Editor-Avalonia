@@ -4,9 +4,10 @@
              xmlns:vm="using:BAKKA_Editor.ViewModels" xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d"
              d:DesignWidth="1154" d:DesignHeight="800" xmlns:controls="clr-namespace:BAKKA_Editor.Controls"
+             xmlns:converters="clr-namespace:Avalonia.Markup.Xaml.Converters;assembly=Avalonia.Markup.Xaml"
              x:Class="BAKKA_Editor.Views.MainView" PropertyChanged="AvaloniaObject_OnPropertyChanged" Focusable="True">
     <UserControl.Resources>
-        <ResourceDictionary>
+        <ResourceDictionary x:Key="ThemeOverrides">
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Default">
                     <SolidColorBrush x:Key="HeaderBorderColor" Color="#0f0f0f" />
@@ -16,6 +17,7 @@
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>
+        <converters:ColorToBrushConverter x:Key="ColorToBrush"/>
     </UserControl.Resources>
     <UserControl.Styles>
         <Style Selector="RadioButton">
@@ -159,31 +161,38 @@
                                     <HeaderedContentControl Header="{DynamicResource L.NoteTypesHeader}"
                                                             Margin="0,0,8,0">
                                         <StackPanel Margin="8">
-                                            <Button Name="tapButton" Classes="note" Background="{Binding ColorNoteTap}"
+                                            <Button Name="tapButton" Classes="note" Background="{Binding AppSettings.ColorNoteTap, Converter={StaticResource ColorToBrush}}"
                                                     Foreground="Black" Click="tapButton_Click"
                                                     Content="{DynamicResource L.TouchNoteButton}">
                                             </Button>
-                                            <Button Name="orangeButton" Classes="note" Background="{Binding ColorNoteSlideCW}"
+                                            <Button Name="orangeButton" Classes="note"
+                                                    Background="{Binding AppSettings.ColorNoteSlideCw, Converter={StaticResource ColorToBrush}}"
                                                     Foreground="Black" Click="orangeButton_Click"
                                                     Content="{DynamicResource L.LeftArrowSlideNoteButton}">
                                             </Button>
-                                            <Button Name="greenButton" Classes="note" Background="{Binding ColorNoteSlideCCW}"
+                                            <Button Name="greenButton" Classes="note"
+                                                    Background="{Binding AppSettings.ColorNoteSlideCcw, Converter={StaticResource ColorToBrush}}"
                                                     Foreground="Black" Click="greenButton_Click"
                                                     Content="{DynamicResource L.RightArrowSlideNoteButton}">
                                             </Button>
-                                            <Button Name="redButton" Classes="note" Background="{Binding ColorNoteSnapFW}" Foreground="Black"
+                                            <Button Name="redButton" Classes="note"
+                                                    Background="{Binding AppSettings.ColorNoteSnapFw, Converter={StaticResource ColorToBrush}}"
+                                                    Foreground="Black"
                                                     Click="redButton_Click"
                                                     Content="{DynamicResource L.UpArrowSnapNoteButton}">
                                             </Button>
-                                            <Button Name="blueButton" Classes="note" Background="{Binding ColorNoteSnapBW}"
+                                            <Button Name="blueButton" Classes="note"
+                                                    Background="{Binding AppSettings.ColorNoteSnapBw, Converter={StaticResource ColorToBrush}}"
                                                     Foreground="Black" Click="blueButton_Click"
                                                     Content="{DynamicResource L.DownArrowSnapNoteButton}">
                                             </Button>
-                                            <Button Name="chainButton" Classes="note" Background="{Binding ColorNoteChain}"
+                                            <Button Name="chainButton" Classes="note"
+                                                    Background="{Binding AppSettings.ColorNoteChain, Converter={StaticResource ColorToBrush}}"
                                                     Foreground="Black" Click="chainButton_Click"
                                                     Content="{DynamicResource L.ChainNoteButton}">
                                             </Button>
-                                            <Button Name="holdButton" Classes="note" Background="{Binding ColorNoteHoldSegment}"
+                                            <Button Name="holdButton" Classes="note"
+                                                    Background="{Binding AppSettings.ColorNoteHoldSegment, Converter={StaticResource ColorToBrush}}"
                                                     Foreground="Black" Click="holdButton_Click"
                                                     Content="{DynamicResource L.HoldNoteButton}">
                                             </Button>
@@ -191,7 +200,7 @@
                                                     Foreground="White" Click="endChartButton_Click"
                                                     Content="{DynamicResource L.EndOfChartNoteButton}">
                                             </Button>
-                                            <CheckBox Name="_endHoldCheck" IsChecked="{Binding EndHoldChecked}"
+                                            <CheckBox IsChecked="{Binding EndHoldChecked}"
                                                       Margin="0,0" IsCheckedChanged="EndHoldCheck_IsCheckedChanged"
                                                       Content="{DynamicResource L.EndHoldCheck}">
                                             </CheckBox>

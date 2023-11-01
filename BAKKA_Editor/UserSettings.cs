@@ -54,15 +54,15 @@ public class SaveSettings
 
 public class HotkeySettings
 {
-    private static readonly CultureInfo _defaultParsingCulture = CultureInfo.InvariantCulture;
-    public int TouchHotkey { get; set; } = Convert.ToInt32(Key.D1, _defaultParsingCulture);
-    public int SlideLeftHotkey { get; set; } = Convert.ToInt32(Key.D2, _defaultParsingCulture);
-    public int SlideRightHotkey { get; set; } = Convert.ToInt32(Key.D3, _defaultParsingCulture);
-    public int SnapUpHotkey { get; set; } = Convert.ToInt32(Key.D4, _defaultParsingCulture);
-    public int SnapDownHotkey { get; set; } = Convert.ToInt32(Key.D5, _defaultParsingCulture);
-    public int ChainHotkey { get; set; } = Convert.ToInt32(Key.D6, _defaultParsingCulture);
-    public int HoldHotkey { get; set; } = Convert.ToInt32(Key.D7, _defaultParsingCulture);
-    public int PlayHotkey { get; set; } = Convert.ToInt32(Key.P, _defaultParsingCulture);
+    private static readonly CultureInfo DefaultParsingCulture = CultureInfo.InvariantCulture;
+    public int TouchHotkey { get; set; } = Convert.ToInt32(Key.D1, DefaultParsingCulture);
+    public int SlideLeftHotkey { get; set; } = Convert.ToInt32(Key.D2, DefaultParsingCulture);
+    public int SlideRightHotkey { get; set; } = Convert.ToInt32(Key.D3, DefaultParsingCulture);
+    public int SnapUpHotkey { get; set; } = Convert.ToInt32(Key.D4, DefaultParsingCulture);
+    public int SnapDownHotkey { get; set; } = Convert.ToInt32(Key.D5, DefaultParsingCulture);
+    public int ChainHotkey { get; set; } = Convert.ToInt32(Key.D6, DefaultParsingCulture);
+    public int HoldHotkey { get; set; } = Convert.ToInt32(Key.D7, DefaultParsingCulture);
+    public int PlayHotkey { get; set; } = Convert.ToInt32(Key.P, DefaultParsingCulture);
 }
 
 public class SoundSettings
@@ -80,14 +80,14 @@ public class CursorSettings
 
 public class ColorSettings
 {
-    public string colorNoteTap { get; set; } = "#FFFF00FF";
-    public string colorNoteChain { get; set; } = "#FFCCBE2D";
-    public string colorNoteSlideCW { get; set; } = "#FFFF8000";
-    public string colorNoteSlideCCW { get; set; } = "#FF32CD32";
-    public string colorNoteSnapFW { get; set; } = "#FFFF0000";
-    public string colorNoteSnapBW { get; set; } = "#FF00FFFF";
-    public string colorNoteHoldStart { get; set; } = "#FF8C6400";
-    public string colorNoteHoldSegment { get; set; } = "#FFDCB932";
-    public string colorNoteHoldGradient0 { get; set; } = "#BEDCA000";
-    public string colorNoteHoldGradient1 { get; set; } = "#BEDCB932";
+    public string ColorNoteTap { get; set; } = "#FFFF00FF";
+    public string ColorNoteChain { get; set; } = "#FFCCBE2D";
+    public string ColorNoteSlideCw { get; set; } = "#FFFF8000";
+    public string ColorNoteSlideCcw { get; set; } = "#FF32CD32";
+    public string ColorNoteSnapFw { get; set; } = "#FFFF0000";
+    public string ColorNoteSnapBw { get; set; } = "#FF00FFFF";
+    public string ColorNoteHoldStart { get; set; } = "#FF8C6400";
+    public string ColorNoteHoldSegment { get; set; } = "#FFDCB932";
+    public string ColorNoteHoldGradient0 { get; set; } = "#BEDCA000";
+    public string ColorNoteHoldGradient1 { get; set; } = "#BEDCB932";
 }

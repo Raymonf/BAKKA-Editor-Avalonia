@@ -6,8 +6,7 @@ namespace BAKKA_Editor.Rendering
 {
     public class NoteColorPalette : IColorPalette
     {
-        private static Color[,] colorChart = new Color[,]
-        {
+        private static readonly Color[,] ColorChart = {
             {
                 Color.FromArgb(255, 255,   0, 255),
                 Color.FromArgb(255, 204, 190,  45),
@@ -56,21 +55,14 @@ namespace BAKKA_Editor.Rendering
             }
         };
 
-        public int ColorCount
-        {
-            get => colorChart.GetLength(0);
-        }
-
-        public int ShadeCount
-        {
-            get => colorChart.GetLength(1);
-        }
+        public int ColorCount => ColorChart.GetLength(0);
+        public int ShadeCount => ColorChart.GetLength(1);
 
         public Color GetColor(int colorIndex, int shadeIndex)
         {
-            return colorChart[
-                MathUtilities.Clamp(colorIndex, 0, colorChart.GetLength(0) - 1),
-                MathUtilities.Clamp(shadeIndex, 0, colorChart.GetLength(1) - 1)];
+            return ColorChart[
+                MathUtilities.Clamp(colorIndex, 0, ColorChart.GetLength(0) - 1),
+                MathUtilities.Clamp(shadeIndex, 0, ColorChart.GetLength(1) - 1)];
         }
     }
 }
