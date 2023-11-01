@@ -1725,8 +1725,8 @@ public partial class MainView : UserControl
                 }
 
                 // X and Y are relative to the upper left of the panel
-                var xCen = point.Position.X - CircleControl.DesiredSize.Width / 2;
-                var yCen = -(point.Position.Y - CircleControl.DesiredSize.Height / 2);
+                var xCen = point.Position.X - skCircleView.CenterPoint.X;
+                var yCen = -(point.Position.Y - skCircleView.CenterPoint.Y);
                 // Update the location of mouse click inside the circle
                 skCircleView.UpdateMouseDown((float)xCen, (float)yCen, point.Position.ToSystemDrawing(), (int)_vm.SizeNumeric);
                 _vm.PositionNumeric = skCircleView.mouseDownPos;
@@ -1800,8 +1800,8 @@ public partial class MainView : UserControl
         var point = e.GetCurrentPoint(CircleControl);
 
         // X and Y are relative to the upper left of the panel
-        var xCen = point.Position.X - CircleControl.DesiredSize.Width / 2;
-        var yCen = -(point.Position.Y - CircleControl.DesiredSize.Height / 2);
+        var xCen = point.Position.X - skCircleView.CenterPoint.X;
+        var yCen = -(point.Position.Y - skCircleView.CenterPoint.Y);
 
         var theta = skCircleView.CalculateTheta((float)xCen, (float)yCen);
         var rolloverState = skCircleView.rolloverState;
