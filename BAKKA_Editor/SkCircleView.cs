@@ -25,7 +25,7 @@ internal partial class SkCircleView
     public bool Playing { get; set; } = false; // TODO: move out
 
     // Cursor
-    public Cursor cursor = new();
+    public Cursor Cursor = new();
 
     private readonly int SelectTransparency = 110;
 

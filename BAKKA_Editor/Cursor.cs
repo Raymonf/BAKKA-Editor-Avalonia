@@ -54,7 +54,8 @@ namespace BAKKA_Editor
         /// <param name="minimumSize">Minimum cursor size</param>
         /// <param name="maximumSize">Maximum cursor size</param>
         /// <exception cref="ArgumentException">Thrown when there are invalid bounds</exception>
-        public void ConfigureSize(uint minimumSize, uint maximumSize)
+        /// <returns>Updated cursor size</returns>
+        public uint ConfigureSize(uint minimumSize, uint maximumSize)
         {
             if (minimumSize > maximumSize)
             {
@@ -64,7 +65,7 @@ namespace BAKKA_Editor
 
             MinimumSize = minimumSize;
             MaximumSize = maximumSize;
-            Resize(Size);
+            return Resize(Size);
         }
 
         /// <summary>
@@ -73,7 +74,8 @@ namespace BAKKA_Editor
         /// <param name="minimumDepth">Minimum cursor depth</param>
         /// <param name="maximumDepth">Maximum cursor depth</param>
         /// <exception cref="ArgumentException">Thrown when there are invalid bounds</exception>
-        public void ConfigureDepth(uint minimumDepth, uint maximumDepth)
+        /// <returns>Updated cursor depth</returns>
+        public uint ConfigureDepth(uint minimumDepth, uint maximumDepth)
         {
             if (minimumDepth > maximumDepth)
             {
@@ -83,16 +85,15 @@ namespace BAKKA_Editor
 
             MinimumDepth = minimumDepth;
             MaximumDepth = maximumDepth;
-            Move(Position, Depth);
+            return Dive(Depth);
         }
 
         /// <summary>
-        /// Moves the cursor's position around the ring and it's depth into the chart.
+        /// Moves the cursor's position around the ring.
         /// </summary>
         /// <param name="position">Position around the circle where 0 is the start. Values increase counterclockwise.</param>
-        /// <param name="depth">Depth into the chart where 0 is the outermost ring. Values increase deeper into the chart.
-        /// This represents which beat the cursor is modifying.</param>
-        public void Move(uint position, uint depth)
+        /// <returns>Updated cursor position</returns>
+        public uint Move(uint position)
         {
             Position = position;
 
@@ -100,22 +101,37 @@ namespace BAKKA_Editor
             // to start at the correct position when a drag starts.
             DragPosition = position;
             _previousDragPosition = position;
+            _relativeDragPosition = 0;
             _initialDragPosition = position;
             _dragRolloverState = RolloverState.None;
             _dragCounter = 0;
             _dragMinimumSize = 0;
             WasDragged = false;
 
+            return Position;
+        }
+
+        /// <summary>
+        /// Moves the cursor's depth into the chart.
+        /// </summary>
+        /// <param name="depth">Depth into the chart where 0 is the outermost ring. Values increase deeper into the chart.
+        /// This represents which beat the cursor is modifying.</param>
+        /// <returns>Updated cursor depth</returns>
+        public uint Dive(uint depth)
+        {
             Depth = Math.Max(Math.Min(depth, MaximumDepth), MinimumDepth);
+            return Depth;
         }
 
         /// <summary>
         /// Changes the cursor size.
         /// </summary>
         /// <param name="size">Cursor size</param>
-        public void Resize(uint size)
+        /// <returns>Updated cursor size</returns>
+        public uint Resize(uint size)
         {
             Size = Math.Max(Math.Min(size, MaximumSize), MinimumSize);
+            return Size;
         }
 
         public void Drag(uint position)
@@ -211,11 +227,8 @@ namespace BAKKA_Editor
                             _dragRolloverState = RolloverState.Counterclockwise;
                         }
 
-                        // If the mouse moved counterclockwise of the mouse down position
-                        // and the mouse down position plus the starting size is between the
-                        // delta, we can start decreasing the size.
-                        int delta = (((int)DragPosition - ((int)_initialDragPosition + minSize - 1) + 120) % 60);
-                        if (delta <= deltaCounterclockwise)
+                        // If the relative mouse position reaches the starting size, we can start decreasing the size.
+                        if (_relativeDragPosition + 1 >= minSize)
                         {
                             _dragMinimumSize = MinimumSize;
                             minSize = (int)MinimumSize;
@@ -228,6 +241,7 @@ namespace BAKKA_Editor
             // Calculate size and position based on mouse click position and relative drag position
             if (_relativeDragPosition >= 0)
             {
+                Position = _initialDragPosition;
                 Size = (uint)Math.Min(Math.Max(minSize, _relativeDragPosition + 1), 60);
             }
             else

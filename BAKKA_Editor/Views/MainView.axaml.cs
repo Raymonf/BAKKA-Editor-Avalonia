@@ -908,14 +908,12 @@ public partial class MainView : UserControl
 
             if (delta > 0)
             {
-                skCircleView.cursor.Resize(skCircleView.cursor.Size + 1);
+                _vm.SizeNumeric = skCircleView.Cursor.Resize(skCircleView.Cursor.Size + 1);
             }
             else
             {
-                skCircleView.cursor.Resize(skCircleView.cursor.Size - 1);
+                _vm.SizeNumeric = skCircleView.Cursor.Resize(skCircleView.Cursor.Size - 1);
             }
-
-            _vm.SizeNumeric = skCircleView.cursor.Size;
         }
         else
         {
@@ -1161,8 +1159,7 @@ public partial class MainView : UserControl
         if (_vm.SizeTrackBar < minSize) _vm.SizeTrackBar = minSize;
         _vm.SizeTrackBarMinimum = minSize;
 
-        skCircleView.cursor.ConfigureSize((uint)minSize, 60);
-        _vm.SizeNumeric = skCircleView.cursor.Size;
+        _vm.SizeNumeric = skCircleView.Cursor.ConfigureSize((uint)minSize, 60);
     }
 
     private void updateLabel(string text)
@@ -1220,8 +1217,7 @@ public partial class MainView : UserControl
     {
         _vm.MeasureNumeric = _vm.Beat1Numeric = 0;
         _vm.PositionNumeric = _vm.PositionNumericMinimum;
-        skCircleView.cursor.Resize(skCircleView.cursor.MinimumSize);
-        _vm.SizeNumeric = skCircleView.cursor.Size;
+        _vm.SizeNumeric = skCircleView.Cursor.Resize(skCircleView.Cursor.MinimumSize);
         updateTime();
     }
 
@@ -1540,10 +1536,9 @@ public partial class MainView : UserControl
     private void PositionTrackBar_OnValueChanged(object? sender, RangeBaseValueChangedEventArgs e)
     {
         var newValue = Convert.ToInt32(e.NewValue);
-        if ((int)skCircleView.cursor.Position != newValue)
+        if ((int)skCircleView.Cursor.Position != newValue)
         {
-            skCircleView.cursor.Move((uint)newValue, skCircleView.cursor.Depth);
-            _vm.PositionNumeric = skCircleView.cursor.Position;
+            _vm.PositionNumeric = skCircleView.Cursor.Move((uint)newValue);
         }
     }
 
@@ -1559,11 +1554,18 @@ public partial class MainView : UserControl
     private void SizeTrackBar_OnValueChanged(object? sender, RangeBaseValueChangedEventArgs e)
     {
         var newValue = Convert.ToInt32(e.NewValue);
-        if ((int)skCircleView.cursor.Size != newValue)
+        if ((int)skCircleView.Cursor.Size != newValue)
         {
-            skCircleView.cursor.Resize((uint)newValue);
-            _vm.SizeNumeric = skCircleView.cursor.Size;
+            _vm.SizeNumeric = skCircleView.Cursor.Resize((uint)newValue);
         }
+    }
+
+    private void CursorBeatDepthNumeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
+    {
+        if (e.NewValue == null)
+            return;
+        var newValue = Convert.ToUInt32(e.NewValue);
+        _vm.CursorBeatDepthNumeric = skCircleView.Cursor.Dive(newValue);
     }
 
     private void insertButton_Click(object? sender, RoutedEventArgs e)
@@ -1744,7 +1746,7 @@ public partial class MainView : UserControl
                     return;
                 }
 
-                _vm.PositionNumeric = skCircleView.cursor.Position;
+                _vm.PositionNumeric = skCircleView.Cursor.Position;
                 editorMode = EditorMode.PlaceNoteMode;
             }
             break;
@@ -1784,7 +1786,7 @@ public partial class MainView : UserControl
                 }
                 else
                 {
-                    if (skCircleView.cursor.WasDragged && userSettings.ViewSettings.PlaceNoteOnDrag)
+                    if (skCircleView.Cursor.WasDragged && userSettings.ViewSettings.PlaceNoteOnDrag)
                         InsertObject();
                 }
 
@@ -1822,24 +1824,24 @@ public partial class MainView : UserControl
         {
             if (editorMode != EditorMode.PlaceNoteMode)
             {
-                skCircleView.cursor.Move((uint)theta, skCircleView.cursor.Depth);
+                skCircleView.Cursor.Move((uint)theta);
             }
             else
             {
-                skCircleView.cursor.Drag((uint)theta);
+                skCircleView.Cursor.Drag((uint)theta);
             }
 
-            _vm.PositionNumeric = skCircleView.cursor.Position;
-            _vm.SizeNumeric = skCircleView.cursor.Size;
+            _vm.PositionNumeric = skCircleView.Cursor.Position;
+            _vm.SizeNumeric = skCircleView.Cursor.Size;
         }
         else
         {
             // If no left click was performed within the circle view, do nothing.
             if (editorMode != EditorMode.PlaceNoteMode) return;
 
-            skCircleView.cursor.Drag((uint)theta);
-            _vm.PositionNumeric = skCircleView.cursor.Position;
-            _vm.SizeNumeric = skCircleView.cursor.Size;
+            skCircleView.Cursor.Drag((uint)theta);
+            _vm.PositionNumeric = skCircleView.Cursor.Position;
+            _vm.SizeNumeric = skCircleView.Cursor.Size;
 
             /*var initialSize = (int)_vm.SizeNumeric;
             var delta = theta - skCircleView.lastMousePos;
@@ -1964,12 +1966,7 @@ public partial class MainView : UserControl
                 chart.MovieOffset = chartSettingsViewModel.MovieOffset;
 
                 // Update cursor beat settings based on BPM
-                _vm.CursorBeatDepthNumericMaximum = 10;
-
-                if (_vm.CursorBeatDepthNumeric > _vm.CursorBeatDepthNumericMaximum)
-                {
-                    _vm.CursorBeatDepthNumeric = _vm.CursorBeatDepthNumericMaximum;
-                }
+                _vm.CursorBeatDepthNumeric = skCircleView.Cursor.ConfigureDepth(0, 10);
 
                 if (selectedGimmickIndex == -1)
                     selectedGimmickIndex = 0;
