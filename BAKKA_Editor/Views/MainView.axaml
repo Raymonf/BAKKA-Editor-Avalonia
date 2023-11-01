@@ -7,7 +7,7 @@
              xmlns:converters="clr-namespace:Avalonia.Markup.Xaml.Converters;assembly=Avalonia.Markup.Xaml"
              x:Class="BAKKA_Editor.Views.MainView" PropertyChanged="AvaloniaObject_OnPropertyChanged" Focusable="True">
     <UserControl.Resources>
-        <ResourceDictionary x:Key="ThemeOverrides">
+        <ResourceDictionary>
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Default">
                     <SolidColorBrush x:Key="HeaderBorderColor" Color="#0f0f0f" />
@@ -17,7 +17,7 @@
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>
-        <converters:ColorToBrushConverter x:Key="ColorToBrush"/>
+        <converters:ColorToBrushConverter x:Key="ColorToBrush" />
     </UserControl.Resources>
     <UserControl.Styles>
         <Style Selector="RadioButton">
@@ -161,7 +161,8 @@
                                     <HeaderedContentControl Header="{DynamicResource L.NoteTypesHeader}"
                                                             Margin="0,0,8,0">
                                         <StackPanel Margin="8">
-                                            <Button Name="tapButton" Classes="note" Background="{Binding AppSettings.ColorNoteTap, Converter={StaticResource ColorToBrush}}"
+                                            <Button Name="tapButton" Classes="note"
+                                                    Background="{Binding AppSettings.ColorNoteTap, Converter={StaticResource ColorToBrush}}"
                                                     Foreground="Black" Click="tapButton_Click"
                                                     Content="{DynamicResource L.TouchNoteButton}">
                                             </Button>
