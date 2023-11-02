@@ -65,8 +65,17 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty] private int measureNumericMaximum = 9999;
 
     [ObservableProperty] private decimal beat1Numeric = 0;
-    [ObservableProperty] private int beat1NumericMinimum = 0;
+    [ObservableProperty] private int beat1NumericMinimum = -1;
     [ObservableProperty] private int beat1NumericMaximum = 1920;
+
+
+    partial void OnBeat1NumericChanged(decimal value)
+    {
+        if (value == -1m && MeasureNumeric <= 0)
+        {
+            Beat1Numeric = 0;
+        }
+    }
 
     [ObservableProperty] private decimal beat2Numeric = 16;
     [ObservableProperty] private int beat2NumericMinimum = 1;
