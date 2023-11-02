@@ -3131,7 +3131,7 @@ public partial class MainView : UserControl
         {
             valueTriggerEvent = EventSource.TrackBar;
             _vm.MeasureNumeric = info.Measure < 0 ? 0 : info.Measure;
-            _vm.Beat1Numeric = (int) (info.Beat / 1920.0f * (float) _vm.Beat2Numeric);
+            _vm.Beat1Numeric = (int) (info.Beat / 1920.0 * (double) _vm.Beat2Numeric + 0.5);
             skCircleView.CurrentMeasure = info.MeasureDecimal;
         }
 
