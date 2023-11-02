@@ -3,6 +3,7 @@
                     xmlns:system="clr-namespace:System;assembly=System.Runtime">
     <!-- TODO: namespaces, ordering, and grouping -->
     <system:String x:Key="L.AddMaskRadio">Add Mask</system:String>
+    <system:String x:Key="L.BakeHoldMenuOption">Bake Selected Hold</system:String>
     <system:String x:Key="L.BeatLabel">Beat:</system:String>
     <system:String x:Key="L.BonusGetRadio">Bonus Get</system:String>
     <system:String x:Key="L.BpmChangeGimmickButton">BPM Change</system:String>
@@ -31,6 +32,7 @@
     <system:String x:Key="L.HitsoundsLabel">Hitsounds</system:String>
     <system:String x:Key="L.HoldNoteButton">Hold</system:String>
     <system:String x:Key="L.InitialChartSettingsMenuOption">Initial Chart Settings</system:String>
+    <system:String x:Key="L.InsertHoldSegmentMenuOption">Insert Hold Segment</system:String>
     <system:String x:Key="L.JumpToNearestGimmickButton">Jump To Nearest Gimmick</system:String>
     <system:String x:Key="L.JumpToNearestNoteButton">Jump To Nearest Note</system:String>
     <system:String x:Key="L.LeftArrowSlideNoteButton">⤾ Slide</system:String>

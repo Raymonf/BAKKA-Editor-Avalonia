@@ -19,6 +19,8 @@ public partial class MainWindow : Window
     public ReactiveCommand<Unit, Unit> SaveAsCommand { get; }
     public ReactiveCommand<Unit, Unit> UndoCommand { get; set; }
     public ReactiveCommand<Unit, Unit> RedoCommand { get; set; }
+    public ReactiveCommand<Unit, Unit> BakeHoldCommand { get; set; }
+    public ReactiveCommand<Unit, Unit> InsertHoldSegmentCommand { get; set; }
 
     public MainWindow()
     {
@@ -32,6 +34,8 @@ public partial class MainWindow : Window
         ExitCommand = ReactiveCommand.Create(ExitMenuItem_OnClick);
         UndoCommand = ReactiveCommand.Create(OnUndoCommand);
         RedoCommand = ReactiveCommand.Create(OnRedoCommand);
+        BakeHoldCommand = ReactiveCommand.Create(OnBakeHoldCommand);
+        InsertHoldSegmentCommand = ReactiveCommand.Create(OnInsertHoldSegmentCommand);
     }
 
     private MainView? GetMainView() => this.FindControl<MainView>("View");
@@ -110,6 +114,24 @@ public partial class MainWindow : Window
         RunInView(view =>
         {
             view?.RedoMenuItem_OnClick();
+            return Task.CompletedTask;
+        });
+    }
+
+    private void OnBakeHoldCommand()
+    {
+        RunInView(view =>
+        {
+            view?.BakeHoldMenuItem_OnClick();
+            return Task.CompletedTask;
+        });
+    }
+
+    private void OnInsertHoldSegmentCommand()
+    {
+        RunInView(view =>
+        {
+            view?.InsertHoldSegmentMenuItem_OnClick();
             return Task.CompletedTask;
         });
     }

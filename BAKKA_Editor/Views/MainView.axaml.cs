@@ -282,6 +282,110 @@ public partial class MainView : UserControl
         }
     }
 
+    public void BakeHoldMenuItem_OnClick()
+    {
+        if (!_vm.BakeHoldMenuItemIsEnabled)
+            return;
+
+        var selectedNote = chart.Notes[selectedNoteIndex];
+        var nextNote = selectedNote.NextReferencedNote;
+
+        if (nextNote == null)
+            return;
+
+        // time in measures between selected hold and next Note
+        float length = nextNote.Measure - selectedNote.Measure;
+
+        // position difference between notes. funny math is to always take the shortest path.
+        // if change = 30, then it will always be positive.
+        int positionChange = (nextNote.Position - selectedNote.Position + 60) % 60;
+        positionChange -= positionChange >= 45 ? 60 : 0;
+        positionChange = positionChange > 30 ? -(60 - positionChange) : positionChange;
+
+        // size difference between notes
+        int sizeChange = nextNote.Size - selectedNote.Size;
+
+        // absolute values of size/position difference
+        var absolutePositionChange = Math.Abs(positionChange);
+        var absoluteSizeChange = Math.Abs(sizeChange);
+
+        // evaluate what algorithm to use.
+        // if there's syntax to do this with a switch that would be cool.
+        if (absolutePositionChange < 2 && absoluteSizeChange < 2)
+        {
+            Dispatcher.UIThread.Post(
+                            async () => await ShowBlockingMessageBox("Selected Hold Note cannot be baked.",
+                                "Hold Note is already optimal. Only hold notes with a position or size change of > 1 can be baked."));
+            return;
+        }
+        else if (positionChange == sizeChange * -2 || sizeChange == positionChange * -2)
+        {
+            // StepSymmetric
+            BakeHold.StepSymmetric(chart, selectedNote, nextNote, length, positionChange, sizeChange, opManager);
+        }
+        else if (absolutePositionChange == absoluteSizeChange || (positionChange == 0 && absoluteSizeChange > 1) || (absolutePositionChange > 1 && sizeChange == 0))
+        {
+            // StepAsymmetric
+            BakeHold.StepAsymmetric(chart, selectedNote, nextNote, length, positionChange, sizeChange, opManager);
+        }
+        else
+        {
+            // LerpRound
+            BakeHold.LerpRound(chart, selectedNote, nextNote, length, positionChange, sizeChange, opManager);
+        }
+    }
+
+    public void InsertHoldSegmentMenuItem_OnClick()
+    {
+        if (!_vm.InsertHoldSegmentMenuItemIsEnabled)
+            return;
+
+        if (selectedNoteIndex == -1)
+            return;
+
+        var selectedNote = chart.Notes[selectedNoteIndex];
+        var currentBeat = new BeatInfo((int)_vm.MeasureNumeric,
+            (int)_vm.Beat1Numeric * 1920 / (int)_vm.Beat2Numeric);
+
+        if (selectedNote.NoteType is NoteType.HoldStartNoBonus or NoteType.HoldStartBonusFlair)
+            return;
+
+        if (selectedNote.PrevReferencedNote?.Measure > currentBeat.MeasureDecimal)
+        {
+            Dispatcher.UIThread.Post(
+                            async () => await ShowBlockingMessageBox("Cannot insert segment.",
+                                "Unselected segment between cursor and selected note. Please select the segment directly in front of where you want to insert a new segment."));
+            return;
+        }
+
+        if (selectedNote.Measure < currentBeat.MeasureDecimal)
+        {
+            Dispatcher.UIThread.Post(
+                            async () => await ShowBlockingMessageBox("Cannot insert segment.",
+                                "Cursor is behind selected note. Please select the segment directly in front of where you want to insert a new segment."));
+            return;
+        }
+
+        var newNote = new Note()
+        {
+            BeatInfo = currentBeat,
+            NoteType = NoteType.HoldJoint,
+            Position = (int)_vm.PositionNumeric,
+            Size = (int)_vm.SizeNumeric,
+            HoldChange = true,
+            PrevReferencedNote = selectedNote.PrevReferencedNote,
+            NextReferencedNote = selectedNote
+        };
+
+        selectedNote.PrevReferencedNote.NextReferencedNote = newNote;
+        selectedNote.PrevReferencedNote = newNote;
+
+        lock (chart) chart.Notes.Add(newNote);
+        chart.IsSaved = false;
+
+        opManager.Push(new InsertHoldSegment(chart, selectedNote, newNote));
+    }
+
     public void SetShowCursor(bool value)
     {
         userSettings.ViewSettings.ShowCursor = value;
@@ -1233,6 +1337,17 @@ public partial class MainView : UserControl
                     noteMaskLabel.Text = "From Center";
                     break;
             }
+
+        // baking holds is only possible if selecting a hold start or segment with a nextReferencedNote and while not placing a hold note.
+        _vm.BakeHoldMenuItemIsEnabled = note.NextReferencedNote != null
+                                        && !isInsertingHold
+                                        && note.NoteType is NoteType.HoldStartNoBonus
+                                        or NoteType.HoldStartBonusFlair
+                                        or NoteType.HoldJoint;
+
+        _vm.InsertHoldSegmentMenuItemIsEnabled = note.NoteType is NoteType.HoldJoint
+                                                 or NoteType.HoldEnd
+                                                 && !isInsertingHold;
     }
 
     private void ResetChartTime()
@@ -1707,6 +1822,11 @@ public partial class MainView : UserControl
 
     private void EndHoldCheck_IsCheckedChanged(object? sender, RoutedEventArgs routedEventArgs)
     {
+        if (sender is CheckBox checkBox)
+        {
+            _vm.EndHoldChecked = (bool) checkBox.IsChecked;
+        }
+
         if (_vm.EndHoldChecked && currentNoteType == NoteType.HoldJoint)
             SetSelectedObject(NoteType.HoldEnd);
 

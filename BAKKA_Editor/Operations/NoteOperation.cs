@@ -1,4 +1,7 @@
-﻿using BAKKA_Editor.Enums;
+﻿using Avalonia.Metadata;
+using BAKKA_Editor.Enums;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace BAKKA_Editor.Operations;
 
@@ -109,7 +112,7 @@ internal class MirrorNote : IOperation
     protected Note Base { get; }
     protected Note OldNote { get; }
     protected Note NewNote { get; }
-    public string Description => "Edit note";
+    public string Description => "Mirror note";
 
     public void Redo()
     {
@@ -125,6 +128,82 @@ internal class MirrorNote : IOperation
         Base.Position = OldNote.Position;
         Base.Size = OldNote.Size;
         Base.NoteType = OldNote.NoteType;
+    }
+}
+
+internal class BakeHoldNote : IOperation
+{
+    private List<Note> Segments;
+    private Chart Chart;
+    private Note Start;
+    private Note End;
+
+    public BakeHoldNote(Chart chart, Note startNote, Note endNote, List<Note> segmentNotes)
+    {
+        Segments = segmentNotes;
+        Chart = chart;
+        Start = startNote;
+        End = endNote;
+    }
+
+    public string Description => "Bake Hold note";
+    public void Redo()
+    {
+        foreach (Note note in Segments)
+        {
+            lock (Chart)
+                Chart.Notes.Add(note);
+        }
+
+        Start.NextReferencedNote = Segments[0];
+        Segments.Last().NextReferencedNote = End;
+        End.PrevReferencedNote = Segments.Last();
+    }
+
+    public void Undo()
+    {
+        foreach (Note note in Segments)
+        {
+            lock (Chart)
+                Chart.Notes.Remove(note);
+        }
+
+        Start.NextReferencedNote = End;
+        End.PrevReferencedNote = Start;
+    }
+}
+
+internal class InsertHoldSegment : IOperation
+{
+    private Chart Chart;
+    private Note SelectedNote;
+    private Note NewNote;
+
+    public InsertHoldSegment(Chart chart, Note selectedNote, Note newNote)
+    {
+        Chart = chart;
+        SelectedNote = selectedNote;
+        NewNote = newNote;
+    }
+
+    public string Description => "Insert hold segment";
+
+    public void Redo()
+    {
+        lock (Chart)
+            Chart.Notes.Add(NewNote);
+
+        SelectedNote.PrevReferencedNote.NextReferencedNote = NewNote;
+        SelectedNote.PrevReferencedNote = NewNote;
+    }
+
+    public void Undo()
+    {
+        lock (Chart)
+            Chart.Notes.Remove(NewNote);
+
+        SelectedNote.PrevReferencedNote = NewNote.PrevReferencedNote;
+        NewNote.PrevReferencedNote.NextReferencedNote = SelectedNote;
     }
 }
 
