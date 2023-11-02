@@ -89,7 +89,7 @@ internal partial class SkCircleView
         if (showHispeed)
         {
             var initialSpeed = chart.Gimmicks.LastOrDefault(x =>
-                x.GimmickType == GimmickType.HiSpeedChange && CurrentMeasure > x.Measure);
+                x.GimmickType == GimmickType.HiSpeedChange && x.Measure <= CurrentMeasure);
 
             if (initialSpeed == null)
             {
@@ -100,7 +100,7 @@ internal partial class SkCircleView
 
             var gimmicksInTimeRange = chart.Gimmicks.Where(x =>
                 x.Measure >= CurrentMeasure &&
-                chart.GetTime(new BeatInfo(x.Measure)) < tempEndTime &&
+                chart.GetTime(new BeatInfo(x.Measure)) <= currentTime &&
                 x.GimmickType == GimmickType.HiSpeedChange).ToList();
 
             if (gimmicksInTimeRange.Count > 0)
