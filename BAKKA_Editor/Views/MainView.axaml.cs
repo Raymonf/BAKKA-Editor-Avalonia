@@ -441,6 +441,9 @@ public partial class MainView : UserControl
         holdButton.AppendHotkey(userSettings.HotkeySettings.HoldHotkey);
         playButton.AppendHotkey(userSettings.HotkeySettings.PlayHotkey);
 
+        // Update circle view
+        skCircleView.BeatsPerMeasure = (uint)_vm.Beat2Numeric;
+
         // Create timers
         updateTimer =
             new DispatcherTimer(TimeSpan.FromMilliseconds(20), DispatcherPriority.Background, UpdateTimer_Tick);
@@ -981,6 +984,9 @@ public partial class MainView : UserControl
 
     private void Beat2Numeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
     {
+        skCircleView.BeatsPerMeasure = (uint)(e.NewValue ?? 1);
+        _vm.CursorBeatDepthNumeric = skCircleView.Cursor.ConfigureDepth(skCircleView.CalculateMaximumDepth(chart));
+        _vm.CursorBeatDepthNumericMaximum = skCircleView.Cursor.MaximumDepth;
         updateTime();
     }
 
@@ -1959,13 +1965,12 @@ public partial class MainView : UserControl
                 chart.Offset = chartSettingsViewModel.Offset;
                 chart.MovieOffset = chartSettingsViewModel.MovieOffset;
 
-                // Update cursor beat settings based on BPM
-                _vm.CursorBeatDepthNumeric = skCircleView.Cursor.ConfigureDepth(0, 10);
-
                 if (selectedGimmickIndex == -1)
                     selectedGimmickIndex = 0;
                 UpdateGimmickLabels();
                 chart.RecalcTime();
+                _vm.CursorBeatDepthNumeric = skCircleView.Cursor.ConfigureDepth(skCircleView.CalculateMaximumDepth(chart));
+                _vm.CursorBeatDepthNumericMaximum = skCircleView.Cursor.MaximumDepth;
             });
     }
 

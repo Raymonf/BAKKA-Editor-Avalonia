@@ -40,6 +40,7 @@ internal partial class SkCircleView
     public PointF CenterPoint { get; private set; }
     public float Radius { get; private set; }
     public float CurrentMeasure { get; set; }
+    public uint BeatsPerMeasure { get; set; }
     public float Hispeed { get; set; } = 1.5f;
     public float BeatDivision { get; set; } = 2;
     public int GuideLineSelection { get; set; } = 0;
@@ -1005,9 +1006,33 @@ internal partial class SkCircleView
         }
     }
 
+    // TODO: Move this
+    public float DepthToMeasure(uint depth)
+    {
+        float measure = CurrentMeasure;
+        measure += (float)depth / (float)BeatsPerMeasure;
+        return measure;
+    }
+
+    public uint CalculateMaximumDepth(Chart chart)
+    {
+        float totalMeasureShowNotes = GetTotalMeasureShowNotes2(chart);
+        float startBeat = CurrentMeasure;
+        float endBeat = CurrentMeasure + totalMeasureShowNotes;
+        float stepSize = DepthToMeasure(1) - DepthToMeasure(0);
+
+        // Just in case, to avoid dividing by 0.
+        if (stepSize == 0)
+        {
+            return 0;
+        }
+
+        return (uint)Math.Floor((endBeat - startBeat) / stepSize);
+    }
+
     public void DrawCursor(Chart chart, NoteType noteType, float startAngle, float sweepAngle, uint depth)
     {
-        float measure = CurrentMeasure + ((float)depth / 16.0f);
+        float measure = DepthToMeasure(depth);
         var measureArcInfo = GetScaledRect(chart, measure);
         canvas.DrawArc(measureArcInfo.Rect, -startAngle * 6.0f,
             -sweepAngle * 6.0f,
@@ -1022,7 +1047,7 @@ internal partial class SkCircleView
     /// <param name="depth">An index representing depth into the circle view. 0 is the outermost circle. Higher values go deeper into the view.</param>
     public void DrawCursorBeatIndicator(Chart chart, uint depth)
     {
-        float measure = CurrentMeasure + ((float)depth / 16.0f);
+        float measure = DepthToMeasure(depth);
         var measureArcInfo = GetScaledRect(chart, measure);
         canvas.DrawOval(measureArcInfo.Rect, CursorBeatIndicatorPen);
     }

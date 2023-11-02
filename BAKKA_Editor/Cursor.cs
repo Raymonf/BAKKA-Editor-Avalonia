@@ -71,19 +71,11 @@ namespace BAKKA_Editor
         /// <summary>
         /// Sets the cursor's depth bounds. Moves the cursor depth if it is outside the new bounds.
         /// </summary>
-        /// <param name="minimumDepth">Minimum cursor depth</param>
         /// <param name="maximumDepth">Maximum cursor depth</param>
-        /// <exception cref="ArgumentException">Thrown when there are invalid bounds</exception>
         /// <returns>Updated cursor depth</returns>
-        public uint ConfigureDepth(uint minimumDepth, uint maximumDepth)
+        public uint ConfigureDepth(uint maximumDepth)
         {
-            if (minimumDepth > maximumDepth)
-            {
-                throw new ArgumentException($"Invalid cursor depth bounds. Minimum ({minimumDepth}) " +
-                    $"greater than maximum ({maximumDepth}).");
-            }
-
-            MinimumDepth = minimumDepth;
+            Debug.WriteLine($"New max depth: {maximumDepth}");
             MaximumDepth = maximumDepth;
             return Dive(Depth);
         }
