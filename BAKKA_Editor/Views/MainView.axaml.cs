@@ -545,9 +545,9 @@ public partial class MainView : UserControl
         holdButton.AppendHotkey(userSettings.HotkeySettings.HoldHotkey);
         playButton.AppendHotkey(userSettings.HotkeySettings.PlayHotkey);
 
-        // clamp refresh rate between 10 and 500 to prevent user from doing stupid shit
+        // clamp refresh rate between 10 and 500
         clampedRefreshRate = int.Clamp(userSettings.ViewSettings.EditorRefreshRate, 10, 500);
-        int updateInterval = (int) MathF.Round(1000 / clampedRefreshRate);
+        int updateInterval = Math.Max((int) Math.Floor(1000.0 / clampedRefreshRate), 1);
 
         // Create timers
         updateTimer =
