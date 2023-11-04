@@ -167,15 +167,12 @@ namespace BAKKA_Editor
         private static float ShortLerp(int direction, int a, int b, float t)
         {
             if (direction > 0 && a > b)
-            {
                 a -= 60;
-                var result = (1 - t) * a + t * b;
-                return result;
-            }
-            else
-            {
-                return (1 - t) * a + t * b;
-            }
+
+            if (direction < 0 && a < b)
+                a += 60;
+
+            return (1 - t) * a + t * b;
         }
     }
 }
