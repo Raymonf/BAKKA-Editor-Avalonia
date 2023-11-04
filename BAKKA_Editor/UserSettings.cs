@@ -42,6 +42,7 @@ public class ViewSettings
     public float BeatDivision { get; set; } = 1;
     public float NoteScaleMultiplier { get; set; } = 1;
     public float SlideNoteRotationSpeed { get; set; } = 1;
+    public int EditorRefreshRate { get; set; } = 60;
 }
 
 public class SaveSettings

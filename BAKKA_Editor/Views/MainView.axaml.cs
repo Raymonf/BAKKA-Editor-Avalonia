@@ -91,6 +91,7 @@ public partial class MainView : UserControl
     // Playfield
     private SkCircleView? skCircleView;
     private string? songFilePath;
+    private int clampedRefreshRate;
 
     // Music
     private IBakkaSoundEngine soundEngine;
@@ -544,9 +545,13 @@ public partial class MainView : UserControl
         holdButton.AppendHotkey(userSettings.HotkeySettings.HoldHotkey);
         playButton.AppendHotkey(userSettings.HotkeySettings.PlayHotkey);
 
+        // clamp refresh rate between 10 and 500
+        clampedRefreshRate = int.Clamp(userSettings.ViewSettings.EditorRefreshRate, 10, 500);
+        int updateInterval = Math.Max((int) Math.Floor(1000.0 / clampedRefreshRate), 1);
+
         // Create timers
         updateTimer =
-            new DispatcherTimer(TimeSpan.FromMilliseconds(20), DispatcherPriority.Background, UpdateTimer_Tick);
+            new DispatcherTimer(TimeSpan.FromMilliseconds(updateInterval), DispatcherPriority.Background, UpdateTimer_Tick);
         updateTimer.IsEnabled = false;
 
         hitsoundTimer =
@@ -636,7 +641,7 @@ public partial class MainView : UserControl
             if (userSettings.ViewSettings.SlideNoteRotationSpeed == 0)
                 skCircleView.arrowMovementOffset = 0;
             else
-                skCircleView.arrowMovementOffset += userSettings.ViewSettings.SlideNoteRotationSpeed;
+                skCircleView.arrowMovementOffset += userSettings.ViewSettings.SlideNoteRotationSpeed * (60 / (float) clampedRefreshRate);
         }
 
         // actually pause the song if we're at the end
