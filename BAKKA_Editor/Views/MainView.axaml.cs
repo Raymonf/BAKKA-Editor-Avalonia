@@ -993,15 +993,16 @@ public partial class MainView : UserControl
         }
 
         // Determine if cursor should be showing
-        var showCursor = userSettings.ViewSettings.ShowCursor || (editorMode == EditorMode.PlaceNoteMode);
+        var showCursor = userSettings.ViewSettings.ShowCursor;
         if (currentSong != null && !currentSong.Paused)
             showCursor = userSettings.ViewSettings.ShowCursorDuringPlayback;
 
         // Draw cursor
         if (showCursor)
         {
-            skCircleView.DrawCursor(chart, currentNoteType, (float)_vm.PositionNumeric, (float)_vm.SizeNumeric, _vm.CursorBeatDepthNumeric);
-            skCircleView.DrawCursorBeatIndicator(chart, _vm.CursorBeatDepthNumeric);
+            skCircleView.DrawCursor(chart, currentNoteType, (float)skCircleView.Cursor.Position,
+                (float)skCircleView.Cursor.Size, skCircleView.Cursor.Depth);
+            skCircleView.DrawCursorBeatIndicator(chart, skCircleView.Cursor.Depth);
         }
     }
 
