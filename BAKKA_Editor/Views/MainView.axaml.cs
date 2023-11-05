@@ -825,7 +825,7 @@ public partial class MainView : UserControl
             // Draw degree lines
             skCircleView.DrawDegreeCircle();
 
-                        // Draw mirror axis
+            // Draw mirror axis
             if (isHoveringOverMirrorAxis)
                 skCircleView.DrawMirrorAxis(mirrorAxis);
 
@@ -855,7 +855,6 @@ public partial class MainView : UserControl
         if (showCursor)
         {
             skCircleView.DrawCursor(chart, currentNoteType, (float)_vm.PositionNumeric, (float)_vm.SizeNumeric, _vm.CursorBeatDepthNumeric);
-
             skCircleView.DrawCursorBeatIndicator(chart, _vm.CursorBeatDepthNumeric);
         }
     }
@@ -977,7 +976,7 @@ public partial class MainView : UserControl
                 _vm.SongTrackBar = time;
         }
 
-        updateTime();
+        UpdateTime();
 
         valueTriggerEvent = EventSource.None;
     }
@@ -987,7 +986,7 @@ public partial class MainView : UserControl
         skCircleView.BeatsPerMeasure = (uint)(e.NewValue ?? 1);
         _vm.CursorBeatDepthNumeric = skCircleView.Cursor.ConfigureDepth(skCircleView.CalculateMaximumDepth(chart));
         _vm.CursorBeatDepthNumericMaximum = skCircleView.Cursor.MaximumDepth;
-        updateTime();
+        UpdateTime();
     }
 
     private void UpdateGimmickLabels(int val = -2)
@@ -1167,7 +1166,7 @@ public partial class MainView : UserControl
         if (_vm.SizeTrackBar < minSize) _vm.SizeTrackBar = minSize;
         _vm.SizeTrackBarMinimum = minSize;
 
-        _vm.SizeNumeric = skCircleView.Cursor.ConfigureSize((uint)minSize, 60);
+        _vm.SizeNumeric = skCircleView.Cursor.ConfigureSize((uint)minSize);
     }
 
     private void updateLabel(string text)
@@ -1226,10 +1225,14 @@ public partial class MainView : UserControl
         _vm.MeasureNumeric = _vm.Beat1Numeric = 0;
         _vm.PositionNumeric = _vm.PositionNumericMinimum;
         _vm.SizeNumeric = skCircleView.Cursor.Resize(skCircleView.Cursor.MinimumSize);
-        updateTime();
+        UpdateTime();
     }
 
-    private void updateTime()
+    /// <summary>
+    /// Updates the current measure being tracked, determines if notes should be placeable
+    /// based on where the cursor is, and updates all notes in view.
+    /// </summary>
+    public void UpdateTime()
     {
         if (skCircleView == null)
         {
@@ -1239,13 +1242,15 @@ public partial class MainView : UserControl
         if (currentSong == null || (currentSong != null && currentSong.Paused))
         {
             skCircleView.CurrentMeasure =
-                (float) _vm.MeasureNumeric + (float) _vm.Beat1Numeric / (float) _vm.Beat2Numeric;
+                (float) _vm.MeasureNumeric + ((float) _vm.Beat1Numeric / (float) _vm.Beat2Numeric);
         }
 
+        var cursorMeasure = skCircleView.DepthToMeasure(skCircleView.Cursor.Depth);
+
         if (currentNoteType is NoteType.HoldJoint or NoteType.HoldEnd)
-            insertButton.IsEnabled = !(lastNote.BeatInfo.MeasureDecimal >= skCircleView.CurrentMeasure);
+            insertButton.IsEnabled = !(lastNote.BeatInfo.MeasureDecimal >= cursorMeasure);
         else if (endOfChartNote != null)
-            insertButton.IsEnabled = !(endOfChartNote.BeatInfo.MeasureDecimal <= skCircleView.CurrentMeasure);
+            insertButton.IsEnabled = !(endOfChartNote.BeatInfo.MeasureDecimal <= cursorMeasure);
         else if (currentSong != null && !currentSong.Paused)
             insertButton.IsEnabled = false;
         else
@@ -1529,7 +1534,7 @@ public partial class MainView : UserControl
     {
         if (_vm.MeasureNumeric != e.NewValue)
             _vm.MeasureNumeric = Convert.ToDecimal(e.NewValue ?? _vm.MeasureNumeric);
-        updateTime();
+        UpdateTime();
     }
 
     private void PositionNumeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
@@ -1578,8 +1583,7 @@ public partial class MainView : UserControl
         if (!insertButton.IsEnabled)
             return;
 
-        var currentBeat = new BeatInfo((int) _vm.MeasureNumeric,
-            ((int) _vm.Beat1Numeric + (int)skCircleView.Cursor.Depth) * 1920 / (int) _vm.Beat2Numeric);
+        var currentBeat = new BeatInfo(skCircleView.DepthToMeasure(skCircleView.Cursor.Depth));
 
         if (currentGimmickType == GimmickType.NoGimmick)
         {
@@ -1587,8 +1591,8 @@ public partial class MainView : UserControl
             {
                 BeatInfo = currentBeat,
                 NoteType = currentNoteType,
-                Position = (int) _vm.PositionNumeric,
-                Size = (int) _vm.SizeNumeric,
+                Position = (int)skCircleView.Cursor.Position,
+                Size = (int)skCircleView.Cursor.Size,
                 HoldChange = true
             };
             switch (currentNoteType)
@@ -1659,6 +1663,7 @@ public partial class MainView : UserControl
                 chart.Notes.Add(tempNote);
 
             UpdateNotesOnBeat();
+            UpdateTime();
 
             chart.IsSaved = false;
             switch (currentNoteType)
@@ -1746,7 +1751,12 @@ public partial class MainView : UserControl
                     return;
                 }
 
-                _vm.PositionNumeric = skCircleView.Cursor.Position;
+                // X and Y are relative to the upper left of the panel
+                var xCen = point.Position.X - skCircleView.CenterPoint.X;
+                var yCen = -(point.Position.Y - skCircleView.CenterPoint.Y);
+                var theta = skCircleView.CalculateTheta((float)xCen, (float)yCen);
+
+                _vm.PositionNumeric = skCircleView.Cursor.Move((uint)theta);
                 editorMode = EditorMode.PlaceNoteMode;
             }
             break;
@@ -2083,8 +2093,7 @@ public partial class MainView : UserControl
         window.DataContext = vm;
         window.SetGimmick(new Gimmick
         {
-            BeatInfo = new BeatInfo((int) _vm.MeasureNumeric,
-                (int) _vm.Beat1Numeric * 1920 / (int) _vm.Beat2Numeric),
+            BeatInfo = new BeatInfo(skCircleView.DepthToMeasure(skCircleView.Cursor.Depth)),
             GimmickType = GimmickType.BpmChange
         }, GimmicksViewModel.FormReason.New);
 
@@ -2115,8 +2124,7 @@ public partial class MainView : UserControl
         window.SetGimmick(
             new Gimmick
             {
-                BeatInfo = new BeatInfo((int) _vm.MeasureNumeric,
-                    (int) _vm.Beat1Numeric * 1920 / (int) _vm.Beat2Numeric),
+                BeatInfo = new BeatInfo(skCircleView.DepthToMeasure(skCircleView.Cursor.Depth)),
                 GimmickType = GimmickType.TimeSignatureChange
             }, GimmicksViewModel.FormReason.New);
         var dialog = new ContentDialog
@@ -2145,8 +2153,7 @@ public partial class MainView : UserControl
         window.SetGimmick(
             new Gimmick
             {
-                BeatInfo = new BeatInfo((int) _vm.MeasureNumeric,
-                    (int) _vm.Beat1Numeric * 1920 / (int) _vm.Beat2Numeric),
+                BeatInfo = new BeatInfo(skCircleView.DepthToMeasure(skCircleView.Cursor.Depth)),
                 GimmickType = GimmickType.HiSpeedChange
             }, GimmicksViewModel.FormReason.New);
         var dialog = new ContentDialog
@@ -2175,8 +2182,7 @@ public partial class MainView : UserControl
         window.SetGimmick(
             new Gimmick
             {
-                BeatInfo = new BeatInfo((int) _vm.MeasureNumeric,
-                    (int) _vm.Beat1Numeric * 1920 / (int) _vm.Beat2Numeric),
+                BeatInfo = new BeatInfo(skCircleView.DepthToMeasure(skCircleView.Cursor.Depth)),
                 GimmickType = GimmickType.StopStart
             }, GimmicksViewModel.FormReason.New);
         var dialog = new ContentDialog
@@ -2205,8 +2211,7 @@ public partial class MainView : UserControl
         window.SetGimmick(
             new Gimmick
             {
-                BeatInfo = new BeatInfo((int) _vm.MeasureNumeric,
-                    (int) _vm.Beat1Numeric * 1920 / (int) _vm.Beat2Numeric),
+                BeatInfo = new BeatInfo(skCircleView.DepthToMeasure(skCircleView.Cursor.Depth)),
                 GimmickType = GimmickType.ReverseStart
             }, GimmicksViewModel.FormReason.New);
         var dialog = new ContentDialog
@@ -2472,7 +2477,7 @@ public partial class MainView : UserControl
                     }
                 }
 
-                updateTime();
+                UpdateTime();
             }
         }
         else
@@ -2512,7 +2517,7 @@ public partial class MainView : UserControl
                     }
                 }
 
-                updateTime();
+                UpdateTime();
             }
         }
     }
@@ -2783,7 +2788,7 @@ public partial class MainView : UserControl
             playButton.AppendHotkey(userSettings.HotkeySettings.PlayHotkey);
         }
 
-        updateTime();
+        UpdateTime();
     }
 
     private void UpdateSongVolume()

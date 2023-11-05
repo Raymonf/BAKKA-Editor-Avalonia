@@ -52,19 +52,10 @@ namespace BAKKA_Editor
         /// Sets the cursor's size bounds. Resizes the cursor if it is outside the new bounds.
         /// </summary>
         /// <param name="minimumSize">Minimum cursor size</param>
-        /// <param name="maximumSize">Maximum cursor size</param>
-        /// <exception cref="ArgumentException">Thrown when there are invalid bounds</exception>
         /// <returns>Updated cursor size</returns>
-        public uint ConfigureSize(uint minimumSize, uint maximumSize)
+        public uint ConfigureSize(uint minimumSize)
         {
-            if (minimumSize > maximumSize)
-            {
-                throw new ArgumentException($"Invalid cursor size bounds. Minimum ({minimumSize}) " +
-                    $"greater than maximum ({maximumSize}).");
-            }
-
             MinimumSize = minimumSize;
-            MaximumSize = maximumSize;
             return Resize(Size);
         }
 
@@ -75,7 +66,6 @@ namespace BAKKA_Editor
         /// <returns>Updated cursor depth</returns>
         public uint ConfigureDepth(uint maximumDepth)
         {
-            Debug.WriteLine($"New max depth: {maximumDepth}");
             MaximumDepth = maximumDepth;
             return Dive(Depth);
         }

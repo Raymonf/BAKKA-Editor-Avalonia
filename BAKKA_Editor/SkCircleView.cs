@@ -39,6 +39,9 @@ internal partial class SkCircleView
     public PointF TopCorner { get; private set; }
     public PointF CenterPoint { get; private set; }
     public float Radius { get; private set; }
+    /// <summary>
+    /// The current measure at depth 0
+    /// </summary>
     public float CurrentMeasure { get; set; }
     public uint BeatsPerMeasure { get; set; }
     public float Hispeed { get; set; } = 1.5f;
@@ -1006,11 +1009,15 @@ internal partial class SkCircleView
         }
     }
 
-    // TODO: Move this
+    private float DepthToTime(uint depth)
+    {
+        return (float)depth / (float)BeatsPerMeasure;
+    }
+
     public float DepthToMeasure(uint depth)
     {
         float measure = CurrentMeasure;
-        measure += (float)depth / (float)BeatsPerMeasure;
+        measure += DepthToTime(depth);
         return measure;
     }
 
