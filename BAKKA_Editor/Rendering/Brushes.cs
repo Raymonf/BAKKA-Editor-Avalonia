@@ -258,14 +258,16 @@ internal class Brushes
         brush.StrokeCap = newStrokeCap ?? brush.StrokeCap;
     }*/
 
-    public SKPaint GetCursorPen(NoteType noteType)
+    public SKPaint GetCursorPen(NoteType noteType, float scale)
     {
         CursorPen.Color = NoteTypeToColor(noteType).WithAlpha(0x80);
+        CursorPen.StrokeWidth = CursorPenStrokeWidth * scale;
         return CursorPen;
     }
 
-    public SKPaint GetCursorMeasurePen()
+    public SKPaint GetCursorMeasurePen(float scale)
     {
+        CursorMeasurePen.StrokeWidth = CursorMeasurePenStrokeWidth * scale;
         return CursorMeasurePen;
     }
 

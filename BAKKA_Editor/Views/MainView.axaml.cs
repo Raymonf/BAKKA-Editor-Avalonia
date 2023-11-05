@@ -377,8 +377,8 @@ public partial class MainView : UserControl
         {
             BeatInfo = currentBeat,
             NoteType = NoteType.HoldJoint,
-            Position = (int)_vm.PositionNumeric,
-            Size = (int)_vm.SizeNumeric,
+            Position = (int)skCircleView.Cursor.Position,
+            Size = (int)skCircleView.Cursor.Size,
             HoldChange = true,
             PrevReferencedNote = selectedNote.PrevReferencedNote,
             NextReferencedNote = selectedNote
@@ -866,6 +866,8 @@ public partial class MainView : UserControl
             ResetChartTime();
             UpdateNoteLabels(chart.Notes.Count > 0 ? 0 : -1);
             UpdateGimmickLabels(chart.Gimmicks.Count > 0 ? 0 : -1);
+            _vm.CursorBeatDepthNumeric = skCircleView.Cursor.ConfigureDepth(skCircleView.CalculateMaximumDepth(chart));
+            _vm.CursorBeatDepthNumericMaximum = skCircleView.Cursor.MaximumDepth;
             if (!IsDesktop)
                 saveFileStream = openChartFileWriteStream;
             saveFilename = openFilename;
@@ -1701,7 +1703,7 @@ public partial class MainView : UserControl
             return;
         var newValue = Convert.ToInt32(e.NewValue);
         if ((int) _vm.PositionTrackBar != newValue)
-            _vm.PositionTrackBar = newValue;
+            _vm.PositionTrackBar = skCircleView.Cursor.Move((uint)newValue);
     }
 
     private void PositionTrackBar_OnValueChanged(object? sender, RangeBaseValueChangedEventArgs e)
@@ -1719,7 +1721,7 @@ public partial class MainView : UserControl
             return;
         var newValue = Convert.ToInt32(e.NewValue);
         if ((int) _vm.SizeTrackBar != newValue)
-            _vm.SizeTrackBar = newValue;
+            _vm.SizeTrackBar = skCircleView.Cursor.Resize((uint)newValue);
     }
 
     private void SizeTrackBar_OnValueChanged(object? sender, RangeBaseValueChangedEventArgs e)
@@ -2015,56 +2017,6 @@ public partial class MainView : UserControl
             skCircleView.Cursor.Drag((uint)theta);
             _vm.PositionNumeric = skCircleView.Cursor.Position;
             _vm.SizeNumeric = skCircleView.Cursor.Size;
-
-            /*var initialSize = (int)_vm.SizeNumeric;
-            var delta = theta - skCircleView.lastMousePos;
-
-            // Handle rollover
-            if (delta == -59)
-            {
-                if (rolloverState == RolloverState.Clockwise)
-                    rolloverState = RolloverState.None;
-                else
-                    rolloverState = RolloverState.Counterclockwise;
-            }
-            else if (delta == 59)
-            {
-                if (rolloverState == RolloverState.Counterclockwise)
-                    rolloverState = RolloverState.None;
-                else
-                    rolloverState = RolloverState.Clockwise;
-            }
-
-            // Left click will alter the note width and possibly position depending on which direction we move
-            if (theta == skCircleView.mouseDownPos)
-            {
-                _vm.PositionNumeric = skCircleView.mouseDownPos;
-                initialSize = 1;
-            }
-            else if ((theta > skCircleView.mouseDownPos || rolloverState == RolloverState.Counterclockwise) && 
-                rolloverState != RolloverState.Clockwise)
-            {
-                _vm.PositionNumeric = skCircleView.mouseDownPos;
-                if (rolloverState == RolloverState.Counterclockwise)
-                    initialSize = Math.Min(theta + 60 - skCircleView.mouseDownPos + 1, 60);
-                else
-                    initialSize = theta - skCircleView.mouseDownPos + 1;
-            }
-            else if (theta < skCircleView.mouseDownPos || rolloverState == RolloverState.Clockwise)
-            {
-                _vm.PositionNumeric = theta;
-                if (rolloverState == RolloverState.Clockwise)
-                    initialSize = Math.Min(skCircleView.mouseDownPos + 60 - theta + 1, 60);
-                else
-                    initialSize = skCircleView.mouseDownPos - theta + 1;
-            }
-
-            if (initialSize < _vm.SizeNumericMinimum) _vm.SizeNumeric = _vm.SizeNumericMinimum;
-            else if (initialSize > 60) _vm.SizeNumeric = 60;
-            else _vm.SizeNumeric = initialSize;
-
-            // Only theta and rollover state matter if active cursor tracking is disabled
-            skCircleView.UpdateMouseMove(theta, 0, -1, rolloverState);*/
         }
     }
 
@@ -2469,8 +2421,8 @@ public partial class MainView : UserControl
         var newNote = new Note
         {
             BeatInfo = currentNote.BeatInfo,
-            Position = (int) _vm.PositionNumeric,
-            Size = (int) _vm.SizeNumeric
+            Position = (int) skCircleView.Cursor.Position,
+            Size = (int) skCircleView.Cursor.Size
         };
         opManager.InvokeAndPush(new EditNote(currentNote, newNote));
         UpdateNoteLabels();

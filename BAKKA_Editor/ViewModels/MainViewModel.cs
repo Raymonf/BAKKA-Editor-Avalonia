@@ -54,7 +54,7 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty] private int positionTrackBarMinimum = 0;
     [ObservableProperty] private int positionTrackBarMaximum = 59;
 
-    [ObservableProperty] private decimal sizeNumeric = 0;
+    [ObservableProperty] private decimal sizeNumeric = 4;
     [ObservableProperty] private int sizeNumericMinimum = 4;
     [ObservableProperty] private int sizeNumericMaximum = 59;
 
@@ -111,7 +111,7 @@ public partial class MainViewModel : ViewModelBase
 
     [ObservableProperty] private uint cursorBeatDepthNumeric = 0;
     [ObservableProperty] private uint cursorBeatDepthNumericMinimum = 0;
-    [ObservableProperty] private uint cursorBeatDepthNumericMaximum = 100;
+    [ObservableProperty] private uint cursorBeatDepthNumericMaximum = 0;
 
     partial void OnCursorBeatDepthNumericChanged(uint value)
     {

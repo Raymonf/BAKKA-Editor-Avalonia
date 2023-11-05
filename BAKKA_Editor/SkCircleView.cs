@@ -963,11 +963,12 @@ internal partial class SkCircleView
     public void DrawCursor(Chart chart, NoteType noteType, float startAngle, float sweepAngle, uint depth)
     {
         float measure = DepthToMeasure(depth);
+        var scale = GetNoteScaleFromMeasure2(chart, measure);
         var measureArcInfo = GetScaledRect(chart, measure);
         canvas.DrawArc(measureArcInfo.Rect, -startAngle * 6.0f,
             -sweepAngle * 6.0f,
             false,
-            Brushes.GetCursorPen(noteType)
+            Brushes.GetCursorPen(noteType, scale)
         );
     }
 
@@ -978,8 +979,9 @@ internal partial class SkCircleView
     public void DrawCursorBeatIndicator(Chart chart, uint depth)
     {
         float measure = DepthToMeasure(depth);
+        var scale = GetNoteScaleFromMeasure2(chart, measure);
         var measureArcInfo = GetScaledRect(chart, measure);
-        canvas.DrawOval(measureArcInfo.Rect, Brushes.GetCursorMeasurePen());
+        canvas.DrawOval(measureArcInfo.Rect, Brushes.GetCursorMeasurePen(scale));
     }
     
     public void DrawMirrorAxis(int axis)
