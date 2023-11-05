@@ -3,6 +3,7 @@
                     xmlns:system="clr-namespace:System;assembly=System.Runtime">
     <!-- TODO: namespaces, ordering, and grouping -->
     <system:String x:Key="L.AddMaskRadio">Add Mask</system:String>
+    <system:String x:Key="L.BakeHoldMenuOption">Bake Selected Hold</system:String>
     <system:String x:Key="L.BeatLabel">Beat:</system:String>
     <system:String x:Key="L.BonusGetRadio">Bonus Get</system:String>
     <system:String x:Key="L.BpmChangeGimmickButton">BPM Change</system:String>
@@ -31,6 +32,7 @@
     <system:String x:Key="L.HitsoundsLabel">Hitsounds</system:String>
     <system:String x:Key="L.HoldNoteButton">Hold</system:String>
     <system:String x:Key="L.InitialChartSettingsMenuOption">Initial Chart Settings</system:String>
+    <system:String x:Key="L.InsertHoldSegmentMenuOption">Insert Hold Segment</system:String>
     <system:String x:Key="L.JumpToNearestGimmickButton">Jump To Nearest Gimmick</system:String>
     <system:String x:Key="L.JumpToNearestNoteButton">Jump To Nearest Note</system:String>
     <system:String x:Key="L.LeftArrowSlideNoteButton">⤾ Slide</system:String>
@@ -108,13 +110,27 @@
     <system:String x:Key="L.Generic.OkButtonText">OK</system:String>
     <system:String x:Key="L.Generic.YesButtonText">Yes</system:String>
     <system:String x:Key="L.Generic.NoButtonText">No</system:String>
+    <system:String x:Key="L.Generic.CancelButtonText">Cancel</system:String>
 
     <system:String x:Key="L.MainView.Menu.File.Settings">Settings</system:String>
     <system:String x:Key="L.Settings.SettingsHeader">Settings</system:String>
     <system:String x:Key="L.Settings.LanguageLabel">Language:</system:String>
+    <system:String x:Key="L.Settings.Buttons.Save">Save</system:String>
     <system:String x:Key="L.Settings.CheckBoxes.ShowBeatVisualSettings">Show Beat Visual Settings</system:String>
-    <system:String x:Key="L.Settings.CheckBoxes.ShowSlideSnapArrows">Show Arrows on Slide- and Snap-Notes</system:String>
+    <system:String x:Key="L.Settings.CheckBoxes.ShowSlideSnapArrows">Show Arrows on Slide and Snap Notes</system:String>
+
+    <system:String x:Key="L.Settings.Tabs.Color">Note Colors</system:String>
+    <system:String x:Key="L.Settings.Tabs.General">General</system:String>
+    <system:String x:Key="L.Settings.Tabs.Visual">Visual</system:String>
+
+    <system:String x:Key="L.Settings.ColorLabels.HoldStart">Hold Start</system:String>
+    <system:String x:Key="L.Settings.ColorLabels.HoldSegment">Hold Segment/End</system:String>
+    <system:String x:Key="L.Settings.ColorLabels.HoldGradient0">Hold Gradient Far</system:String>
+    <system:String x:Key="L.Settings.ColorLabels.HoldGradient1">Hold Gradient Near</system:String>
 
     <system:String x:Key="L.Settings.CheckBoxes.IsActiveCursorTrackingEnabled">Enable Active Cursor Tracking</system:String>
     <system:String x:Key="L.Settings.Labels.ActiveCursorTrackingHelp">Note: When this option is enabled, hold right click and scroll to adjust the note size.</system:String>
+    <system:String x:Key="L.Settings.Labels.NoteScale">Note Scale:</system:String>
+    <system:String x:Key="L.Settings.Labels.SlideNoteRotationSpeed">Slide Note Rotation Speed:</system:String>
+    <system:String x:Key="L.Settings.Labels.ColorHint">To revert or choose a game-accurate color, click on a note type and check the palette (second) tab at the top :)</system:String>
 </ResourceDictionary>

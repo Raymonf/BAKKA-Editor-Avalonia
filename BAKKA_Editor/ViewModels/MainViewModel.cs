@@ -2,9 +2,12 @@
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
 using Avalonia.Controls.ApplicationLifetimes;
 using BAKKA_Editor.Data;
 using BAKKA_Editor.Views;
+using BAKKA_Editor.Rendering;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace BAKKA_Editor.ViewModels;
@@ -37,6 +40,10 @@ public partial class MainViewModel : ViewModelBase
     public ObservableCollection<NoteOnBeatItem> NotesOnBeatList { get; } = new();
     [ObservableProperty] private bool endHoldChecked = false;
 
+    // Hold note editing
+    [ObservableProperty] private bool bakeHoldMenuItemIsEnabled = false;
+    [ObservableProperty] private bool insertHoldSegmentMenuItemIsEnabled = false;
+
     // Music UI State
     // TODO: move this stuff out of here
     [ObservableProperty] private double sizeTrackBar = 0.0;
@@ -60,8 +67,17 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty] private int measureNumericMaximum = 9999;
 
     [ObservableProperty] private decimal beat1Numeric = 0;
-    [ObservableProperty] private int beat1NumericMinimum = 0;
+    [ObservableProperty] private int beat1NumericMinimum = -1;
     [ObservableProperty] private int beat1NumericMaximum = 1920;
+
+
+    partial void OnBeat1NumericChanged(decimal value)
+    {
+        if (value == -1m && MeasureNumeric <= 0)
+        {
+            Beat1Numeric = 0;
+        }
+    }
 
     [ObservableProperty] private decimal beat2Numeric = 16;
     [ObservableProperty] private int beat2NumericMinimum = 1;
@@ -161,6 +177,20 @@ public partial class MainViewModel : ViewModelBase
     {
         var mainWindow = Target();
         mainWindow?.RedoMenuItem_OnClick();
+        return true;
+    }
+
+    public bool BakeHoldCommand()
+    {
+        var mainWindow = Target();
+        mainWindow?.BakeHoldMenuItem_OnClick();
+        return true;
+    }
+
+    public bool InsertHoldSegmentCommand()
+    {
+        var mainWindow = Target();
+        mainWindow?.InsertHoldSegmentMenuItem_OnClick();
         return true;
     }
 

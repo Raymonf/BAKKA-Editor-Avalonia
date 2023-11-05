@@ -22,6 +22,8 @@
         <KeyBinding Gesture="Ctrl+N" Command="{Binding NewCommand}" />
         <KeyBinding Gesture="Ctrl+Shift+S" Command="{Binding SaveAsCommand}" />
         <KeyBinding Gesture="Ctrl+S" Command="{Binding SaveCommand}" />
+        <KeyBinding Gesture="Ctrl+Shift+B" Command="{Binding BakeHoldCommand}" />
+        <KeyBinding Gesture="Shift+H" Command="{Binding InsertHoldSegmentCommand}" />
     </Window.KeyBindings>
     <Grid RowDefinitions="*" ColumnDefinitions="*">
         <views:MainView Name="View" />

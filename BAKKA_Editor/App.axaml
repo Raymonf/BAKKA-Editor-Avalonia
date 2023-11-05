@@ -17,5 +17,6 @@
     <Application.Styles>
         <styling:FluentAvaloniaTheme PreferUserAccentColor="True" />
         <StyleInclude Source="/Styles/FluentAvaloniaOverrides.axaml" />
+        <StyleInclude Source="/Styles/HeaderedContentControl.axaml" />
     </Application.Styles>
 </Application>

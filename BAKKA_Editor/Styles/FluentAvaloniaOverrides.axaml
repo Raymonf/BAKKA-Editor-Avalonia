@@ -1,6 +1,5 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:styling="clr-namespace:FluentAvalonia.Styling;assembly=FluentAvalonia">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!-- FluentAvalonia overrides -->
     <Style Selector="Slider">
         <Setter Property="Margin">
@@ -74,34 +73,12 @@
         <Setter Property="CornerRadius" Value="4,0,0,4" />
         <Setter Property="Background" Value="Transparent" />
     </Style>
-
-    <!-- thanks https://github.com/AvaloniaUI/Avalonia/issues/823#issuecomment-692270581 -->
-    <Style Selector="HeaderedContentControl">
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate>
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Border ZIndex="1" Padding="5,0,5,0"
-                                Background="{DynamicResource ApplicationPageBackgroundThemeBrush}" Margin="5,0,0,0">
-                            <TextBlock FontWeight="Bold" Text="{TemplateBinding Header}" />
-                        </Border>
-                        <Border Grid.RowSpan="2" Grid.ColumnSpan="2" Margin="0,10,0,0"
-                                BorderBrush="{DynamicResource HeaderBorderColor}"
-                                CornerRadius="2"
-                                BorderThickness="1">
-                            <ContentPresenter Content="{TemplateBinding Content}" />
-                        </Border>
-                    </Grid>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
+    <!-- fix off-center right-side buttons of NumericUpDowns -->
+    <Style Selector="NumericUpDown /template/ ButtonSpinner#PART_Spinner /template/ Grid#PART_SpinnerPanel">
+        <Setter Property="Margin" Value="4,0,-1,0" />
+    </Style>
+    <!-- fix intense vibrating -->
+    <Style Selector="Slider /template/ RepeatButton#PART_IncreaseButton">
+        <Setter Property="UseLayoutRounding" Value="False" />
     </Style>
 </Styles>

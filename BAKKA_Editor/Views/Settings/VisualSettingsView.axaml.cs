@@ -1,12 +1,12 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
 namespace BAKKA_Editor.Views.Settings;
 
-public partial class SettingsView : UserControl
+public partial class VisualSettingsView : UserControl
 {
-    public SettingsView()
+    public VisualSettingsView()
     {
         InitializeComponent();
     }

@@ -14,7 +14,7 @@ internal partial class SkCircleView
              meas += 1.0f)
         {
             var info = GetScaledRect(chart, meas);
-            if (info.Rect.Width >= 1) canvas.DrawOval(info.Rect, BeatPen);
+            if (info.Rect.Width >= 1) canvas.DrawOval(info.Rect, Brushes.BeatPen);
         }
     }
 
@@ -31,7 +31,7 @@ internal partial class SkCircleView
             {
                 var info = GetScaledRect(chart, gimmick.Measure);
 
-                if (info.Rect.Width >= 1) canvas.DrawOval(info.Rect, GetNotePaint(gimmick));
+                if (info.Rect.Width >= 1) canvas.DrawOval(info.Rect, Brushes.GetGimmickPen(gimmick, info.NoteScale));
             }
         }
     }

@@ -168,8 +168,8 @@ internal class Chart
                     continue;
                 }
 
-                Notes[i].NextNote = notesByLine[refByLine[i]];
-                Notes[i].NextNote.PrevNote = Notes[i];
+                Notes[i].NextReferencedNote = notesByLine[refByLine[i]];
+                Notes[i].NextReferencedNote.PrevReferencedNote = Notes[i];
             }
         }
 
@@ -235,8 +235,8 @@ internal class Chart
                     $"{Notes.IndexOf(note),5:F0}{note.Position,5:F0}{note.Size,5:F0}{Convert.ToInt32(note.HoldChange, _defaultParsingCulture),5:F0}");
                 if (note.IsMask)
                     sw.Write($"{(int) note.MaskFill,5:F0}");
-                if (note.NextNote != null)
-                    sw.Write($"{Notes.IndexOf(note.NextNote),5:F0}");
+                if (note.NextReferencedNote != null)
+                    sw.Write($"{Notes.IndexOf(note.NextReferencedNote),5:F0}");
                 sw.WriteLine("");
             }
         }

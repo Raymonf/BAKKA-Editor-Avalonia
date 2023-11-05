@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using Avalonia.Styling;
 using BAKKA_Editor.Enums;
-using Microsoft.VisualBasic;
+using BAKKA_Editor.Rendering;
 using SkiaSharp;
 
 namespace BAKKA_Editor;
@@ -20,17 +18,17 @@ internal struct SkArcInfo
 internal partial class SkCircleView
 {
     private SKCanvas canvas;
-    private readonly int CursorTransparency = 110;
-    private readonly int FlairTransparency = 75;
+    private Brushes Brushes;
+    public int lastMousePos = -1;
     public bool Playing { get; set; } = false; // TODO: move out
 
     // Cursor
     public Cursor Cursor = new();
 
-    private readonly int SelectTransparency = 110;
 
-    public SkCircleView(SizeF size)
+    public SkCircleView(UserSettings userSettings, SizeF size)
     {
+        Brushes = new(userSettings);
         Update(size);
     }
 
@@ -49,28 +47,7 @@ internal partial class SkCircleView
     public int GuideLineSelection { get; set; } = 0;
     public bool showHispeed { get; set; } = true;
     public bool renderNotesBeyondCircle { get; set; } = false; // temporary(?) - may be moved to settings since it's for the Settings UI, just wanted to put it here to put it in the code already.
-
-    // Pens and Brushes
-    public SKPaint? MeasurePen { get; set; }
-    public SKPaint? BeatPen { get; set; }
-    public SKPaint? TickMinorPen { get; set; }
-    public SKPaint? TickMediumPen { get; set; }
-    public SKPaint? TickMajorPen { get; set; }
-    public SKPaint? MirrorAxisPen { get; set; }
-
-    public SKPaint? HoldBrush { get; set; } = new()
-    {
-        IsAntialias = false,
-        Color = SKColors.Yellow.WithAlpha(170),
-        Style = SKPaintStyle.Fill
-    };
-
-    public SKPaint MaskBrush { get; set; } = Utils.CreateFillBrush(SKColors.Black.WithAlpha(90), false);
-    public SKPaint? BackgroundBrush { get; set; }
-    public SKPaint? HighlightPen { get; set; }
-    public SKPaint? RoundHighlightPen { get; set; }
-    public SKPaint? FlairPen { get; set; }
-    public SKPaint CursorBeatIndicatorPen { get; set; } = Utils.CreateStrokeBrush(SKColors.Cyan.WithAlpha(110), 0);
+    public float arrowMovementOffset;
 
     public void SetCanvas(SKCanvas canvas)
     {
@@ -89,21 +66,7 @@ internal partial class SkCircleView
             PanelSize.Height - basePenWidth * 8);
         Radius = DrawRect.Width / 2.0f;
         CenterPoint = new PointF(TopCorner.X + Radius, TopCorner.Y + Radius);
-
-        // Pens
-        MeasurePen = Utils.CreateStrokeBrush(SKColors.White, PanelSize.Width * 1.0f / 600.0f);
-        BeatPen = Utils.CreateStrokeBrush(SKColors.White.WithAlpha(0x80), PanelSize.Width * 0.5f / 600.0f);
-        TickMinorPen = Utils.CreateStrokeBrush(SKColors.Black, PanelSize.Width * 2.0f / 600.0f);
-        TickMediumPen = Utils.CreateStrokeBrush(SKColors.Black, PanelSize.Width * 4.0f / 600.0f);
-        TickMajorPen = Utils.CreateStrokeBrush(SKColors.Black, PanelSize.Width * 7.0f / 600.0f);
-        MirrorAxisPen = Utils.CreateStrokeBrush(SKColors.Cyan, PanelSize.Width * 1.0f / 600.0f);
-        HighlightPen = Utils.CreateStrokeBrush(SKColors.LightPink.WithAlpha((byte) SelectTransparency),
-            PanelSize.Width * 8.0f / 600.0f);
-        RoundHighlightPen = Utils.CreateStrokeBrush(SKColors.LightPink.WithAlpha((byte)SelectTransparency),
-            PanelSize.Width * 8.0f / 600.0f, SKStrokeCap.Round);
-        FlairPen = Utils.CreateStrokeBrush(SKColors.Yellow.WithAlpha((byte) FlairTransparency),
-            PanelSize.Width * 8.0f / 600.0f);
-        CursorBeatIndicatorPen.StrokeWidth = PanelSize.Width * 3.0f / 600.0f;
+        Brushes.UpdateBrushStrokeWidth(PanelSize.Width);
     }
 
     // lazy reduced allocation version
@@ -120,7 +83,7 @@ internal partial class SkCircleView
         if (showHispeed)
         {
             var initialSpeed = chart.Gimmicks.LastOrDefault(x =>
-                x.GimmickType == GimmickType.HiSpeedChange && CurrentMeasure > x.Measure);
+                x.GimmickType == GimmickType.HiSpeedChange && x.Measure <= CurrentMeasure);
 
             if (initialSpeed == null)
             {
@@ -131,7 +94,7 @@ internal partial class SkCircleView
 
             var gimmicksInTimeRange = chart.Gimmicks.Where(x =>
                 x.Measure >= CurrentMeasure &&
-                chart.GetTime(new BeatInfo(x.Measure)) < tempEndTime &&
+                chart.GetTime(new BeatInfo(x.Measure)) <= currentTime &&
                 x.GimmickType == GimmickType.HiSpeedChange).ToList();
 
             if (gimmicksInTimeRange.Count > 0)
@@ -201,85 +164,6 @@ internal partial class SkCircleView
         return result;
     }
 
-    /*private float GetTotalMeasureShowNotes(Chart chart)
-    {
-        //Convert hispeed to frames
-        var displayFrames = 73.0f - (Hispeed - 1.5f) * 10.0f;
-        var tempTotalTime = displayFrames / 60.0f * 1000.0f;
-
-        float currentTime = chart.GetTime(CurrentMeasure);
-
-        var tempEndTime = currentTime + tempTotalTime;
-        if (showHispeed)
-        {
-            //Account for hispeed gimmick
-            var hiSpeedChanges = new List<Gimmick>();
-            var initialSpeed = chart.Gimmicks.LastOrDefault(x =>
-                x.GimmickType == GimmickType.HiSpeedChange && CurrentMeasure > x.Measure);
-            //Add initial hispeed to list
-            if (initialSpeed == null)
-            {
-                initialSpeed = new Gimmick();
-                initialSpeed.HiSpeed = 1.0;
-            }
-
-            hiSpeedChanges.Add(initialSpeed);
-            //Random todos that im too lazy to put in applicable locations
-            //TODO: add "time" to notes so we can compare against it every time instead of always calculating what time a note is at
-            //TODO: add function to reevaluate the time of every note when bpm or TS is added/removed.
-
-            //add all hispeed changes to list that happen within the current total time to show notes
-            hiSpeedChanges.AddRange(chart.Gimmicks.Where(
-                x => x.Measure >= CurrentMeasure
-                     && chart.GetTime(new BeatInfo(x.Measure)) < tempEndTime
-                     && x.GimmickType == GimmickType.HiSpeedChange));
-            if (hiSpeedChanges.Count > 1)
-                for (var i = 0; i < hiSpeedChanges.Count; i++)
-                {
-                    float timeDiff;
-                    float itemTime = chart.GetTime(hiSpeedChanges[i].BeatInfo);
-                    float modifiedTime;
-                    if (itemTime <= tempTotalTime + currentTime)
-                    {
-                        if (i == 0)
-                            itemTime = currentTime;
-
-                        if (i != hiSpeedChanges.Count - 1)
-                        {
-                            var tempTestITimeDiff = currentTime + tempTotalTime - itemTime;
-                            var tempTestIModifiedTime = tempTestITimeDiff / (float) hiSpeedChanges[i].HiSpeed;
-                            if (currentTime + tempTotalTime - tempTestITimeDiff + tempTestIModifiedTime <
-                                chart.GetTime(hiSpeedChanges[i + 1].BeatInfo))
-                            {
-                                timeDiff = currentTime + tempTotalTime - itemTime;
-                                modifiedTime = timeDiff / (float) hiSpeedChanges[i].HiSpeed;
-                            }
-                            else
-                            {
-                                timeDiff = chart.GetTime(hiSpeedChanges[i + 1].BeatInfo) - itemTime;
-                                modifiedTime = timeDiff / (float) hiSpeedChanges[i].HiSpeed;
-                            }
-                        }
-                        else
-                        {
-                            timeDiff = currentTime + tempTotalTime - itemTime;
-                            modifiedTime = timeDiff / (float) hiSpeedChanges[i].HiSpeed;
-                        }
-
-                        tempTotalTime = tempTotalTime - timeDiff + modifiedTime;
-                    }
-                }
-            else
-                tempTotalTime /= (float) hiSpeedChanges[0].HiSpeed;
-
-            tempEndTime = currentTime + tempTotalTime;
-        }
-
-        //convert total time to total measure
-        var endMeasure = chart.GetBeatMeasureDecimal(tempEndTime);
-        return endMeasure - CurrentMeasure;
-    }*/
-
     private float GetNoteScaleFromMeasure(Chart chart, float objectTime)
     {
         // Scale from 0-1
@@ -324,7 +208,7 @@ internal partial class SkCircleView
         return notescaleInit;
     }
 
-    private SkArcInfo  GetScaledRect(Chart chart, float objectTime, float scale = 1)
+    private SkArcInfo GetScaledRect(Chart chart, float objectTime, float scale = 1)
     {
         SkArcInfo info = new();
         info.NoteScale = GetNoteScaleFromMeasure2(chart, objectTime);
@@ -352,8 +236,8 @@ internal partial class SkCircleView
         }
         else
         {
-            info.StartAngle -= 2;
-            info.ArcLength += 4;
+            info.StartAngle -= 6;
+            info.ArcLength += 12;
         }
 
         return info;
@@ -371,14 +255,10 @@ internal partial class SkCircleView
     /// <summary>
     ///     Creates the background brush with the passed in color if it's null.
     /// </summary>
-    /// <param name="color">SKColor</param>
-    public void DrawBackground(SKColor color, bool setBrush = false, bool isDarkMode = false)
+    /// <param name="dark">Is dark mode enabled?</param>
+    public void DrawBackground(bool dark)
     {
-        if (setBrush || BackgroundBrush == null)
-            // Remember background color for drawing later
-            BackgroundBrush = Utils.CreateFillBrush(color, false);
-
-        canvas.Clear(color);
+        canvas.Clear(Brushes.GetBackgroundColor(dark));
     }
 
     /// <summary>
@@ -409,7 +289,7 @@ internal partial class SkCircleView
         canvas.DrawArc(rect, -startAngle, -sweepAngle, true, paint);
     }
 
-    public void DrawMasks(Chart chart)
+    public void DrawMasks(Chart chart, bool darkMode)
     {
         // var masks = chart.Notes.Where(x => x.Measure <= CurrentMeasure && x.IsMask).ToList();
         var notes = chart.Notes;
@@ -437,12 +317,12 @@ internal partial class SkCircleView
                     }
 
                     if (shouldDraw)
-                        FillPie(MaskBrush, DrawRect, mask.Position * 6.0f, mask.Size * 6.0f);
+                        FillPie(Brushes.MaskFill, DrawRect, mask.Position * 6.0f, mask.Size * 6.0f);
                     break;
                 }
                 // Explicitly draw MaskRemove for edge cases
                 case NoteType.MaskRemove:
-                    FillPie(BackgroundBrush, DrawRect, mask.Position * 6.0f, mask.Size * 6.0f);
+                    FillPie(Brushes.GetBackgroundFill(darkMode), DrawRect, mask.Position * 6.0f, mask.Size * 6.0f);
                     break;
             }
         }
@@ -458,7 +338,7 @@ internal partial class SkCircleView
         {
             var measureArcInfo = GetScaledRect(chart, measure);
             if (measureArcInfo.Rect.Width >= 1 && GetObjectVisibility(measure))
-                canvas.DrawOval(measureArcInfo.Rect, MeasurePen);
+                canvas.DrawOval(measureArcInfo.Rect, Brushes.MeasurePen);
         }
 
         // Draw beat divider circle
@@ -470,7 +350,7 @@ internal partial class SkCircleView
             {
                 var beatArcInfo = GetScaledRect(chart, beat);
                 if (beatArcInfo.Rect.Width >= 1 && beat % 1 > 0.0001 && GetObjectVisibility(beat))
-                    canvas.DrawOval(beatArcInfo.Rect, BeatPen);
+                    canvas.DrawOval(beatArcInfo.Rect, Brushes.BeatPen);
             }
         }
     }
@@ -478,7 +358,7 @@ internal partial class SkCircleView
     public void DrawDegreeCircle()
     {
         // Draw base circle
-        canvas.DrawOval(DrawRect, TickMediumPen);
+        canvas.DrawOval(DrawRect, Brushes.DegreeCircleMediumPen);
 
         for (var i = 0; i < 360; i += 6)
         {
@@ -491,16 +371,16 @@ internal partial class SkCircleView
             if (i % 90 == 0)
             {
                 innerRad = Radius - tickLength * 3.5f;
-                activePen = TickMajorPen;
+                activePen = Brushes.DegreeCircleMajorPen;
             }
             else if (i % 30 == 0)
             {
                 innerRad = Radius - tickLength * 2.5f;
-                activePen = TickMediumPen;
+                activePen = Brushes.DegreeCircleMediumPen;
             }
             else
             {
-                activePen = TickMinorPen;
+                activePen = Brushes.DegreeCircleMinorPen;
             }
 
             var endPoint = new SKPoint(
@@ -570,12 +450,6 @@ internal partial class SkCircleView
 
         if (interval > 0)
         {
-            var colors = new[]
-             {
-                SKColors.White.WithAlpha(0x20),
-                SKColors.White.WithAlpha(0x00)
-            };
-
             for (var i = 0 + offset; i < 360 + offset; i += interval)
             {
                 var tickLength = PanelSize.Width * 110.0f / 285.0f;
@@ -584,21 +458,12 @@ internal partial class SkCircleView
                 var startPoint = GetPointOnArc(CenterPoint.X, CenterPoint.Y, Radius, i);
                 var endPoint = GetPointOnArc(CenterPoint.X, CenterPoint.Y, innerRad, i);
 
-                var shader = SKShader.CreateLinearGradient(
-                    new SKPoint(startPoint.X, startPoint.Y),
-                    new SKPoint(endPoint.X, endPoint.Y),
-                    colors,
-                    null,
-                    SKShaderTileMode.Clamp);
-
-                var GuideLinePaint = new SKPaint { Shader = shader };
-
-                canvas.DrawLine(startPoint, endPoint, GuideLinePaint);
+                canvas.DrawLine(startPoint, endPoint, Brushes.GetGuidelinePen(startPoint, endPoint));
             }
         }
     }
 
-    public void DrawGimmicksWithVisibilityCheck(Chart chart, bool showGimmicks, int selectedGimmickIndex)
+    public void DrawGimmicksWithVisibilityCheck(Chart chart, bool showGimmicks, int selectedGimmickIndex, float noteScaleMultiplier)
     {
         if (showGimmicks)
         {
@@ -612,12 +477,12 @@ internal partial class SkCircleView
                 var info = GetScaledRect(chart, gimmick.Measure);
 
                 if (info.Rect.Width >= 1 && GetObjectVisibility(gimmick.Measure))
-                    canvas.DrawOval(info.Rect, GetNotePaint(gimmick));
+                    canvas.DrawOval(info.Rect, Brushes.GetGimmickPen(gimmick, info.NoteScale * noteScaleMultiplier));
             }
         }
     }
 
-    public void DrawHolds(Chart chart, bool highlightSelectedNote, int selectedNoteIndex)
+    /*public void DrawHolds(Chart chart, bool highlightSelectedNote, int selectedNoteIndex)
     {
         var totalMeasureShowNotes = GetTotalMeasureShowNotes2(chart);
         var currentInfo = GetScaledRect(chart, CurrentMeasure);
@@ -661,7 +526,7 @@ internal partial class SkCircleView
             var p = new SKPath();
             p.ArcTo(currentInfo.Rect, startAngle, arcLength, true);
             p.ArcTo(endInfo.Rect, startAngle2 + arcLength2, -arcLength2, false);
-            canvas.DrawPath(p, HoldBrush);
+            canvas.DrawPath(p, Brushes.GetHoldFill(new SKPoint(CenterPoint.X, CenterPoint.Y), Radius));
         }
 
         // Second, draw all the notes on-screen
@@ -692,7 +557,7 @@ internal partial class SkCircleView
                 var p = new SKPath();
                 p.ArcTo(info.Rect, info.StartAngle, info.ArcLength, true);
                 p.ArcTo(currentInfo.Rect, startAngle + arcLength, -arcLength, false);
-                canvas.DrawPath(p, HoldBrush);
+                canvas.DrawPath(p, Brushes.GetHoldFill(new SKPoint(CenterPoint.X, CenterPoint.Y), Radius));
             }
 
             // If the next note is on-screen, this case handles that
@@ -702,7 +567,7 @@ internal partial class SkCircleView
                 var p = new SKPath();
                 p.ArcTo(info.Rect, info.StartAngle, info.ArcLength, true);
                 p.ArcTo(nextInfo.Rect, nextInfo.StartAngle + nextInfo.ArcLength, -nextInfo.ArcLength, false);
-                canvas.DrawPath(p, HoldBrush);
+                canvas.DrawPath(p, Brushes.GetHoldFill(new SKPoint(CenterPoint.X, CenterPoint.Y), Radius));
             }
 
             // If the next note is off-screen, this case handles that
@@ -724,27 +589,27 @@ internal partial class SkCircleView
                 var p = new SKPath();
                 p.ArcTo(endInfo.Rect, startAngle, arcLength, true);
                 p.ArcTo(info.Rect, info.StartAngle + info.ArcLength, -info.ArcLength, false);
-                canvas.DrawPath(p, HoldBrush);
+                canvas.DrawPath(p, Brushes.GetHoldFill(new SKPoint(CenterPoint.X, CenterPoint.Y), Radius));
             }
 
             // Draw note
             if (info.Rect.Width >= 1)
             {
-                canvas.DrawArc(info.Rect, info.StartAngle, info.ArcLength, false, GetNotePaint(note));
+                canvas.DrawArc(info.Rect, info.StartAngle, info.ArcLength, false, Brushes.GetNotePen(note, info.NoteScale * NoteScaleMultiplier));
 
-                // Draw bonus
+                // Draw flair
                 if (note.IsFlair)
-                    canvas.DrawArc(info.Rect, info.StartAngle + 2, info.ArcLength - 4, false, HighlightPen);
+                    canvas.DrawArc(info.Rect, info.StartAngle + 2, info.ArcLength - 4, false, Brushes.GetFlairPen(info.NoteScale * NoteScaleMultiplier));
 
                 // Plot highlighted
                 if (highlightSelectedNote)
                     if (selectedNoteIndex != -1 && note == chart.Notes[selectedNoteIndex])
-                        canvas.DrawArc(info.Rect, info.StartAngle + 2, info.ArcLength - 4, false, HighlightPen);
+                        canvas.DrawArc(info.Rect, info.StartAngle + 2, info.ArcLength - 4, false, Brushes.GetHighlightPen(info.NoteScale * NoteScaleMultiplier, false));
             }
         }
-    }
+    }*/
 
-    public void DrawHoldsSingle(Chart chart, bool highlightSelectedNote, int selectedNoteIndex)
+    public void DrawHoldsSingle(Chart chart, bool highlightSelectedNote, int selectedNoteIndex, float noteScaleMultiplier)
     {
         var currentInfo = GetScaledRect(chart, CurrentMeasure);
         var totalMeasureShowNotes = GetTotalMeasureShowNotes2(chart);
@@ -754,17 +619,17 @@ internal partial class SkCircleView
         // Draw all the notes on-screen
         var holdNotes = chart.Notes
             .Where(x => x.IsHold && (
-                (x.Measure < CurrentMeasure && x.NextNote?.Measure > endMeasure) ||
+                (x.Measure < CurrentMeasure && x.NextReferencedNote?.Measure > endMeasure) ||
                 (x.Measure >= CurrentMeasure && x.Measure <= endMeasure)));
-            // .ToList();
+        // .ToList();
         foreach (var note in holdNotes)
         {
             var info = GetSkArcInfo(chart, note);
 
             // If the previous note is off-screen, this case handles that
-            if (note.PrevNote?.Measure < CurrentMeasure)
+            if (note.PrevReferencedNote?.Measure < CurrentMeasure)
             {
-                var prevInfo = GetSkArcInfo(chart, (Note) note.PrevNote);
+                var prevInfo = GetSkArcInfo(chart, (Note) note.PrevReferencedNote);
                 var ratio = (currentInfo.Rect.Width - info.Rect.Width) / (prevInfo.Rect.Width - info.Rect.Width);
                 var startNoteAngle = info.StartAngle;
                 var endNoteAngle = prevInfo.StartAngle;
@@ -777,26 +642,39 @@ internal partial class SkCircleView
                                (startNoteAngle - info.ArcLength);
                 var arcLength = startAngle - endAngle;
 
+                var arc1StartAngle = note.Size == 60 ? info.StartAngle : info.StartAngle + 1.5f;
+                var arc1ArcLength = note.Size == 60 ? info.ArcLength : info.ArcLength - 3.0f;
+
+                var arc2StartAngle = note.Size == 60 ? startAngle + arcLength : startAngle + arcLength - 1.5f;
+                var arc2ArcLength = note.Size == 60 ? -arcLength : -arcLength + 3.0f;
+
                 var p = new SKPath();
-                p.ArcTo(info.Rect, info.StartAngle, info.ArcLength, true);
-                p.ArcTo(currentInfo.Rect, startAngle + arcLength, -arcLength, false);
-                canvas.DrawPath(p, HoldBrush);
+                p.ArcTo(info.Rect, arc1StartAngle, arc1ArcLength, true);
+                p.ArcTo(currentInfo.Rect, arc2StartAngle, arc2ArcLength, false);
+                canvas.DrawPath(p, Brushes.GetHoldFill(new SKPoint(CenterPoint.X, CenterPoint.Y), Radius));
             }
 
             // If the next note is on-screen, this case handles that
-            if (note.NextNote != null && note.NextNote.Measure <= CurrentMeasure + totalMeasureShowNotes)
+            if (note.NextReferencedNote != null && note.NextReferencedNote.Measure <= CurrentMeasure + totalMeasureShowNotes)
             {
-                var nextInfo = GetSkArcInfo(chart, note.NextNote);
+                var nextInfo = GetSkArcInfo(chart, note.NextReferencedNote);
+
+                var arc1StartAngle = note.Size == 60 ? info.StartAngle : info.StartAngle + 1.5f;
+                var arc1ArcLength = note.Size == 60 ? info.ArcLength : info.ArcLength - 3.0f;
+
+                var arc2StartAngle = note.Size == 60 ? nextInfo.StartAngle + nextInfo.ArcLength : nextInfo.StartAngle + nextInfo.ArcLength - 1.5f;
+                var arc2ArcLength = note.Size == 60 ? -nextInfo.ArcLength : -nextInfo.ArcLength + 3.0f;
+
                 var p = new SKPath();
-                p.ArcTo(info.Rect, info.StartAngle, info.ArcLength, true);
-                p.ArcTo(nextInfo.Rect, nextInfo.StartAngle + nextInfo.ArcLength, -nextInfo.ArcLength, false);
-                canvas.DrawPath(p, HoldBrush);
+                p.ArcTo(info.Rect, arc1StartAngle, arc1ArcLength, true);
+                p.ArcTo(nextInfo.Rect, arc2StartAngle, arc2ArcLength, false);
+                canvas.DrawPath(p, Brushes.GetHoldFill(new SKPoint(CenterPoint.X, CenterPoint.Y), Radius));
             }
 
             // If the next note is off-screen, this case handles that
-            if (note.NextNote != null && note.NextNote.Measure > CurrentMeasure + totalMeasureShowNotes)
+            if (note.NextReferencedNote != null && note.NextReferencedNote.Measure > CurrentMeasure + totalMeasureShowNotes)
             {
-                var nextInfo = GetSkArcInfo(chart, note.NextNote);
+                var nextInfo = GetSkArcInfo(chart, note.NextReferencedNote);
                 var ratio = (endInfo.Rect.Width - nextInfo.Rect.Width) / (info.Rect.Width - nextInfo.Rect.Width);
                 var startNoteAngle = nextInfo.StartAngle;
                 var endNoteAngle = info.StartAngle;
@@ -809,31 +687,61 @@ internal partial class SkCircleView
                                (startNoteAngle - nextInfo.ArcLength);
                 var arcLength = startAngle - endAngle;
 
+                // slightly hacky fix to stop hold notes from overflowing the circle
+                var limitedRect = info.Rect.Width < DrawRect.Width ? info.Rect : DrawRect;
+
+                var arc1StartAngle = note.Size == 60 ? startAngle : startAngle + 1.5f;
+                var arc1ArcLength = note.Size == 60 ? arcLength : arcLength - 3.0f;
+
+                var arc2StartAngle = note.Size == 60 ? info.StartAngle + info.ArcLength : info.StartAngle + info.ArcLength - 1.5f;
+                var arc2ArcLength = note.Size == 60 ? -info.ArcLength : -info.ArcLength + 3.0f;
+
                 var p = new SKPath();
-                p.ArcTo(endInfo.Rect, startAngle, arcLength, true);
-                p.ArcTo(info.Rect, info.StartAngle + info.ArcLength, -info.ArcLength, false);
-                canvas.DrawPath(p, HoldBrush);
+                p.ArcTo(endInfo.Rect, arc1StartAngle, arc1ArcLength, true);
+                p.ArcTo(limitedRect, arc2StartAngle, arc2ArcLength, false);
+                canvas.DrawPath(p, Brushes.GetHoldFill(new SKPoint(CenterPoint.X, CenterPoint.Y), Radius));
             }
 
             // Draw note
-            if (info.Rect.Width >= 1)
+            if (info.Rect.Width >= 1 && GetObjectVisibility(note.Measure))
             {
-                if (!Playing || note.NoteType is NoteType.HoldStartNoBonus or NoteType.HoldStartBonusFlair or NoteType.HoldEnd)
-                    canvas.DrawArc(info.Rect, info.StartAngle, info.ArcLength, false, GetNotePaint(note));
+                // draw hold start notes with end caps
+                if (note.NoteType is NoteType.HoldStartNoBonus or NoteType.HoldStartBonusFlair)
+                {
+                    if (note.Size != 60)
+                        DrawEndCaps(info.Rect, info.StartAngle, info.ArcLength, info.NoteScale * noteScaleMultiplier);
+
+                    canvas.DrawArc(info.Rect, info.StartAngle, info.ArcLength, false, Brushes.GetNotePen(note, info.NoteScale * noteScaleMultiplier));
+                }
+
+                // draw hold joint and end notes if paused
+                if (!Playing && note.NoteType is NoteType.HoldJoint or NoteType.HoldEnd)
+                {
+                    canvas.DrawArc(info.Rect, info.StartAngle + 1.5f, info.ArcLength - 3.0f, false, Brushes.GetNotePen(note, info.NoteScale * noteScaleMultiplier));
+                }
+
+                // draw thin hold end notes only while playing
+                if (Playing && note.NoteType is NoteType.HoldEnd)
+                {
+                    canvas.DrawArc(info.Rect, info.StartAngle + 1.5f, info.ArcLength - 3.0f, false, Brushes.GetEndHoldPen(note, info.NoteScale * noteScaleMultiplier));
+                }
+
 
                 // Draw bonus
                 if (note.IsFlair)
-                    canvas.DrawArc(info.Rect, info.StartAngle + 2, info.ArcLength - 4, false, HighlightPen);
+                {
+                    canvas.DrawArc(info.Rect, info.StartAngle + 2, info.ArcLength - 4, false, Brushes.GetFlairPen(info.NoteScale * noteScaleMultiplier));
+                }
 
                 // Plot highlighted
                 if (highlightSelectedNote)
                     if (selectedNoteIndex != -1 && note == chart.Notes[selectedNoteIndex])
-                        canvas.DrawArc(info.Rect, info.StartAngle + 2, info.ArcLength - 4, false, HighlightPen);
+                        canvas.DrawArc(info.Rect, info.StartAngle + 2, info.ArcLength - 4, false, Brushes.GetHighlightPen(info.NoteScale * noteScaleMultiplier, false));
             }
         }
     }
 
-    public void DrawNotes(Chart chart, bool highlightSelectedNote, int selectedNoteIndex)
+    public void DrawNotes(Chart chart, bool highlightSelectedNote, int selectedNoteIndex, float noteScaleMultiplier)
     {
         var totalMeasureShowNotes = GetTotalMeasureShowNotes2(chart);
         var drawNotes = chart.Notes.Where(
@@ -846,19 +754,36 @@ internal partial class SkCircleView
 
             if (info.Rect.Width >= 1 && GetObjectVisibility(note.Measure))
             {
-                canvas.DrawArc(info.Rect, info.StartAngle, info.ArcLength, false,
-                    GetNotePaint(note, info.NoteScale));
-
+                if (note.IsBonus)
+                    canvas.DrawArc(info.Rect, info.StartAngle, info.ArcLength, false, Brushes.GetBonusPen(info.NoteScale * noteScaleMultiplier));
+                
                 if (note.IsFlair)
-                    canvas.DrawArc(info.Rect, info.StartAngle + 2, info.ArcLength - 4, false, FlairPen);
-                // Plot highlighted
-                if (highlightSelectedNote)
-                    if (selectedNoteIndex != -1 && note == chart.Notes[selectedNoteIndex])
-                        canvas.DrawArc(info.Rect, info.StartAngle + 2, info.ArcLength - 4, false, HighlightPen);
-                //if (note.Measure < CurrentMeasure)
-                    //canvas.DrawArc(info.Rect, info.StartAngle, info.ArcLength, false, HitPen);
+                    canvas.DrawArc(info.Rect, info.StartAngle, info.ArcLength, false, Brushes.GetFlairPen(info.NoteScale * noteScaleMultiplier));
+
+                if (note.Size != 60)
+                    DrawEndCaps(info.Rect, info.StartAngle, info.ArcLength, info.NoteScale * noteScaleMultiplier);
+
+                canvas.DrawArc(info.Rect, info.StartAngle, info.ArcLength, false, Brushes.GetNotePen(note, info.NoteScale * noteScaleMultiplier));
+                
+                if (highlightSelectedNote && (selectedNoteIndex != -1 && note == chart.Notes[selectedNoteIndex]))
+                    canvas.DrawArc(info.Rect, info.StartAngle, info.ArcLength, false, Brushes.GetHighlightPen(info.NoteScale * noteScaleMultiplier, false));
             }
         }
+    }
+
+    public void DrawEndCaps(SKRect rect, float start, float length, float noteScale)
+    {
+        var arc1Start = start - 0.1f;
+        var arc2Start = start + length - 1.5f;
+        const float arcLength = 1.6f;
+        canvas.DrawArc(rect, arc1Start, arcLength, false, Brushes.GetEndCapPen(noteScale));
+        canvas.DrawArc(rect, arc2Start, arcLength, false, Brushes.GetEndCapPen(noteScale));
+    }
+
+    public void DrawNoteLinks(Chart chart, float noteScaleMultiplier)
+    {
+        // leaving this here for when it's actually implemented.
+        // A nested foreach loop is a stupid solution.
     }
 
     public void DrawSlideArrows(Chart chart, bool highlightSelectedNote, int selectedNoteIndex)
@@ -871,8 +796,6 @@ internal partial class SkCircleView
         foreach (var note in drawNotes)
         {
             var info = GetSkArcInfo(chart, note);
-            var paint = GetNotePaint(note, info.NoteScale);
-            paint.StrokeCap = SKStrokeCap.Round;
 
             int arrowDirection;
             switch (note.NoteType)
@@ -891,20 +814,23 @@ internal partial class SkCircleView
                     arrowDirection = 0;
                     break;
             }
-            
+
             var radius = info.Rect.Width * 0.53f;
 
-            var radiusOffset = 0.79f;
-            var arrowMinWidth = 0.02f;
-            var arrowMaxWidth = 0.07f;
-            var arrowLength = 3.5f;
+            const float radiusOffset = 0.79f;
+            const float arrowMinWidth = 0.02f;
+            const float arrowMaxWidth = 0.07f;
+            const float arrowLength = 3.5f;
 
-            var startPoint = info.StartAngle - 6;
-            var endPoint = info.StartAngle + info.ArcLength + 6;
-            var interval = 12;
+            var startPoint = info.StartAngle - 12 - (6 * arrowDirection);
+            var endPoint = startPoint + info.ArcLength + 18 + (6 * arrowDirection);
 
+            const int interval = 12;
 
-            for (var i = startPoint; i > endPoint; i -= interval)
+            if (arrowMovementOffset > 12)
+                arrowMovementOffset -= 12;
+
+            for (var i = startPoint + arrowMovementOffset % 12 * arrowDirection; i > endPoint; i -= interval)
             {
                 var progress = arrowDirection != 1 ? (i - startPoint) / (endPoint - startPoint) : 1 - (i - startPoint) / (endPoint - startPoint);
                 var scaledArrowWidth = (1 - progress) * arrowMinWidth + arrowMaxWidth * progress;
@@ -915,14 +841,14 @@ internal partial class SkCircleView
 
                 if (info.Rect.Width >= 1 && GetObjectVisibility(note.Measure))
                 {
-                    canvas.DrawLine(p1, p2, paint);
-                    canvas.DrawLine(p2, p3, paint);
+                    canvas.DrawLine(p1, p2, Brushes.GetArrowPen(note, info.NoteScale));
+                    canvas.DrawLine(p2, p3, Brushes.GetArrowPen(note, info.NoteScale));
 
-                    if(highlightSelectedNote)
+                    if (highlightSelectedNote)
                         if (selectedNoteIndex != -1 && note == chart.Notes[selectedNoteIndex])
                         {
-                            canvas.DrawLine(p1, p2, RoundHighlightPen);
-                            canvas.DrawLine(p2, p3, RoundHighlightPen);
+                            canvas.DrawLine(p1, p2, Brushes.GetHighlightPen(info.NoteScale, true));
+                            canvas.DrawLine(p2, p3, Brushes.GetHighlightPen(info.NoteScale, true));
                         }
                 }
             }
@@ -939,9 +865,6 @@ internal partial class SkCircleView
         foreach (var note in drawNotes)
         {
             var info = GetSkArcInfo(chart, note);
-            var paint = GetNotePaint(note, info.NoteScale);
-            paint.StrokeCap = SKStrokeCap.Round;
-            paint.StrokeWidth *= 0.8f;
 
             int arrowDirection;
             switch (note.NoteType)
@@ -989,20 +912,20 @@ internal partial class SkCircleView
 
                 if (info.Rect.Width >= 1 && GetObjectVisibility(note.Measure))
                 {
-                    canvas.DrawLine(p1, p2, paint);
-                    canvas.DrawLine(p2, p3, paint);
+                    canvas.DrawLine(p1, p2, Brushes.GetArrowPen(note, info.NoteScale));
+                    canvas.DrawLine(p2, p3, Brushes.GetArrowPen(note, info.NoteScale));
 
-                    canvas.DrawLine(p4, p5, paint);
-                    canvas.DrawLine(p5, p6, paint);
+                    canvas.DrawLine(p4, p5, Brushes.GetArrowPen(note, info.NoteScale));
+                    canvas.DrawLine(p5, p6, Brushes.GetArrowPen(note, info.NoteScale));
 
                     if (highlightSelectedNote)
                         if (selectedNoteIndex != -1 && note == chart.Notes[selectedNoteIndex])
                         {
-                            canvas.DrawLine(p1, p2, RoundHighlightPen);
-                            canvas.DrawLine(p2, p3, RoundHighlightPen);
+                            canvas.DrawLine(p1, p2, Brushes.GetHighlightPen(info.NoteScale, true));
+                            canvas.DrawLine(p2, p3, Brushes.GetHighlightPen(info.NoteScale, true));
 
-                            canvas.DrawLine(p4, p5, RoundHighlightPen);
-                            canvas.DrawLine(p5, p6, RoundHighlightPen);
+                            canvas.DrawLine(p4, p5, Brushes.GetHighlightPen(info.NoteScale, true));
+                            canvas.DrawLine(p5, p6, Brushes.GetHighlightPen(info.NoteScale, true));
                         }
                 }
             }
@@ -1044,7 +967,7 @@ internal partial class SkCircleView
         canvas.DrawArc(measureArcInfo.Rect, -startAngle * 6.0f,
             -sweepAngle * 6.0f,
             false,
-            GetNotePaint(noteType)
+            Brushes.GetCursorPen(noteType)
         );
     }
 
@@ -1071,45 +994,7 @@ internal partial class SkCircleView
                 (float)(Radius * Math.Cos(Utils.DegToRad(axisAngle + 180)) + CenterPoint.X),
                 (float)(Radius * Math.Sin(Utils.DegToRad(axisAngle + 180)) + CenterPoint.Y));
 
-        canvas.DrawLine(startPoint, endPoint, MirrorAxisPen);
-    }
-
-    private SKPaint GetNotePaint(Note note, float noteScale = 1.0f)
-    {
-        var color = note.Measure >= CurrentMeasure ? note.Color : note.Color.WithAlpha(0x30);
-
-        return new SKPaint
-        {
-            IsAntialias = true,
-            Color = color,
-            Style = SKPaintStyle.Stroke,
-            StrokeWidth = PanelSize.Width * 8.0f * noteScale / 600.0f
-        };
-    }
-
-    private SKPaint GetNotePaint(Gimmick gimmick, float noteScale = 1.0f)
-    {
-        var color = gimmick.Measure >= CurrentMeasure ? Utils.GimmickTypeToColor(gimmick.GimmickType) : Utils.GimmickTypeToColor(gimmick.GimmickType).WithAlpha(0x30);
-
-        return new SKPaint
-        {
-            IsAntialias = true,
-            Color = color,
-            Style = SKPaintStyle.Stroke,
-            StrokeWidth = PanelSize.Width * 5.0f * noteScale / 600.0f
-        };
-    }
-
-    private SKPaint GetNotePaint(NoteType noteType)
-    {
-        var color = Utils.NoteTypeToColor(noteType);
-        return new SKPaint
-        {
-            IsAntialias = true,
-            Color = color.WithAlpha((byte) CursorTransparency),
-            Style = SKPaintStyle.Stroke,
-            StrokeWidth = PanelSize.Width * 24.0f / 600.0f
-        };
+        canvas.DrawLine(startPoint, endPoint, Brushes.MirrorAxisPen);
     }
 
     private bool GetObjectVisibility(float noteTime)
