@@ -359,13 +359,57 @@ internal class Chart
         return GetTime(beatInfo.MeasureDecimal);
     }
 
+    public static float GetScaledMeasurePosition(Chart chart, float measureDecimal)
+    {
+        return GetScaledMeasurePositionOpt(chart, measureDecimal);
+    }
+
+
+    public static float GetScaledMeasurePositionOpt(Chart chart, float measureDecimal)
+    {
+        float scaledPosition = measureDecimal;
+        float lastMeasurePosition = 0;
+        float currentHiSpeedValue = 1;
+        float currentTimeSigValue = 1;
+
+        var relevantScaleChanges = chart.Gimmicks
+            .Where(x => x.Measure < measureDecimal &&
+                        x.GimmickType is GimmickType.HiSpeedChange or GimmickType.TimeSignatureChange);
+
+        foreach (var scaleChange in relevantScaleChanges)
+        {
+            // Apply the scale change up to this point.
+            float distance = scaleChange.Measure - lastMeasurePosition;
+            scaledPosition += (distance * currentHiSpeedValue * currentTimeSigValue) - distance;
+
+            lastMeasurePosition = scaleChange.Measure;
+
+            // Update the current values.
+            if (scaleChange.GimmickType == GimmickType.TimeSignatureChange)
+            {
+                currentTimeSigValue = (float)scaleChange.TimeSig.Ratio;
+            }
+            else if (scaleChange.GimmickType == GimmickType.HiSpeedChange)
+            {
+                currentHiSpeedValue = (float)scaleChange.HiSpeed;
+            }
+        }
+
+        // Apply the final scale change for the remaining distance.
+        float finalDistance = measureDecimal - lastMeasurePosition;
+        scaledPosition += (finalDistance * currentHiSpeedValue * currentTimeSigValue) - finalDistance;
+
+        return scaledPosition;
+    }
+
+
     /// <summary>
     /// Returns MeasureDecimal scaled by all previous HiSpeed changes and Time Signatures.
     /// <br>Avoid using this in realtime, it's very expensive.</br>
     /// </summary>
     /// <param name="chart">Current Chart</param>
     /// <param name="measureDecimal">Position in MeasureDecimals</param>
-    public static float GetScaledMeasurePosition(Chart chart, float measureDecimal)
+    public static float GetScaledMeasurePositionOld(Chart chart, float measureDecimal)
     {
         float scaledPosition = measureDecimal;
 

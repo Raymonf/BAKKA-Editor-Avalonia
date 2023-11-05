@@ -957,26 +957,26 @@ public partial class MainView : UserControl
             skCircleView.RenderEngine.DrawDegreeCircle();
 
             // Draw mirror axis
-            /*if (isHoveringOverMirrorAxis)
-                skCircleView.RenderEngine.DrawMirrorAxis(mirrorAxis);*/
+            // if (isHoveringOverMirrorAxis)
+                // skCircleView.RenderEngine.DrawMirrorAxis(mirrorAxis);
 
             // Draw Gimmicks
-            //skCircleView.RenderEngine.DrawGimmickNotes(chart, userSettings.ViewSettings.ShowGimmicks, userSettings.ViewSettings.HighlightViewedNote, selectedGimmickIndex);
+            skCircleView.RenderEngine.DrawGimmickNotes(chart, userSettings.ViewSettings.ShowGimmicks, userSettings.ViewSettings.HighlightViewedNote, selectedGimmickIndex);
 
             /*// Draw Links connecting simultaneous notes
             // WIP for now.
-            //skCircleView.RenderEngine.DrawNoteLinks(chart, userSettings.ViewSettings.NoteScaleMultiplier);
+            //skCircleView.RenderEngine.DrawNoteLinks(chart, userSettings.ViewSettings.NoteScaleMultiplier);*/
 
             // Draw holds
-            skCircleView.RenderEngine.DrawHolds(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex, userSettings.ViewSettings.NoteScaleMultiplier);*/
+            // skCircleView.RenderEngine.DrawHolds(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex, userSettings.ViewSettings.NoteScaleMultiplier);
 
             // Draw notes
-            //skCircleView.RenderEngine.DrawNotes(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex, userSettings.ViewSettings.NoteScaleMultiplier);
+            skCircleView.RenderEngine.DrawNotes(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex, userSettings.ViewSettings.NoteScaleMultiplier);
 
             if (appSettingsVm.ShowSlideSnapArrows)
             {
-                //skCircleView.RenderEngine.DrawSlideArrows(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex);
-                //skCircleView.RenderEngine.DrawSnapArrows(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex);
+                // skCircleView.RenderEngine.DrawSlideArrows(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex);
+                // skCircleView.RenderEngine.DrawSnapArrows(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex);
             }
         }
 
@@ -986,8 +986,8 @@ public partial class MainView : UserControl
             showCursor = userSettings.ViewSettings.ShowCursorDuringPlayback;
 
         // Draw cursor
-        /*if (showCursor)
-            skCircleView.RenderEngine.DrawCursor(currentNoteType, (float) _vm.PositionNumeric, (float) _vm.SizeNumeric);*/
+        // if (showCursor)
+            // skCircleView.RenderEngine.DrawCursor(currentNoteType, (float) _vm.PositionNumeric, (float) _vm.SizeNumeric)
     }
 
     private void CircleControl_OnWheel(object? sender, PointerWheelEventArgs e)
