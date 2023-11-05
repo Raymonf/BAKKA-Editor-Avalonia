@@ -43,7 +43,7 @@ namespace BAKKA_Editor
                     {
                         BeatInfo = new((float) i),
                         NoteType = NoteType.HoldJoint,
-                        Position = newPosition,
+                        Position = (newPosition + 60) % 60,
                         Size = newSize,
                         HoldChange = true,
                         PrevReferencedNote = lastNote,
@@ -97,7 +97,7 @@ namespace BAKKA_Editor
                     {
                         BeatInfo = new((float) i),
                         NoteType = NoteType.HoldJoint,
-                        Position = newPosition,
+                        Position = (newPosition + 60) % 60,
                         Size = newSize,
                         HoldChange = true,
                         PrevReferencedNote = lastNote,
