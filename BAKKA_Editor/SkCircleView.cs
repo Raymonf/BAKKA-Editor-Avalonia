@@ -979,7 +979,7 @@ internal partial class SkCircleView
     {
         float measure = DepthToMeasure(depth);
         var measureArcInfo = GetScaledRect(chart, measure);
-        canvas.DrawOval(measureArcInfo.Rect, CursorBeatIndicatorPen);
+        canvas.DrawOval(measureArcInfo.Rect, Brushes.GetCursorMeasurePen());
     }
     
     public void DrawMirrorAxis(int axis)

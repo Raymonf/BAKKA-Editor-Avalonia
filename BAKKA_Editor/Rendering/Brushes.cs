@@ -28,6 +28,8 @@ internal class Brushes
     private const float MirrorAxisPenStrokeWidth = 0.5f;
 
     private const float CursorPenStrokeWidth = 24.0f;
+    private static readonly SKColor CursorMeasureColor = SKColors.Cyan.WithAlpha(0x80);
+    private const float CursorMeasurePenStrokeWidth = 3.0f;
 
     private static readonly SKColor[] GuidelinePenColors =
     {
@@ -99,6 +101,14 @@ internal class Brushes
     public SKPaint CursorPen = new()
     {
         StrokeWidth = CursorPenStrokeWidth,
+        Style = SKPaintStyle.Stroke,
+        IsAntialias = true
+    };
+
+    public SKPaint CursorMeasurePen = new()
+    {
+        Color = CursorMeasureColor,
+        StrokeWidth = CursorMeasurePenStrokeWidth,
         Style = SKPaintStyle.Stroke,
         IsAntialias = true
     };
@@ -252,6 +262,11 @@ internal class Brushes
     {
         CursorPen.Color = NoteTypeToColor(noteType).WithAlpha(0x80);
         return CursorPen;
+    }
+
+    public SKPaint GetCursorMeasurePen()
+    {
+        return CursorMeasurePen;
     }
 
     public SKPaint GetGuidelinePen(SKPoint startPoint, SKPoint endPoint)
