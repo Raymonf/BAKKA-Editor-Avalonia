@@ -302,11 +302,11 @@ internal class Chart
     */
 
     /// <summary>
-    ///     Translate clock time to beats
+    ///     Translate milliseconds to BeatInfo
     /// </summary>
-    /// <param name="time">Current timestamp in ms</param>
+    /// <param name="time">Timestamp in milliseconds</param>
     /// <returns></returns>
-    public BeatInfo GetBeat(double time)
+    public BeatInfo GetBeatInfoFromTime(double time)
     {
         if (TimeEvents == null || TimeEvents.Count == 0)
             return new BeatInfo(-1, 0);
@@ -319,9 +319,9 @@ internal class Chart
     /// <summary>
     ///     Translate MeasureDecimal to beats
     /// </summary>
-    /// <param name="time">Current timestamp in ms</param>
+    /// <param name="time">Timestamp in milliseconds</param>
     /// <returns></returns>
-    public float GetBeatFromMeasureDecimal(double time)
+    public float GetMeasureDecimalFromTime(double time)
     {
         if (TimeEvents == null || TimeEvents.Count == 0)
         {
@@ -333,9 +333,9 @@ internal class Chart
     }
 
     /// <summary>
-    ///     Translate measures into clock time
+    ///     Translate MeasureDecimals into milliseconds
     /// </summary>
-    /// <param name="beat"></param>
+    /// <param name="measureDecimal">Timestamp in MeasureDecimals</param>
     /// <returns></returns>
     public int GetTime(float measureDecimal)
     {
@@ -350,12 +350,65 @@ internal class Chart
     }
 
     /// <summary>
-    ///     Translate measures into clock time
+    ///     Translate BeatInfo into milliseconds
     /// </summary>
-    /// <param name="beat"></param>
+    /// <param name="beat">BeatInfo</param>
     /// <returns></returns>
-    public int GetTime(BeatInfo beat)
+    public int GetTime(BeatInfo beatInfo)
     {
-        return GetTime(beat.MeasureDecimal);
+        return GetTime(beatInfo.MeasureDecimal);
+    }
+
+    /// <summary>
+    /// Returns MeasureDecimal scaled by all previous HiSpeed changes and Time Signatures.
+    /// <br>Avoid using this in realtime, it's very expensive.</br>
+    /// </summary>
+    /// <param name="chart">Current Chart</param>
+    /// <param name="measureDecimal">Position in MeasureDecimals</param>
+    public static float GetScaledMeasurePosition(Chart chart, float measureDecimal)
+    {
+        float scaledPosition = measureDecimal;
+
+        // scaleChange = HiSpeed or TimeSig change
+        var previousScaleChanges = chart.Gimmicks.Where(x =>
+            x.Measure < measureDecimal &&
+            x.GimmickType is GimmickType.HiSpeedChange or GimmickType.TimeSignatureChange).ToList();
+
+        if (previousScaleChanges.Count > 0)
+        {
+            for (var i = 0; i < previousScaleChanges.Count; i++)
+            {
+                var currentScaleChangePosition = previousScaleChanges[i].Measure;
+
+                var timeSigChange = previousScaleChanges.LastOrDefault(x => x.Measure <= currentScaleChangePosition && x.GimmickType is GimmickType.TimeSignatureChange);
+                var timeSigValue = timeSigChange != null ? (float)timeSigChange.TimeSig.Ratio : 1;
+
+                var hiSpeedChange = previousScaleChanges.LastOrDefault(x => x.Measure <= currentScaleChangePosition && x.GimmickType is GimmickType.HiSpeedChange);
+                var hiSpeedValue = hiSpeedChange != null ? (float)hiSpeedChange.HiSpeed : 1;
+
+                // if it's not the last Scale change in the list
+                if (i != previousScaleChanges.Count - 1)
+                {
+                    // get distance from current to next Scale change
+                    var nextScaleChangePosition = (float)previousScaleChanges[i + 1].Measure;
+                    var distance = nextScaleChangePosition - currentScaleChangePosition;
+
+                    // scale distance and apply change to scaledPosition
+                    scaledPosition += (distance * hiSpeedValue * timeSigValue) - distance;
+                }
+
+                // if it's the last Scale change in the list
+                else
+                {
+                    // get distance from current Scale change to position that should be scaled
+                    var distance = measureDecimal - currentScaleChangePosition;
+
+                    // scale distance and apply change to scaledPosition
+                    scaledPosition += (distance * hiSpeedValue * timeSigValue) - distance;
+                }
+            }
+        }
+
+        return scaledPosition;
     }
 }

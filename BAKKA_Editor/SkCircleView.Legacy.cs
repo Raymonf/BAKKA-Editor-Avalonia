@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Linq;
 
-namespace BAKKA_Editor;
+namespace BAKKA_Editor.Rendering;
 
-internal partial class SkCircleView
+internal partial class SkCircleViewLegacy
 {
-    public void DrawCircle(Chart chart)
+    /*public void DrawCircle(Chart chart)
     {
         // Draw measure circle
         var totalMeasureShowNotes = GetTotalMeasureShowNotes2(chart);
@@ -34,5 +34,5 @@ internal partial class SkCircleView
                 if (info.Rect.Width >= 1) canvas.DrawOval(info.Rect, Brushes.GetGimmickPen(gimmick, info.NoteScale));
             }
         }
-    }
+    }*/
 }
