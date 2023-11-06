@@ -713,15 +713,17 @@ public partial class MainView : UserControl
         if (tempFilePath == "")
             tempFilePath = PlatformUtils.GetTempFileName().Replace(".tmp", ".mer");
 
-        var tempFileStream = File.Open(tempFilePath, FileMode.Create);
-        if ((chart.Notes.Count > 0 || chart.Gimmicks.Count > 0) && !chart.IsSaved)
+        using (FileStream fileStream = File.Open(tempFilePath, FileMode.Create))
         {
-            chart.WriteFile(tempFileStream, false);
-            File.WriteAllLines(tempStatusPath, new[] {"true", DateTime.Now.ToString("yyyy-MM-dd HH:mm")});
-        }
-        else
-        {
-            DeleteAutosaves(tempFilePath);
+            if ((chart.Notes.Count > 0 || chart.Gimmicks.Count > 0) && !chart.IsSaved)
+            {
+                chart.WriteFile(fileStream, false);
+                File.WriteAllLines(tempStatusPath, new[] { "true", DateTime.Now.ToString("yyyy-MM-dd HH:mm") });
+            }
+            else
+            {
+                DeleteAutosaves(tempFilePath);
+            }
         }
     }
 
