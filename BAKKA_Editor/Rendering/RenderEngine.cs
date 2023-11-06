@@ -23,6 +23,7 @@ internal class RenderEngine
     public float CanvasRadius { get; private set; }
 
     public float CurrentMeasure { get; set; }
+    public float ScaledCurrentMeasure { get; private set; }
     public float UserHiSpeed { get; set; } = 1.5f;
     public float BeatDivision { get; set; } = 2;
     public int GuideLineSelection { get; set; } = 0;
@@ -43,6 +44,11 @@ internal class RenderEngine
 
         UserHiSpeed = clampedHiSpeed;
         VisibleMeasures = chart.GetMeasureDecimalFromTime(visibleTime);
+    }
+
+    public void UpdateScaledCurrentMeasure(Chart chart)
+    {
+        ScaledCurrentMeasure = chart.GetScaledMeasurePosition(CurrentMeasure);
     }
 
     public void UpdateCanvasSize(SizeF size)
@@ -73,7 +79,7 @@ internal class RenderEngine
         // get scaled note and cursor position if ShowHiSpeed is true,
         // otherwise default to original positions.
         var scaledPosition = ShowHiSpeed ? chart.GetScaledMeasurePosition(position) : position;
-        var scaledCurrentMeasure = ShowHiSpeed ? chart.GetScaledMeasurePosition(CurrentMeasure) : CurrentMeasure;
+        var scaledCurrentMeasure = ShowHiSpeed ? ScaledCurrentMeasure : CurrentMeasure;
         var visionEndMeasure = scaledCurrentMeasure + VisibleMeasures;
 
         var latestHiSpeedChange = chart.Gimmicks.LastOrDefault(x =>
@@ -247,11 +253,9 @@ internal class RenderEngine
 
     public void DrawCircleDividers(Chart chart)
     {
-        return;
-
         // Measures
         var measureStartValue = (float)Math.Ceiling(CurrentMeasure);
-        var endValue = chart.GetScaledMeasurePosition(CurrentMeasure) + VisibleMeasures;
+        var endValue = ScaledCurrentMeasure + VisibleMeasures;
 
         for (var i = measureStartValue; chart.GetScaledMeasurePosition(i) < endValue; i++)
         {
@@ -349,13 +353,13 @@ internal class RenderEngine
 
     public void DrawNotes(Chart chart, bool highlightSelectedNote, int selectedNoteIndex, float noteScaleMultiplier)
     {
-        var p2 = chart.GetScaledMeasurePosition(CurrentMeasure);
         var visibleNotes = chart.Notes.Where(x =>
             x.Measure >= CurrentMeasure
-            && chart.GetScaledMeasurePosition(x.Measure) <= p2 + VisibleMeasures);
+            && chart.GetScaledMeasurePosition(x.Measure) <= ScaledCurrentMeasure + VisibleMeasures);
 
         foreach (var note in visibleNotes)
         {
+            var test = chart.GetScaledMeasurePosition(note.Measure);
             var info = GetArc(chart, note);
 
             if (info.Rect.Width >= 1)
@@ -395,10 +399,12 @@ internal class RenderEngine
         {
             var info = GetRect(chart, gimmick.Measure);
             if (info.Rect.Width >= 1)
+            {
                 canvas.DrawOval(info.Rect, brushes.GetGimmickPen(gimmick, 1));
 
-            if (highlightSelectedNote && selectedGimmickIndex != -1 && gimmick == chart.Gimmicks[selectedGimmickIndex])
-                canvas.DrawOval(info.Rect, brushes.GetHighlightPen(1 , false));
+                if (highlightSelectedNote && selectedGimmickIndex != -1 && gimmick == chart.Gimmicks[selectedGimmickIndex])
+                    canvas.DrawOval(info.Rect, brushes.GetHighlightPen(1, false));
+            }
         }
     }
 }

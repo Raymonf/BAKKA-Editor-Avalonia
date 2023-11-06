@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using BAKKA_Editor.Enums;
 
@@ -378,9 +379,11 @@ internal class Chart
             // TODO: can we only update the required ones, as opposed to all at once
             ScaledMeasurePositions.Add(GetScaledMeasurePositionOptForCache(gimmick.Measure));
         }
+
+        ScaledMeasurePositions.Add(GetScaledMeasurePositionOptForCache(float.PositiveInfinity));
     }
 
-    private ScaledMeasurePositionInfo? FindFirstGimmickStartMeasureGreaterThan(float value)
+    private ScaledMeasurePositionInfo? FindFirstGimmickStartMeasureGreaterThan(float measure)
     {
         var left = 0;
         var right = ScaledMeasurePositions.Count - 1;
@@ -389,7 +392,7 @@ internal class Chart
         while (left <= right)
         {
             var mid = left + (right - left) / 2;
-            if (ScaledMeasurePositions[mid].GimmickStartMeasure <= value)
+            if (ScaledMeasurePositions[mid].GimmickStartMeasure <= measure)
             {
                 left = mid + 1;
             }
@@ -445,6 +448,7 @@ internal class Chart
                 currentHiSpeedValue = (float)scaleChange.HiSpeed;
             }
         }
+
 
         return new ScaledMeasurePositionInfo
         {

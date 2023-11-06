@@ -936,6 +936,8 @@ public partial class MainView : UserControl
         if (skCircleView == null)
             return;
 
+        skCircleView.RenderEngine.UpdateScaledCurrentMeasure(chart);
+
         skCircleView.RenderEngine.ShowHiSpeed = userSettings.ViewSettings.ShowGimmicksDuringPlayback;
 
         skCircleView.RenderEngine.SetCanvas(canvas);
@@ -2466,6 +2468,7 @@ public partial class MainView : UserControl
 
             chart.IsSaved = false;
             opManager.Push(new CompositeOperation(operations[0].Description, operations));
+            chart.RebuildScaledMeasurePositionCache();
         }
     }
 
