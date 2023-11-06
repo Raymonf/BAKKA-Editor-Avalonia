@@ -72,8 +72,8 @@ internal class RenderEngine
 
         // get scaled note and cursor position if ShowHiSpeed is true,
         // otherwise default to original positions.
-        var scaledPosition = ShowHiSpeed ? GetScaledMeasurePosition(chart, position) : position;
-        var scaledCurrentMeasure = ShowHiSpeed ? GetScaledMeasurePosition(chart, CurrentMeasure) : CurrentMeasure;
+        var scaledPosition = ShowHiSpeed ? chart.GetScaledMeasurePosition(position) : position;
+        var scaledCurrentMeasure = ShowHiSpeed ? chart.GetScaledMeasurePosition(CurrentMeasure) : CurrentMeasure;
         var visionEndMeasure = scaledCurrentMeasure + VisibleMeasures;
 
         var latestHiSpeedChange = chart.Gimmicks.LastOrDefault(x =>
@@ -171,40 +171,44 @@ internal class RenderEngine
         canvas.Clear(Brushes.GetBackgroundColor(isDarkMode));
     }
 
-    public void DrawMasks(Chart chart, bool isDarkMode)
+    public void DrawMasks(Chart chart, bool darkMode)
     {
-        // get all mask notes
-        var maskNotes = chart.Notes.Where(x =>
-            x.Measure <= CurrentMeasure
-            && x.IsMask).ToList();
-
-        for (var i = 0; i < maskNotes.Count; i++)
+        // TODO: i undid this thing because it was so slow
+        // but it might not be drawing masks right
+        return;
+        // var masks = chart.Notes.Where(x => x.Measure <= CurrentMeasure && x.IsMask).ToList();
+        var notes = chart.Notes;
+        for (var i = 0; i < notes.Count; i++)
         {
-            var currentMask = maskNotes[i];
+            var mask = notes[i];
+            if (!mask.IsMask || mask.Measure > CurrentMeasure)
+                continue;
 
-            switch (currentMask.NoteType)
+            switch (mask.NoteType)
             {
                 case NoteType.MaskAdd:
                 {
-                    // find a mask remove that is 1:1 overlapping the mask add
-                    var otherMask = chart.Notes.Where(x =>
-                        x.Measure >= currentMask.Measure
-                        && x.Size == currentMask.Size
-                        && x.Position == currentMask.Position
-                        && x.NoteType is NoteType.MaskRemove).ToList();
+                    var shouldDraw = true;
+                    for (var j = 0; j < chart.Notes.Count; j++)
+                    {
+                        var rem = notes[j];
+                        if (rem.NoteType == NoteType.MaskRemove && rem.Position == mask.Position &&
+                            rem.Size == mask.Size)
+                            if (rem.Measure >= mask.Measure)
+                            {
+                                shouldDraw = false;
+                                break;
+                            }
+                    }
 
-                    // if one is found -> skip rendering
-                    if (otherMask.Count != 0) break;
-                    else FillPie(brushes.MaskFill, DrawRect, currentMask.Position * 6.0f, currentMask.Size * 6.0f);
-
+                    if (shouldDraw)
+                        FillPie(brushes.MaskFill, DrawRect, mask.Position * 6.0f, mask.Size * 6.0f);
                     break;
                 }
-
+                // Explicitly draw MaskRemove for edge cases
                 case NoteType.MaskRemove:
-                {
-                    FillPie(brushes.GetBackgroundFill(isDarkMode), DrawRect, currentMask.Position * 6.0f, currentMask.Size * 6.0f);
+                    FillPie(brushes.GetBackgroundFill(darkMode), DrawRect, mask.Position * 6.0f, mask.Size * 6.0f);
                     break;
-                }
             }
         }
     }
@@ -243,11 +247,13 @@ internal class RenderEngine
 
     public void DrawCircleDividers(Chart chart)
     {
+        return;
+
         // Measures
         var measureStartValue = (float)Math.Ceiling(CurrentMeasure);
-        var endValue = GetScaledMeasurePosition(chart, CurrentMeasure) + VisibleMeasures;
+        var endValue = chart.GetScaledMeasurePosition(CurrentMeasure) + VisibleMeasures;
 
-        for (var i = measureStartValue; GetScaledMeasurePosition(chart, i) < endValue; i++)
+        for (var i = measureStartValue; chart.GetScaledMeasurePosition(i) < endValue; i++)
         {
             var measureArc = GetRect(chart, i);
             if (measureArc.Rect.Width >= 1)
@@ -260,7 +266,7 @@ internal class RenderEngine
             var beatStartValue = MathF.Floor(CurrentMeasure / BeatDivision) * BeatDivision;
 
             // reuse endValue because it's the same as above
-            for (var i = beatStartValue; GetScaledMeasurePosition(chart, i) < endValue; i += 1 / BeatDivision)
+            for (var i = beatStartValue; chart.GetScaledMeasurePosition(i) < endValue; i += 1 / BeatDivision)
             {
                 var beatArc = GetRect(chart, i);
                 if (beatArc.Rect.Width >= 1 && i % 1 > 0.0001)
@@ -343,9 +349,10 @@ internal class RenderEngine
 
     public void DrawNotes(Chart chart, bool highlightSelectedNote, int selectedNoteIndex, float noteScaleMultiplier)
     {
+        var p2 = chart.GetScaledMeasurePosition(CurrentMeasure);
         var visibleNotes = chart.Notes.Where(x =>
             x.Measure >= CurrentMeasure
-            && GetScaledMeasurePosition(chart, x.Measure) <= GetScaledMeasurePosition(chart, CurrentMeasure) + VisibleMeasures);
+            && chart.GetScaledMeasurePosition(x.Measure) <= p2 + VisibleMeasures);
 
         foreach (var note in visibleNotes)
         {
@@ -382,7 +389,7 @@ internal class RenderEngine
 
         var visibleGimmicks = chart.Gimmicks.Where(x =>
             x.Measure >= CurrentMeasure
-            && GetScaledMeasurePosition(chart, x.Measure) <= CurrentMeasure + VisibleMeasures);
+            && chart.GetScaledMeasurePosition(x.Measure) <= CurrentMeasure + VisibleMeasures);
 
         foreach (var gimmick in visibleGimmicks)
         {

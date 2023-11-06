@@ -24,6 +24,7 @@ internal class Chart
 
     public List<Note> Notes { get; set; }
     public List<Gimmick> Gimmicks { get; set; }
+    private List<ScaledMeasurePositionInfo> ScaledMeasurePositions { get; set; } = new();
 
     /// <summary>
     ///     Offset in seconds.
@@ -295,6 +296,9 @@ internal class Chart
                 (TimeEvents[i].Measure - TimeEvents[i - 1].Measure) *
                 (4.0f * TimeEvents[i - 1].TimeSig.Ratio * (60000.0 / TimeEvents[i - 1].BPM)) +
                 TimeEvents[i - 1].StartTime;
+
+        // Generate scaled measure position cache
+        RebuildScaledMeasurePositionCache();
     }
     /*
     ((60000.0 / evt.BPM) * 4.0 * evt.TimeSig.Ratio) * measure = time
@@ -359,13 +363,144 @@ internal class Chart
         return GetTime(beatInfo.MeasureDecimal);
     }
 
+    public float GetScaledMeasurePosition(float measureDecimal)
+    {
+        // return GetScaledMeasurePositionOpt(this, measureDecimal);
+        return GetScaledMeasurePositionFromCache(measureDecimal);
+    }
+
+    public void RebuildScaledMeasurePositionCache()
+    {
+        ScaledMeasurePositions.Clear();
+
+        foreach (var gimmick in Gimmicks)
+        {
+            // TODO: can we only update the required ones, as opposed to all at once
+            ScaledMeasurePositions.Add(GetScaledMeasurePositionOptForCache(gimmick.Measure));
+        }
+    }
+
+    private ScaledMeasurePositionInfo? FindFirstGimmickStartMeasureGreaterThan(float value)
+    {
+        var left = 0;
+        var right = ScaledMeasurePositions.Count - 1;
+        ScaledMeasurePositionInfo? result = null;
+
+        while (left <= right)
+        {
+            var mid = left + (right - left) / 2;
+            if (ScaledMeasurePositions[mid].GimmickStartMeasure <= value)
+            {
+                left = mid + 1;
+            }
+            else
+            {
+                result = ScaledMeasurePositions[mid];
+                right = mid - 1;
+            }
+        }
+
+        return result;
+    }
+
+    public float GetScaledMeasurePositionFromCache(float measureDecimal)
+    {
+        var info = FindFirstGimmickStartMeasureGreaterThan(measureDecimal);
+        if (info == null)
+        {
+            return measureDecimal; // ?
+        }
+        var scaledPosition = measureDecimal + info.PartialScaledPosition;
+        float finalDistance = measureDecimal - info.LastMeasurePosition;
+        scaledPosition += finalDistance * info.CurrentHiSpeedValue * info.CurrentTimeSigValue - finalDistance;
+        return scaledPosition;
+    }
+
+    public ScaledMeasurePositionInfo GetScaledMeasurePositionOptForCache(float measureDecimal)
+    {
+        float scaledPosition = 0;
+        float lastMeasurePosition = 0;
+        float currentHiSpeedValue = 1;
+        float currentTimeSigValue = 1;
+
+        var relevantScaleChanges = Gimmicks
+            .Where(x => x.Measure < measureDecimal &&
+                        x.GimmickType is GimmickType.HiSpeedChange or GimmickType.TimeSignatureChange);
+
+        foreach (var scaleChange in relevantScaleChanges)
+        {
+            // Apply the scale change up to this point.
+            float distance = scaleChange.Measure - lastMeasurePosition;
+            scaledPosition += (distance * currentHiSpeedValue * currentTimeSigValue) - distance;
+
+            lastMeasurePosition = scaleChange.Measure;
+
+            // Update the current values.
+            if (scaleChange.GimmickType == GimmickType.TimeSignatureChange)
+            {
+                currentTimeSigValue = (float)scaleChange.TimeSig.Ratio;
+            }
+            else if (scaleChange.GimmickType == GimmickType.HiSpeedChange)
+            {
+                currentHiSpeedValue = (float)scaleChange.HiSpeed;
+            }
+        }
+
+        return new ScaledMeasurePositionInfo
+        {
+            GimmickStartMeasure = measureDecimal,
+            PartialScaledPosition = scaledPosition,
+            LastMeasurePosition = lastMeasurePosition,
+            CurrentHiSpeedValue = currentHiSpeedValue,
+            CurrentTimeSigValue = currentTimeSigValue
+        };
+    }
+
+    public static float GetScaledMeasurePositionOpt(Chart chart, float measureDecimal)
+    {
+        float scaledPosition = measureDecimal;
+        float lastMeasurePosition = 0;
+        float currentHiSpeedValue = 1;
+        float currentTimeSigValue = 1;
+
+        var relevantScaleChanges = chart.Gimmicks
+            .Where(x => x.Measure < measureDecimal &&
+                        x.GimmickType is GimmickType.HiSpeedChange or GimmickType.TimeSignatureChange);
+
+        foreach (var scaleChange in relevantScaleChanges)
+        {
+            // Apply the scale change up to this point.
+            float distance = scaleChange.Measure - lastMeasurePosition;
+            scaledPosition += (distance * currentHiSpeedValue * currentTimeSigValue) - distance;
+
+            lastMeasurePosition = scaleChange.Measure;
+
+            // Update the current values.
+            if (scaleChange.GimmickType == GimmickType.TimeSignatureChange)
+            {
+                currentTimeSigValue = (float)scaleChange.TimeSig.Ratio;
+            }
+            else if (scaleChange.GimmickType == GimmickType.HiSpeedChange)
+            {
+                currentHiSpeedValue = (float)scaleChange.HiSpeed;
+            }
+        }
+
+        // Apply the final scale change for the remaining distance.
+        float finalDistance = measureDecimal - lastMeasurePosition;
+        scaledPosition += (finalDistance * currentHiSpeedValue * currentTimeSigValue) - finalDistance;
+
+        return scaledPosition;
+    }
+
+
     /// <summary>
     /// Returns MeasureDecimal scaled by all previous HiSpeed changes and Time Signatures.
     /// <br>Avoid using this in realtime, it's very expensive.</br>
     /// </summary>
     /// <param name="chart">Current Chart</param>
     /// <param name="measureDecimal">Position in MeasureDecimals</param>
-    public static float GetScaledMeasurePosition(Chart chart, float measureDecimal)
+    public static float GetScaledMeasurePositionOld(Chart chart, float measureDecimal)
     {
         float scaledPosition = measureDecimal;
 
