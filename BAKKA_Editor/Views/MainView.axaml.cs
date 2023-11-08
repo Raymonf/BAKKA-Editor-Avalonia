@@ -1711,7 +1711,7 @@ public partial class MainView : UserControl
             return;
         var newValue = Convert.ToInt32(e.NewValue);
         if ((int) _vm.PositionTrackBar != newValue)
-            _vm.PositionTrackBar = skCircleView.Cursor.Move((uint)newValue);
+            _vm.PositionTrackBar = (editorMode == EditorMode.PlaceNoteMode) ? skCircleView.Cursor.Position : skCircleView.Cursor.Move((uint)newValue);
     }
 
     private void PositionTrackBar_OnValueChanged(object? sender, RangeBaseValueChangedEventArgs e)
@@ -1719,7 +1719,7 @@ public partial class MainView : UserControl
         var newValue = Convert.ToInt32(e.NewValue);
         if ((int)skCircleView.Cursor.Position != newValue)
         {
-            _vm.PositionNumeric = skCircleView.Cursor.Move((uint)newValue);
+            _vm.PositionNumeric = (editorMode == EditorMode.PlaceNoteMode) ? skCircleView.Cursor.Position : skCircleView.Cursor.Move((uint)newValue);
         }
     }
 

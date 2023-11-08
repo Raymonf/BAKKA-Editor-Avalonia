@@ -30,7 +30,6 @@ namespace BAKKA_Editor
         private int _relativeDragPosition = 0;
         private uint _initialDragPosition = 0;
         private uint _dragCounter = 0;
-        private uint _dragMinimumSize = 0;
         private RolloverState _dragRolloverState = RolloverState.None;
 
         private const uint DragDetectionThreshold = 5;
@@ -87,7 +86,6 @@ namespace BAKKA_Editor
             _initialDragPosition = position;
             _dragRolloverState = RolloverState.None;
             _dragCounter = 0;
-            _dragMinimumSize = 0;
             WasDragged = false;
 
             return Position;
@@ -101,7 +99,7 @@ namespace BAKKA_Editor
         /// <returns>Updated cursor depth</returns>
         public uint Dive(uint depth)
         {
-            Depth = Math.Max(Math.Min(depth, MaximumDepth), MinimumDepth);
+            Depth = Math.Clamp(depth, MinimumDepth, MaximumDepth);
             return Depth;
         }
 
@@ -112,7 +110,7 @@ namespace BAKKA_Editor
         /// <returns>Updated cursor size</returns>
         public uint Resize(uint size)
         {
-            Size = Math.Max(Math.Min(size, MaximumSize), MinimumSize);
+            Size = Math.Clamp(size, MinimumSize, MaximumSize);
             return Size;
         }
 
@@ -139,11 +137,6 @@ namespace BAKKA_Editor
                 WasDragged = true;
             }
 
-            if (_dragMinimumSize == 0)
-            {
-                _dragMinimumSize = Size;
-            }
-
             if (position == DragPosition)
             {
                 // Only update if the position changed. This ensures that the current and
@@ -163,7 +156,6 @@ namespace BAKKA_Editor
             int deltaClockwise = ((int)_previousDragPosition + 60 - (int)DragPosition) % 60;
             int deltaCounterclockwise = ((int)DragPosition + 60 - (int)_previousDragPosition) % 60;
             bool movedClockwise = deltaClockwise < deltaCounterclockwise;
-            int minSize = Math.Max((int)_dragMinimumSize, (int)MinimumSize);
 
             switch (_dragRolloverState)
             {
@@ -183,12 +175,12 @@ namespace BAKKA_Editor
                 case RolloverState.Clockwise:
                 {
                     // If rolled over clockwise, the mouse moved counterclockwise, and mouse down position
-                    // plus the minimum size is between the delta, we are no longer rolled over
-                    int delta = (((int)DragPosition + 60 - ((int)_initialDragPosition + minSize)) % 60);
+                    // is between the delta, we are no longer rolled over
+                    int delta = (((int)DragPosition + 60 - ((int)_initialDragPosition) - 1) % 60);
                     if (!movedClockwise && delta <= deltaCounterclockwise)
                     {
                         _dragRolloverState = RolloverState.None;
-                        _relativeDragPosition += delta;
+                        _relativeDragPosition += delta + 1;
                     }
                 }
                 break;
@@ -197,9 +189,9 @@ namespace BAKKA_Editor
                 {
                     if (movedClockwise)
                     {
-                        _relativeDragPosition = Math.Max(_relativeDragPosition - deltaClockwise, minSize - 60);
+                        _relativeDragPosition = Math.Max(_relativeDragPosition - deltaClockwise, -60);
 
-                        if (_relativeDragPosition <= minSize - 60)
+                        if (_relativeDragPosition <= -60)
                         {
                             _dragRolloverState = RolloverState.Clockwise;
                         }
@@ -212,29 +204,40 @@ namespace BAKKA_Editor
                         {
                             _dragRolloverState = RolloverState.Counterclockwise;
                         }
-
-                        // If the relative mouse position reaches the starting size, we can start decreasing the size.
-                        if (_relativeDragPosition + 1 >= minSize)
-                        {
-                            _dragMinimumSize = MinimumSize;
-                            minSize = (int)MinimumSize;
-                        }
                     }
                 }
                 break;
             }
 
-            // Calculate size and position based on mouse click position and relative drag position
+            // Calculate size and position based on mouse click position and relative drag position.
+            // First, on a drag, the initial size is reset to the minimum size. If moving
+            // counterclockwise, the size grows in that direction. Otherwise, if moving clockwise,
+            // the position shifts clockwise by the minimum size before growing in that direction.
+            // Essentially, we draw the cursor across the dragged positions which the initial shifting
+            // accomplishes when moving clockwise.
             if (_relativeDragPosition >= 0)
             {
+                // Counterclockwise of mouse down position
                 Position = _initialDragPosition;
-                Size = (uint)Math.Min(Math.Max(minSize, _relativeDragPosition + 1), 60);
+                Size = (uint)Math.Clamp(_relativeDragPosition + 1, (int)MinimumSize, MaximumSize);
             }
             else
             {
-                Position = (uint)(((int)_initialDragPosition + 60 + _relativeDragPosition) % 60);
-                Size = (uint)Math.Max(minSize, minSize - _relativeDragPosition);
+                // Clockwise of mouse down position
+                if (_relativeDragPosition >= -(MinimumSize - 1))
+                {
+                    // Shift
+                    Position = (uint)(((int)_initialDragPosition + 60 + _relativeDragPosition) % 60);
+                    Size = MinimumSize;
+                }
+                else
+                {
+                    // Grow
+                    Position = (uint)(((int)_initialDragPosition + 60 + _relativeDragPosition) % 60);
+                    Size = (uint)Math.Min(MinimumSize - (_relativeDragPosition + (MinimumSize - 1)), MaximumSize);
+                }
             }
+            Debug.WriteLine($"{Size}");
         }
     }
 }
