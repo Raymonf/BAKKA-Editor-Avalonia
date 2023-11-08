@@ -14,8 +14,9 @@
             <TextBlock TextWrapping="Wrap"
                        Text="can we just pretend everything looks good and correct for the time being? thanks :)"
                        Margin="0,0,0,8" />
-            
-            <TextBlock Text="{DynamicResource L.Settings.LanguageLabel}" />
+
+            <!-- TODO: use a style class for this margin -->
+            <TextBlock Margin="0,0,0,4" Text="{DynamicResource L.Settings.Labels.Language}" />
             <ComboBox SelectedItem="{Binding SelectedLanguage}" ItemsSource="{Binding SupportedLanguages}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>

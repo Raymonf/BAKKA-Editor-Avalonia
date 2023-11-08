@@ -111,7 +111,6 @@
 
     <system:String x:Key="L.MainView.Menu.File.Settings">Settings</system:String>
     <system:String x:Key="L.Settings.SettingsHeader">Settings</system:String>
-    <system:String x:Key="L.Settings.LanguageLabel">Language:</system:String>
     <system:String x:Key="L.Settings.Buttons.Save">Save</system:String>
     <system:String x:Key="L.Settings.CheckBoxes.ShowBeatVisualSettings">Show Beat Visual Settings</system:String>
     <system:String x:Key="L.Settings.CheckBoxes.ShowSlideSnapArrows">Show Arrows on Slide and Snap Notes</system:String>
