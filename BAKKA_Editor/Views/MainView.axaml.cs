@@ -1051,6 +1051,14 @@ public partial class MainView : UserControl
         }
         else if ((e.KeyModifiers & KeyModifiers.Control) != 0)
         {
+            // Adjust cursor depth with mouse wheel when holding ctrl
+            var newDepthValue = _vm.CursorBeatDepthNumeric;
+            if (delta > 0)
+                newDepthValue++;
+            else if (newDepthValue > 0)
+                newDepthValue--;
+
+            _vm.CursorBeatDepthNumeric = Math.Clamp(newDepthValue, 0, _vm.CursorBeatDepthNumericMaximum);
         }
         else if (editorMode == EditorMode.AdjustSizeMode)
         {
