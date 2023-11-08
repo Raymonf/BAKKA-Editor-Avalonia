@@ -40,6 +40,10 @@
                 Content="{DynamicResource L.Settings.Tabs.Color}"
                 Tag="Color"
                 IconSource="ColorFill" />
+            <controls:NavigationViewItem
+                Content="{DynamicResource L.Settings.Tabs.Sound}"
+                Tag="Sound"
+                IconSource="Volume" />
         </controls:NavigationView.MenuItems>
     </controls:NavigationView>
 </UserControl>

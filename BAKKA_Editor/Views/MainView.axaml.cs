@@ -518,7 +518,12 @@ public partial class MainView : UserControl
         appSettingsVm.IsActiveCursorTrackingEnabled = userSettings.CursorSettings.IsActiveCursorTrackingEnabled;
         appSettingsVm.ShowSlideSnapArrows = userSettings.ViewSettings.ShowSlideSnapArrows;
         appSettingsVm.SlideNoteRotationSpeedNumeric = userSettings.ViewSettings.SlideNoteRotationSpeed;
-        appSettingsVm.UseSpaceKeyToPlay = userSettings.ViewSettings.UseSpaceToPlaySink; // TODO: add this to yasu's function
+
+        // TODO: add these to yasu's function
+        appSettingsVm.UseSpaceKeyToPlay = userSettings.ViewSettings.UseSpaceToPlaySink;
+        appSettingsVm.HitsoundEnabled = userSettings.SoundSettings.HitsoundEnabled;
+        appSettingsVm.HitsoundOffsetMs = userSettings.SoundSettings.HitsoundAdditionalOffsetMs;
+        appSettingsVm.HitsoundPath = userSettings.SoundSettings.HitsoundPath;
 
         // colors
         appSettingsVm.ColorNoteTap = AvColor.Parse(userSettings.ColorSettings.ColorNoteTap);

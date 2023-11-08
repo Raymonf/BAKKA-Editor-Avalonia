@@ -118,6 +118,7 @@
     <system:String x:Key="L.Settings.Tabs.Color">Note Colors</system:String>
     <system:String x:Key="L.Settings.Tabs.General">General</system:String>
     <system:String x:Key="L.Settings.Tabs.Visual">Visual</system:String>
+    <system:String x:Key="L.Settings.Tabs.Sound">Sound</system:String>
 
     <system:String x:Key="L.Settings.Labels.Language">Language:</system:String>
     <system:String x:Key="L.Settings.CheckBoxes.UseSpaceKeyToPlay">Press Space to Play/Pause</system:String>
@@ -133,4 +134,9 @@
     <system:String x:Key="L.Settings.Labels.NoteScale">Note Scale:</system:String>
     <system:String x:Key="L.Settings.Labels.SlideNoteRotationSpeed">Slide Note Rotation Speed:</system:String>
     <system:String x:Key="L.Settings.Labels.ColorHint">To revert or choose a game-accurate color, click on a note type and check the palette (second) tab at the top :)</system:String>
+
+    <system:String x:Key="L.Settings.Buttons.SelectHitsoundPath">Select File</system:String>
+    <system:String x:Key="L.Settings.CheckBoxes.EnableHitsound">Enable Hitsounds</system:String>
+    <system:String x:Key="L.Settings.Labels.HitsoundOffsetMs">Additional Hitsound Offset (milliseconds):</system:String>
+    <system:String x:Key="L.Settings.Labels.HitsoundRestartRequiredWarning">Please be advised that changing the hitsound path will require a restart to take effect (for the time being).</system:String>
 </ResourceDictionary>
