@@ -1,0 +1,33 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:BAKKA_Editor.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="530" d:DesignHeight="280"
+             x:Class="BAKKA_Editor.Views.Settings.SoundSettingsView">
+    <UserControl.DataContext>
+        <vm:AppSettingsViewModel />
+    </UserControl.DataContext>
+
+    <ScrollViewer Padding="10,10">
+        <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <TextBlock TextWrapping="Wrap"
+                       Text="can we just pretend everything here also looks beautiful for the time being? thanks :)"
+                       Margin="0,0,0,8" />
+
+            <TextBlock Foreground="Firebrick" Text="{DynamicResource L.Settings.Labels.HitsoundRestartRequiredWarning}" />
+
+            <CheckBox IsChecked="{Binding HitsoundEnabled}"
+                      Content="{DynamicResource L.Settings.CheckBoxes.EnableHitsound}" />
+
+            <TextBlock Margin="0,0,0,4" Text="{DynamicResource L.Settings.Labels.HitsoundOffsetMs}"  />
+            <NumericUpDown Value="{Binding HitsoundOffsetMs}" Minimum="-10000" Maximum="10000" Increment="1" FormatString="0" />
+
+            <TextBlock Margin="0,0,0,4" Text="{DynamicResource L.Settings.Labels.HitsoundPath}" />
+            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+                <Button Content="{DynamicResource L.Settings.Buttons.SelectHitsoundPath}" Command="{Binding SelectHitsoundPathCommand}" IsEnabled="True" Margin="0,0,4,0" />
+                <TextBlock VerticalAlignment="Center" Text="{Binding HitsoundPath}" TextWrapping="WrapWithOverflow" />
+            </WrapPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

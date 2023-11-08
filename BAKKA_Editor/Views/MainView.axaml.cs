@@ -520,6 +520,12 @@ public partial class MainView : UserControl
         appSettingsVm.ShowSlideSnapArrows = userSettings.ViewSettings.ShowSlideSnapArrows;
         appSettingsVm.SlideNoteRotationSpeedNumeric = userSettings.ViewSettings.SlideNoteRotationSpeed;
 
+        // TODO: add these to yasu's function
+        appSettingsVm.UseSpaceKeyToPlay = userSettings.ViewSettings.UseSpaceToPlaySink;
+        appSettingsVm.HitsoundEnabled = userSettings.SoundSettings.HitsoundEnabled;
+        appSettingsVm.HitsoundOffsetMs = userSettings.SoundSettings.HitsoundAdditionalOffsetMs;
+        appSettingsVm.HitsoundPath = userSettings.SoundSettings.HitsoundPath;
+
         // colors
         appSettingsVm.ColorNoteTap = AvColor.Parse(userSettings.ColorSettings.ColorNoteTap);
         appSettingsVm.ColorNoteChain = AvColor.Parse(userSettings.ColorSettings.ColorNoteChain);
@@ -719,15 +725,17 @@ public partial class MainView : UserControl
         if (tempFilePath == "")
             tempFilePath = PlatformUtils.GetTempFileName().Replace(".tmp", ".mer");
 
-        var tempFileStream = File.Open(tempFilePath, FileMode.Create);
-        if ((chart.Notes.Count > 0 || chart.Gimmicks.Count > 0) && !chart.IsSaved)
+        using (FileStream fileStream = File.Open(tempFilePath, FileMode.Create))
         {
-            chart.WriteFile(tempFileStream, false);
-            File.WriteAllLines(tempStatusPath, new[] {"true", DateTime.Now.ToString("yyyy-MM-dd HH:mm")});
-        }
-        else
-        {
-            DeleteAutosaves(tempFilePath);
+            if ((chart.Notes.Count > 0 || chart.Gimmicks.Count > 0) && !chart.IsSaved)
+            {
+                chart.WriteFile(fileStream, false);
+                File.WriteAllLines(tempStatusPath, new[] { "true", DateTime.Now.ToString("yyyy-MM-dd HH:mm") });
+            }
+            else
+            {
+                DeleteAutosaves(tempFilePath);
+            }
         }
     }
 

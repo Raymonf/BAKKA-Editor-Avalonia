@@ -11,21 +11,25 @@
 
     <ScrollViewer Padding="10,10">
         <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-            <TextBlock Text="{DynamicResource L.Settings.Labels.NoteScale}" Margin="0,8,0,0"/>
+            <TextBlock Text="{DynamicResource L.Settings.Labels.NoteScale}" Margin="0,0,0,4"/>
             <NumericUpDown Width="80" HorizontalAlignment="Left" Margin="0,0,8,0"
                            Value="{Binding NoteScaleMultiplierNumeric}" Increment="0.1"
                            Minimum="{Binding NoteScaleMultiplierNumericMinimum}"
                            Maximum="{Binding NoteScaleMultiplierNumericMaximum}"/>
 
-            <TextBlock Text="{DynamicResource L.Settings.Labels.SlideNoteRotationSpeed}" Margin="0,8,0,0"/>
+            <TextBlock Text="{DynamicResource L.Settings.Labels.SlideNoteRotationSpeed}" Margin="0,8,0,4"/>
             <NumericUpDown Width="80" HorizontalAlignment="Left" Margin="0,0,8,0"
                            Value="{Binding SlideNoteRotationSpeedNumeric}" Increment="0.1"
                            Minimum="{Binding SlideNoteRotationSpeedNumericMinimum}"
                            Maximum="{Binding SlideNoteRotationSpeedNumericMaximum}"/>
+
             <CheckBox IsChecked="{Binding ShowBeatVisualSettings}"
-                      Content="{DynamicResource L.Settings.CheckBoxes.ShowBeatVisualSettings}" />
+                      Content="{DynamicResource L.Settings.CheckBoxes.ShowBeatVisualSettings}"
+                      Margin="0,8,0,0" />
+
             <CheckBox IsChecked="{Binding ShowSlideSnapArrows}"
                       Content="{DynamicResource L.Settings.CheckBoxes.ShowSlideSnapArrows}" />
+
             <CheckBox IsChecked="{Binding IsActiveCursorTrackingEnabled}"
                       Content="{DynamicResource L.Settings.CheckBoxes.IsActiveCursorTrackingEnabled}" />
             <TextBlock Text="{DynamicResource L.Settings.Labels.ActiveCursorTrackingHelp}" />
