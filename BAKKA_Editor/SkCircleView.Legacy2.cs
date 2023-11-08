@@ -636,7 +636,7 @@ internal partial class SkCircleViewOld
                 // Plot highlighted
                 if (highlightSelectedNote)
                     if (selectedNoteIndex != -1 && note == chart.Notes[selectedNoteIndex])
-                        canvas.DrawArc(info.Rect, info.StartAngle + 2, info.ArcAngle - 4, false, Brushes.GetHighlightPen(info.NoteScale * noteScaleMultiplier, false));
+                        canvas.DrawArc(info.Rect, info.StartAngle + 2, info.ArcAngle - 4, false, Brushes.GetHighlightPen(info.NoteScale * noteScaleMultiplier));
             }
         }
     }
@@ -666,7 +666,7 @@ internal partial class SkCircleViewOld
                 canvas.DrawArc(info.Rect, info.StartAngle, info.ArcAngle, false, Brushes.GetNotePen(note, info.NoteScale * noteScaleMultiplier));
                 
                 if (highlightSelectedNote && (selectedNoteIndex != -1 && note == chart.Notes[selectedNoteIndex]))
-                    canvas.DrawArc(info.Rect, info.StartAngle, info.ArcAngle, false, Brushes.GetHighlightPen(info.NoteScale * noteScaleMultiplier, false));
+                    canvas.DrawArc(info.Rect, info.StartAngle, info.ArcAngle, false, Brushes.GetHighlightPen(info.NoteScale * noteScaleMultiplier));
             }
         }
     }
@@ -741,14 +741,14 @@ internal partial class SkCircleViewOld
 
                 if (info.Rect.Width >= 1 && GetObjectVisibility(note.Measure))
                 {
-                    canvas.DrawLine(p1, p2, Brushes.GetArrowPen(note, info.NoteScale));
-                    canvas.DrawLine(p2, p3, Brushes.GetArrowPen(note, info.NoteScale));
+                    //canvas.DrawLine(p1, p2, Brushes.GetArrowPen(note, info.NoteScale));
+                    //canvas.DrawLine(p2, p3, Brushes.GetArrowPen(note, info.NoteScale));
 
                     if (highlightSelectedNote)
                         if (selectedNoteIndex != -1 && note == chart.Notes[selectedNoteIndex])
                         {
-                            canvas.DrawLine(p1, p2, Brushes.GetHighlightPen(info.NoteScale, true));
-                            canvas.DrawLine(p2, p3, Brushes.GetHighlightPen(info.NoteScale, true));
+                            //canvas.DrawLine(p1, p2, Brushes.GetHighlightPen(info.NoteScale, true));
+                            //canvas.DrawLine(p2, p3, Brushes.GetHighlightPen(info.NoteScale, true));
                         }
                 }
             }
@@ -812,20 +812,20 @@ internal partial class SkCircleViewOld
 
                 if (info.Rect.Width >= 1 && GetObjectVisibility(note.Measure))
                 {
-                    canvas.DrawLine(p1, p2, Brushes.GetArrowPen(note, info.NoteScale));
-                    canvas.DrawLine(p2, p3, Brushes.GetArrowPen(note, info.NoteScale));
+                    //canvas.DrawLine(p1, p2, Brushes.GetArrowPen(note, info.NoteScale));
+                    //canvas.DrawLine(p2, p3, Brushes.GetArrowPen(note, info.NoteScale));
 
-                    canvas.DrawLine(p4, p5, Brushes.GetArrowPen(note, info.NoteScale));
-                    canvas.DrawLine(p5, p6, Brushes.GetArrowPen(note, info.NoteScale));
+                    //canvas.DrawLine(p4, p5, Brushes.GetArrowPen(note, info.NoteScale));
+                    //canvas.DrawLine(p5, p6, Brushes.GetArrowPen(note, info.NoteScale));
 
                     if (highlightSelectedNote)
                         if (selectedNoteIndex != -1 && note == chart.Notes[selectedNoteIndex])
                         {
-                            canvas.DrawLine(p1, p2, Brushes.GetHighlightPen(info.NoteScale, true));
-                            canvas.DrawLine(p2, p3, Brushes.GetHighlightPen(info.NoteScale, true));
-
-                            canvas.DrawLine(p4, p5, Brushes.GetHighlightPen(info.NoteScale, true));
-                            canvas.DrawLine(p5, p6, Brushes.GetHighlightPen(info.NoteScale, true));
+                            //canvas.DrawLine(p1, p2, Brushes.GetHighlightPen(info.NoteScale, true));
+                            //canvas.DrawLine(p2, p3, Brushes.GetHighlightPen(info.NoteScale, true));
+                            //
+                            //canvas.DrawLine(p4, p5, Brushes.GetHighlightPen(info.NoteScale, true));
+                            //canvas.DrawLine(p5, p6, Brushes.GetHighlightPen(info.NoteScale, true));
                         }
                 }
             }

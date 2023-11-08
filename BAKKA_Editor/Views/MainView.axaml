@@ -100,27 +100,6 @@
                                   BorderThickness="0" IsHitTestVisible="False" />
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="{DynamicResource L.ShowGimmicksInCircleViewMenuOption}"
-                          Command="{Binding ToggleGimmicksInCircleViewCommand}">
-                    <MenuItem.Icon>
-                        <CheckBox IsChecked="{Binding ShowGimmicksInCircleView}"
-                                  Name="ShowGimmicksInCircleViewMenuItem" BorderThickness="0" IsHitTestVisible="False" />
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="{DynamicResource L.ShowGimmicksDuringPlaybackMenuOption}"
-                          Command="{Binding ToggleShowGimmicksDuringPlaybackInCircleViewCommand}">
-                    <MenuItem.Icon>
-                        <CheckBox IsChecked="{Binding ShowGimmicksDuringPlaybackInCircleView}"
-                                  Name="ShowGimmicksDuringPlaybackInCircleViewMenuItem" BorderThickness="0"
-                                  IsHitTestVisible="False" />
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="{DynamicResource L.DarkModeMenuOption}" Command="{Binding ToggleDarkModeViewCommand}">
-                    <MenuItem.Icon>
-                        <CheckBox IsChecked="{Binding DarkMode}" Name="ToggleDarkModeMenuItem" BorderThickness="0"
-                                  IsHitTestVisible="False" />
-                    </MenuItem.Icon>
-                </MenuItem>
                 <MenuItem Header="{DynamicResource L.ShowMeasureMovementButtonsMenuOption}"
                           Command="{Binding ToggleShowMeasureButtonsCommand}">
                     <MenuItem.Icon>

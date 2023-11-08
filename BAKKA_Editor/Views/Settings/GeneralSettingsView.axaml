@@ -23,6 +23,8 @@
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
+            <CheckBox IsChecked="{Binding DarkMode}"
+                      Content="{DynamicResource L.Settings.CheckBoxes.DarkMode}"/>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

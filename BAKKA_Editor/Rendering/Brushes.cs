@@ -44,7 +44,7 @@ internal class Brushes
 
     private const float NotePenStrokeWidth = 8.0f;
 
-    private const float ArrowPenStrokeWidth = 8.0f;
+    private const float ArrowPenStrokeWidth = 2.0f;
 
     private const float GimmickPenStrokeWidth = 5.0f;
 
@@ -69,7 +69,7 @@ internal class Brushes
     {
         StrokeWidth = ArrowPenStrokeWidth,
         StrokeCap = SKStrokeCap.Round,
-        Style = SKPaintStyle.Stroke,
+        Style = SKPaintStyle.Fill,
         IsAntialias = true
     };
 
@@ -269,10 +269,9 @@ internal class Brushes
         return NotePen;
     }
 
-    public SKPaint GetArrowPen(Note note, float noteScaleMultiplier)
+    public SKPaint GetArrowPen(Note note)
     {
         ArrowPen.Color = NoteTypeToColor(note.NoteType);
-        ArrowPen.StrokeWidth = ArrowPenStrokeWidth * strokeWidthMultiplier * noteScaleMultiplier;
         return ArrowPen;
     }
 
@@ -295,10 +294,9 @@ internal class Brushes
         return FlairPen;
     }
 
-    public SKPaint GetHighlightPen(float noteScaleMultiplier, bool round = false)
+    public SKPaint GetHighlightPen(float noteScaleMultiplier)
     {
         HighlightPen.StrokeWidth = HighlightPenStrokeWidth * strokeWidthMultiplier * noteScaleMultiplier;
-        HighlightPen.StrokeCap = round ? SKStrokeCap.Round : SKStrokeCap.Square;
         return HighlightPen;
     }
 
@@ -376,6 +374,10 @@ internal class Brushes
             case NoteType.Chain:
             case NoteType.ChainBonusFlair:
                 return SKColor.Parse(UserSettings.ColorSettings.ColorNoteChain);
+            case NoteType.MaskAdd:
+                return SKColors.Black.WithAlpha(0x80);
+            case NoteType.MaskRemove:
+                return SKColors.Gray.WithAlpha(0x80);
             default:
                 return SKColors.Transparent;
         }

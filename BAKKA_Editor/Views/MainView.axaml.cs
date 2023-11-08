@@ -420,7 +420,7 @@ public partial class MainView : UserControl
 
     public void SetShowGimmicksDuringPlaybackInCircleView(bool value)
     {
-        userSettings.ViewSettings.ShowGimmicksDuringPlayback = value;
+        userSettings.ViewSettings.ShowGimmickEffects = value;
     }
 
     public void SetDarkMode(bool value)
@@ -428,8 +428,6 @@ public partial class MainView : UserControl
         userSettings.ViewSettings.DarkMode = value;
         if (Application.Current != null)
             Application.Current.RequestedThemeVariant = value ? ThemeVariant.Dark : ThemeVariant.Light;
-        BackColor = SKColor.Parse(value ? "#ff444444" : "#FFF3F3F3");
-        ResetBackColor = true;
     }
 
     public void SetShowMeasureButtons(bool value)
@@ -498,44 +496,16 @@ public partial class MainView : UserControl
                     $"The selected language was invalid."));
         }
 
-        // TODO: this should move to the AppSettings VM at minimum
-        _vm.ShowCursor = userSettings.ViewSettings.ShowCursor;
-        _vm.ShowCursorDuringPlayback = userSettings.ViewSettings.ShowCursorDuringPlayback;
-        _vm.HighlightViewedNote = userSettings.ViewSettings.HighlightViewedNote;
-        _vm.SelectLastInsertedNote = userSettings.ViewSettings.SelectLastInsertedNote;
-        _vm.ShowGimmicksInCircleView = userSettings.ViewSettings.ShowGimmicks;
-        _vm.ShowGimmicksDuringPlaybackInCircleView = userSettings.ViewSettings.ShowGimmicksDuringPlayback;
-        _vm.DarkMode = userSettings.ViewSettings.DarkMode;
-        _vm.AreMeasureButtonsVisible = userSettings.ViewSettings.ShowMeasureButtons;
-        _vm.PlaceNoteOnDrag = userSettings.ViewSettings.PlaceNoteOnDrag;
-        _vm.VisualHiSpeedNumeric = (decimal) userSettings.ViewSettings.HispeedSetting;
-        _vm.VolumeTrackBar = userSettings.ViewSettings.Volume;
-        _vm.HitsoundVolumeTrackBar = Math.Clamp(userSettings.SoundSettings.HitsoundVolume, 0, 100);
-        _vm.ShowNotesOnBeat = userSettings.ViewSettings.ShowNotesOnBeat;
         SetDarkMode(userSettings.ViewSettings.DarkMode);
-        appSettingsVm.ShowBeatVisualSettings = userSettings.ViewSettings.ShowBeatVisualSettings;
-        _vm.VisualBeatDivisionNumeric = (decimal) userSettings.ViewSettings.BeatDivision;
-        _vm.GuideLineSelectedIndex = userSettings.ViewSettings.GuideLineSelection;
-        appSettingsVm.IsActiveCursorTrackingEnabled = userSettings.CursorSettings.IsActiveCursorTrackingEnabled;
-        appSettingsVm.ShowSlideSnapArrows = userSettings.ViewSettings.ShowSlideSnapArrows;
-        appSettingsVm.SlideNoteRotationSpeedNumeric = userSettings.ViewSettings.SlideNoteRotationSpeed;
 
-        // colors
-        appSettingsVm.ColorNoteTap = AvColor.Parse(userSettings.ColorSettings.ColorNoteTap);
-        appSettingsVm.ColorNoteChain = AvColor.Parse(userSettings.ColorSettings.ColorNoteChain);
-        appSettingsVm.ColorNoteSlideCw = AvColor.Parse(userSettings.ColorSettings.ColorNoteSlideCw);
-        appSettingsVm.ColorNoteSlideCcw = AvColor.Parse(userSettings.ColorSettings.ColorNoteSlideCcw);
-        appSettingsVm.ColorNoteSnapFw = AvColor.Parse(userSettings.ColorSettings.ColorNoteSnapFw);
-        appSettingsVm.ColorNoteSnapBw = AvColor.Parse(userSettings.ColorSettings.ColorNoteSnapBw);
-        appSettingsVm.ColorNoteHoldStart = AvColor.Parse(userSettings.ColorSettings.ColorNoteHoldStart);
-        appSettingsVm.ColorNoteHoldSegment = AvColor.Parse(userSettings.ColorSettings.ColorNoteHoldSegment);
-        appSettingsVm.ColorNoteHoldGradient0 = AvColor.Parse(userSettings.ColorSettings.ColorNoteHoldGradient0);
-        appSettingsVm.ColorNoteHoldGradient1 = AvColor.Parse(userSettings.ColorSettings.ColorNoteHoldGradient1);
+        // moved to VMs :)
+        _vm.Setup(userSettings);
+        appSettingsVm.Setup(userSettings);
 
         autoSaveTimer =
             new DispatcherTimer(TimeSpan.FromMilliseconds(userSettings.SaveSettings.AutoSaveInterval * 60000),
                 DispatcherPriority.Background, AutoSaveTimer_Tick);
-
+        
         // Update hotkey labels
         tapButton.AppendHotkey(userSettings.HotkeySettings.TouchHotkey);
         orangeButton.AppendHotkey(userSettings.HotkeySettings.SlideLeftHotkey);
@@ -937,59 +907,14 @@ public partial class MainView : UserControl
             return;
 
         skCircleView.RenderEngine.UpdateScaledCurrentMeasure(chart);
-
-        skCircleView.RenderEngine.ShowHiSpeed = userSettings.ViewSettings.ShowGimmicksDuringPlayback;
-
         skCircleView.RenderEngine.SetCanvas(canvas);
 
-        skCircleView.RenderEngine.DrawBackground(userSettings.ViewSettings.DarkMode);
+        var showCursor = (userSettings.ViewSettings.ShowCursor || skCircleView.mouseDownPosition != -1) && (currentSong != null && !currentSong.Paused) ? userSettings.ViewSettings.ShowCursorDuringPlayback : true;
 
         lock (chart)
         {
-            // Draw masks
-            skCircleView.RenderEngine.DrawMasks(chart, userSettings.ViewSettings.DarkMode);
-
-            // Draw base and measure circle with dividers
-            skCircleView.RenderEngine.DrawCircleDividers(chart);
-
-            // Draw guide lines
-            skCircleView.RenderEngine.DrawGuideLines();
-
-            // Draw degree lines
-            skCircleView.RenderEngine.DrawDegreeCircle();
-
-            // Draw mirror axis
-            // if (isHoveringOverMirrorAxis)
-                // skCircleView.RenderEngine.DrawMirrorAxis(mirrorAxis);
-
-            // Draw Gimmicks
-            skCircleView.RenderEngine.DrawGimmickNotes(chart, userSettings.ViewSettings.ShowGimmicks, userSettings.ViewSettings.HighlightViewedNote, selectedGimmickIndex);
-
-            /*// Draw Links connecting simultaneous notes
-            // WIP for now.
-            //skCircleView.RenderEngine.DrawNoteLinks(chart, userSettings.ViewSettings.NoteScaleMultiplier);*/
-
-            // Draw holds
-            // skCircleView.RenderEngine.DrawHolds(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex, userSettings.ViewSettings.NoteScaleMultiplier);
-
-            // Draw notes
-            skCircleView.RenderEngine.DrawNotes(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex, userSettings.ViewSettings.NoteScaleMultiplier);
-
-            if (appSettingsVm.ShowSlideSnapArrows)
-            {
-                // skCircleView.RenderEngine.DrawSlideArrows(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex);
-                // skCircleView.RenderEngine.DrawSnapArrows(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex);
-            }
+            skCircleView.RenderEngine.Render(chart, currentNoteType, selectedNoteIndex, selectedGimmickIndex, isHoveringOverMirrorAxis, showCursor, (int)_vm.PositionNumeric, (int)_vm.SizeNumeric, _vm.MirrorAxisNumeric);
         }
-
-        // Determine if cursor should be showing
-        var showCursor = userSettings.ViewSettings.ShowCursor || skCircleView.mouseDownPosition != -1;
-        if (currentSong != null && !currentSong.Paused)
-            showCursor = userSettings.ViewSettings.ShowCursorDuringPlayback;
-
-        // Draw cursor
-        // if (showCursor)
-            // skCircleView.RenderEngine.DrawCursor(currentNoteType, (float) _vm.PositionNumeric, (float) _vm.SizeNumeric)
     }
 
     private void CircleControl_OnWheel(object? sender, PointerWheelEventArgs e)
