@@ -120,6 +120,10 @@
     <system:String x:Key="L.Settings.Tabs.General">General</system:String>
     <system:String x:Key="L.Settings.Tabs.Visual">Visual</system:String>
 
+    <system:String x:Key="L.Settings.Labels.Language">Language:</system:String>
+    <system:String x:Key="L.Settings.CheckBoxes.UseSpaceKeyToPlay">Press Space to Play/Pause</system:String>
+    <system:String x:Key="L.Settings.Labels.UseSpaceKeyToPlayWarning">Please be advised that this option commits a few sins to make the Space key toggle playback when possible. It is possible that enabling this option may cause thermonuclear war.</system:String>
+
     <system:String x:Key="L.Settings.ColorLabels.HoldStart">Hold Start</system:String>
     <system:String x:Key="L.Settings.ColorLabels.HoldSegment">Hold Segment/End</system:String>
     <system:String x:Key="L.Settings.ColorLabels.HoldGradient0">Hold Gradient Far</system:String>

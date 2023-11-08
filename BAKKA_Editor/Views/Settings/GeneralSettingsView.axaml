@@ -23,6 +23,12 @@
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
+
+            <Rectangle Margin="0,8" />
+
+            <CheckBox IsChecked="{Binding UseSpaceKeyToPlay}"
+                      Content="{DynamicResource L.Settings.CheckBoxes.UseSpaceKeyToPlay}" />
+            <TextBlock Foreground="Firebrick" Text="{DynamicResource L.Settings.Labels.UseSpaceKeyToPlayWarning}" />
         </StackPanel>
     </ScrollViewer>
 </UserControl>

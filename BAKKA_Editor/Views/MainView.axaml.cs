@@ -518,6 +518,7 @@ public partial class MainView : UserControl
         appSettingsVm.IsActiveCursorTrackingEnabled = userSettings.CursorSettings.IsActiveCursorTrackingEnabled;
         appSettingsVm.ShowSlideSnapArrows = userSettings.ViewSettings.ShowSlideSnapArrows;
         appSettingsVm.SlideNoteRotationSpeedNumeric = userSettings.ViewSettings.SlideNoteRotationSpeed;
+        appSettingsVm.UseSpaceKeyToPlay = userSettings.ViewSettings.UseSpaceToPlaySink; // TODO: add this to yasu's function
 
         // colors
         appSettingsVm.ColorNoteTap = AvColor.Parse(userSettings.ColorSettings.ColorNoteTap);

@@ -189,4 +189,12 @@ public partial class AppSettingsViewModel : ViewModelBase
         if (UserSettings != null)
             UserSettings.ColorSettings.ColorNoteHoldGradient1 = "#" + value.ToUInt32().ToString("X8");
     }
+
+    [ObservableProperty] private bool useSpaceKeyToPlay = false;
+
+    partial void OnUseSpaceKeyToPlayChanged(bool value)
+    {
+        if (UserSettings != null)
+            UserSettings.ViewSettings.UseSpaceToPlaySink = value;
+    }
 }
