@@ -237,7 +237,6 @@ namespace BAKKA_Editor
                     Size = (uint)Math.Min(MinimumSize - (_relativeDragPosition + (MinimumSize - 1)), MaximumSize);
                 }
             }
-            Debug.WriteLine($"{Size}");
         }
     }
 }
