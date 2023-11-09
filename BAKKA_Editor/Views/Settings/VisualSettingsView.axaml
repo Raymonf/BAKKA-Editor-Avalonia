@@ -37,7 +37,6 @@
                         Content="{DynamicResource L.Settings.CheckBoxes.DuringPlayback}"/>
             </StackPanel>
             
-
             <StackPanel Orientation="Horizontal">
               <CheckBox IsChecked="{Binding ShowMaskNotes}"
                         Content="{DynamicResource L.Settings.CheckBoxes.ShowMaskNotes}"/>
@@ -50,7 +49,10 @@
           
             <CheckBox IsChecked="{Binding ShowMaskEffects}"
                       Content="{DynamicResource L.Settings.CheckBoxes.ShowMaskEffects}"/>
-          
+
+            <CheckBox IsChecked="{Binding ShowCursorDepth}"
+                      Content="{DynamicResource L.Settings.CheckBoxes.ShowCursorDepth}"/>
+
             <CheckBox IsChecked="{Binding IsActiveCursorTrackingEnabled}"
                       Content="{DynamicResource L.Settings.CheckBoxes.IsActiveCursorTrackingEnabled}" />
             <TextBlock Text="{DynamicResource L.Settings.Labels.ActiveCursorTrackingHelp}" />

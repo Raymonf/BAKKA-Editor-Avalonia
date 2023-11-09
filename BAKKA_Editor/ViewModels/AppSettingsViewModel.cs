@@ -203,6 +203,13 @@ public partial class AppSettingsViewModel : ViewModelBase
             UserSettings.ViewSettings.ShowMaskEffects = value;
     }
 
+    [ObservableProperty] private bool showCursorDepth = true;
+    partial void OnShowCursorDepthChanged(bool value)
+    {
+        if (UserSettings != null)
+            UserSettings.ViewSettings.ShowCursorDepth = value;
+    }
+
     [ObservableProperty] private static IColorPalette _notePalette = new NoteColorPalette();
     [ObservableProperty] private Color colorNoteTap = _notePalette.GetColor(0, 0);
     [ObservableProperty] private Color colorNoteChain = _notePalette.GetColor(0, 1);
