@@ -14,6 +14,8 @@ namespace BAKKA_Editor.ViewModels;
 
 public partial class MainViewModel : ViewModelBase
 {
+    private Cursor? Cursor;
+
     [ObservableProperty] private AppSettingsViewModel appSettings = new();
 
     [ObservableProperty] private bool areMeasureButtonsVisible;
@@ -52,7 +54,7 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty] private int positionTrackBarMinimum = 0;
     [ObservableProperty] private int positionTrackBarMaximum = 59;
 
-    [ObservableProperty] private decimal sizeNumeric = 0;
+    [ObservableProperty] private decimal sizeNumeric = 4;
     [ObservableProperty] private int sizeNumericMinimum = 4;
     [ObservableProperty] private int sizeNumericMaximum = 59;
 
@@ -106,6 +108,24 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty] private int mirrorAxisNumericMaximum = 60;
 
     [ObservableProperty] private int guideLineSelectedIndex = 0;
+
+    [ObservableProperty] private uint cursorBeatDepthNumeric = 0;
+    [ObservableProperty] private uint cursorBeatDepthNumericMinimum = 0;
+    [ObservableProperty] private uint cursorBeatDepthNumericMaximum = 0;
+
+    partial void OnCursorBeatDepthNumericChanged(uint value)
+    {
+        Cursor?.Dive(value);
+
+        var mainWindow = Target();
+        if (mainWindow != null)
+            mainWindow.UpdateTime();
+    }
+
+    public void Initialize(ref Cursor cursor)
+    {
+        Cursor = cursor;
+    }
 
     // Commands
     public async Task<bool> NewCommand()

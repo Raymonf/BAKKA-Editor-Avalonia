@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -376,8 +377,8 @@ public partial class MainView : UserControl
         {
             BeatInfo = currentBeat,
             NoteType = NoteType.HoldJoint,
-            Position = (int)_vm.PositionNumeric,
-            Size = (int)_vm.SizeNumeric,
+            Position = (int)skCircleView.Cursor.Position,
+            Size = (int)skCircleView.Cursor.Size,
             HoldChange = true,
             PrevReferencedNote = selectedNote.PrevReferencedNote,
             NextReferencedNote = selectedNote
@@ -537,6 +538,8 @@ public partial class MainView : UserControl
         appSettingsVm.ColorNoteHoldGradient0 = AvColor.Parse(userSettings.ColorSettings.ColorNoteHoldGradient0);
         appSettingsVm.ColorNoteHoldGradient1 = AvColor.Parse(userSettings.ColorSettings.ColorNoteHoldGradient1);
 
+        _vm.Initialize(ref skCircleView.Cursor);
+
         autoSaveTimer =
             new DispatcherTimer(TimeSpan.FromMilliseconds(userSettings.SaveSettings.AutoSaveInterval * 60000),
                 DispatcherPriority.Background, AutoSaveTimer_Tick);
@@ -550,6 +553,9 @@ public partial class MainView : UserControl
         chainButton.AppendHotkey(userSettings.HotkeySettings.ChainHotkey);
         holdButton.AppendHotkey(userSettings.HotkeySettings.HoldHotkey);
         playButton.AppendHotkey(userSettings.HotkeySettings.PlayHotkey);
+
+        // Update circle view
+        skCircleView.BeatsPerMeasure = (uint)_vm.Beat2Numeric;
 
         // clamp refresh rate between 10 and 500
         clampedRefreshRate = int.Clamp(userSettings.ViewSettings.EditorRefreshRate, 10, 500);
@@ -868,6 +874,8 @@ public partial class MainView : UserControl
             ResetChartTime();
             UpdateNoteLabels(chart.Notes.Count > 0 ? 0 : -1);
             UpdateGimmickLabels(chart.Gimmicks.Count > 0 ? 0 : -1);
+            _vm.CursorBeatDepthNumeric = skCircleView.Cursor.ConfigureDepth(skCircleView.CalculateMaximumDepth(chart));
+            _vm.CursorBeatDepthNumericMaximum = skCircleView.Cursor.MaximumDepth;
             if (!IsDesktop)
                 saveFileStream = openChartFileWriteStream;
             saveFilename = openFilename;
@@ -995,13 +1003,17 @@ public partial class MainView : UserControl
         }
 
         // Determine if cursor should be showing
-        var showCursor = userSettings.ViewSettings.ShowCursor || skCircleView.mouseDownPos != -1;
+        var showCursor = userSettings.ViewSettings.ShowCursor;
         if (currentSong != null && !currentSong.Paused)
             showCursor = userSettings.ViewSettings.ShowCursorDuringPlayback;
 
         // Draw cursor
         if (showCursor)
-            skCircleView.DrawCursor(currentNoteType, (float) _vm.PositionNumeric, (float) _vm.SizeNumeric);
+        {
+            skCircleView.DrawCursor(chart, currentNoteType, (float)skCircleView.Cursor.Position,
+                (float)skCircleView.Cursor.Size, skCircleView.Cursor.Depth);
+            skCircleView.DrawCursorBeatIndicator(chart, skCircleView.Cursor.Depth);
+        }
     }
 
     private void CircleControl_OnWheel(object? sender, PointerWheelEventArgs e)
@@ -1047,16 +1059,29 @@ public partial class MainView : UserControl
         }
         else if ((e.KeyModifiers & KeyModifiers.Control) != 0)
         {
+            // Adjust cursor depth with mouse wheel when holding ctrl
+            var newDepthValue = _vm.CursorBeatDepthNumeric;
+            if (delta > 0)
+                newDepthValue++;
+            else if (newDepthValue > 0)
+                newDepthValue--;
+
+            _vm.CursorBeatDepthNumeric = Math.Clamp(newDepthValue, 0, _vm.CursorBeatDepthNumericMaximum);
         }
         else if (editorMode == EditorMode.AdjustSizeMode)
         {
+            if (skCircleView == null)
+            {
+                return;
+            }
+
             if (delta > 0)
             {
-                _vm.SizeNumeric = Math.Min(_vm.SizeNumeric + 1, 60);
+                _vm.SizeNumeric = skCircleView.Cursor.Resize(skCircleView.Cursor.Size + 1);
             }
             else
             {
-                _vm.SizeNumeric = Math.Max(_vm.SizeNumeric - 1, _vm.SizeNumericMinimum);
+                _vm.SizeNumeric = skCircleView.Cursor.Resize(skCircleView.Cursor.Size - 1);
             }
         }
         else
@@ -1116,14 +1141,17 @@ public partial class MainView : UserControl
                 _vm.SongTrackBar = time;
         }
 
-        updateTime();
+        UpdateTime();
 
         valueTriggerEvent = EventSource.None;
     }
 
     private void Beat2Numeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
     {
-        updateTime();
+        skCircleView.BeatsPerMeasure = (uint)(e.NewValue ?? 1);
+        _vm.CursorBeatDepthNumeric = skCircleView.Cursor.ConfigureDepth(skCircleView.CalculateMaximumDepth(chart));
+        _vm.CursorBeatDepthNumericMaximum = skCircleView.Cursor.MaximumDepth;
+        UpdateTime();
     }
 
     private void UpdateGimmickLabels(int val = -2)
@@ -1300,10 +1328,10 @@ public partial class MainView : UserControl
                 break;
         }
 
-        if (_vm.SizeNumeric < minSize) _vm.SizeNumeric = minSize;
         if (_vm.SizeTrackBar < minSize) _vm.SizeTrackBar = minSize;
-        _vm.SizeNumericMinimum = minSize;
         _vm.SizeTrackBarMinimum = minSize;
+
+        _vm.SizeNumeric = skCircleView.Cursor.ConfigureSize((uint)minSize);
     }
 
     private void updateLabel(string text)
@@ -1372,11 +1400,15 @@ public partial class MainView : UserControl
     {
         _vm.MeasureNumeric = _vm.Beat1Numeric = 0;
         _vm.PositionNumeric = _vm.PositionNumericMinimum;
-        _vm.SizeNumeric = _vm.SizeNumericMinimum;
-        updateTime();
+        _vm.SizeNumeric = skCircleView.Cursor.Resize(skCircleView.Cursor.MinimumSize);
+        UpdateTime();
     }
 
-    private void updateTime()
+    /// <summary>
+    /// Updates the current measure being tracked, determines if notes should be placeable
+    /// based on where the cursor is, and updates all notes in view.
+    /// </summary>
+    public void UpdateTime()
     {
         if (skCircleView == null)
         {
@@ -1386,13 +1418,15 @@ public partial class MainView : UserControl
         if (currentSong == null || (currentSong != null && currentSong.Paused))
         {
             skCircleView.CurrentMeasure =
-                (float) _vm.MeasureNumeric + (float) _vm.Beat1Numeric / (float) _vm.Beat2Numeric;
+                (float) _vm.MeasureNumeric + ((float) _vm.Beat1Numeric / (float) _vm.Beat2Numeric);
         }
 
+        var cursorMeasure = skCircleView.DepthToMeasure(skCircleView.Cursor.Depth);
+
         if (currentNoteType is NoteType.HoldJoint or NoteType.HoldEnd)
-            insertButton.IsEnabled = !(lastNote.BeatInfo.MeasureDecimal >= skCircleView.CurrentMeasure);
+            insertButton.IsEnabled = !(lastNote.BeatInfo.MeasureDecimal >= cursorMeasure);
         else if (endOfChartNote != null)
-            insertButton.IsEnabled = !(endOfChartNote.BeatInfo.MeasureDecimal <= skCircleView.CurrentMeasure);
+            insertButton.IsEnabled = !(endOfChartNote.BeatInfo.MeasureDecimal <= cursorMeasure);
         else if (currentSong != null && !currentSong.Paused)
             insertButton.IsEnabled = false;
         else
@@ -1676,7 +1710,7 @@ public partial class MainView : UserControl
     {
         if (_vm.MeasureNumeric != e.NewValue)
             _vm.MeasureNumeric = Convert.ToDecimal(e.NewValue ?? _vm.MeasureNumeric);
-        updateTime();
+        UpdateTime();
     }
 
     private void PositionNumeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
@@ -1685,14 +1719,16 @@ public partial class MainView : UserControl
             return;
         var newValue = Convert.ToInt32(e.NewValue);
         if ((int) _vm.PositionTrackBar != newValue)
-            _vm.PositionTrackBar = newValue;
+            _vm.PositionTrackBar = (editorMode == EditorMode.PlaceNoteMode) ? skCircleView.Cursor.Position : skCircleView.Cursor.Move((uint)newValue);
     }
 
     private void PositionTrackBar_OnValueChanged(object? sender, RangeBaseValueChangedEventArgs e)
     {
         var newValue = Convert.ToInt32(e.NewValue);
-        if ((int) _vm.PositionNumeric != newValue)
-            _vm.PositionNumeric = newValue;
+        if ((int)skCircleView.Cursor.Position != newValue)
+        {
+            _vm.PositionNumeric = (editorMode == EditorMode.PlaceNoteMode) ? skCircleView.Cursor.Position : skCircleView.Cursor.Move((uint)newValue);
+        }
     }
 
     private void SizeNumeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
@@ -1701,14 +1737,16 @@ public partial class MainView : UserControl
             return;
         var newValue = Convert.ToInt32(e.NewValue);
         if ((int) _vm.SizeTrackBar != newValue)
-            _vm.SizeTrackBar = newValue;
+            _vm.SizeTrackBar = skCircleView.Cursor.Resize((uint)newValue);
     }
 
     private void SizeTrackBar_OnValueChanged(object? sender, RangeBaseValueChangedEventArgs e)
     {
         var newValue = Convert.ToInt32(e.NewValue);
-        if ((int) _vm.SizeNumeric != newValue)
-            _vm.SizeNumeric = newValue;
+        if ((int)skCircleView.Cursor.Size != newValue)
+        {
+            _vm.SizeNumeric = skCircleView.Cursor.Resize((uint)newValue);
+        }
     }
 
     private void insertButton_Click(object? sender, RoutedEventArgs e)
@@ -1721,8 +1759,7 @@ public partial class MainView : UserControl
         if (!insertButton.IsEnabled)
             return;
 
-        var currentBeat = new BeatInfo((int) _vm.MeasureNumeric,
-            (int) _vm.Beat1Numeric * 1920 / (int) _vm.Beat2Numeric);
+        var currentBeat = new BeatInfo(skCircleView.DepthToMeasure(skCircleView.Cursor.Depth));
 
         if (currentGimmickType == GimmickType.NoGimmick)
         {
@@ -1730,8 +1767,8 @@ public partial class MainView : UserControl
             {
                 BeatInfo = currentBeat,
                 NoteType = currentNoteType,
-                Position = (int) _vm.PositionNumeric,
-                Size = (int) _vm.SizeNumeric,
+                Position = (int)skCircleView.Cursor.Position,
+                Size = (int)skCircleView.Cursor.Size,
                 HoldChange = true
             };
             switch (currentNoteType)
@@ -1802,6 +1839,7 @@ public partial class MainView : UserControl
                 chart.Notes.Add(tempNote);
 
             UpdateNotesOnBeat();
+            UpdateTime();
 
             chart.IsSaved = false;
             switch (currentNoteType)
@@ -1897,9 +1935,9 @@ public partial class MainView : UserControl
                 // X and Y are relative to the upper left of the panel
                 var xCen = point.Position.X - skCircleView.CenterPoint.X;
                 var yCen = -(point.Position.Y - skCircleView.CenterPoint.Y);
-                // Update the location of mouse click inside the circle
-                skCircleView.UpdateMouseDown((float)xCen, (float)yCen, point.Position.ToSystemDrawing(), (int)_vm.SizeNumeric);
-                _vm.PositionNumeric = skCircleView.mouseDownPos;
+                var theta = skCircleView.CalculateTheta((float)xCen, (float)yCen);
+
+                _vm.PositionNumeric = skCircleView.Cursor.Move((uint)theta);
                 editorMode = EditorMode.PlaceNoteMode;
             }
             break;
@@ -1939,12 +1977,10 @@ public partial class MainView : UserControl
                 }
                 else
                 {
-                    var dist = Utils.GetDist(point.Position.ToSystemDrawing(), skCircleView.mouseDownPt);
-                    if (dist > 5.0f && userSettings.ViewSettings.PlaceNoteOnDrag)
+                    if (skCircleView.Cursor.WasDragged && userSettings.ViewSettings.PlaceNoteOnDrag)
                         InsertObject();
                 }
 
-                skCircleView.UpdateMouseUp();
                 editorMode = EditorMode.None;
             }
             break;
@@ -1974,164 +2010,29 @@ public partial class MainView : UserControl
         var yCen = -(point.Position.Y - skCircleView.CenterPoint.Y);
 
         var theta = skCircleView.CalculateTheta((float)xCen, (float)yCen);
-        var rolloverState = skCircleView.rolloverState;
 
         if (userSettings.CursorSettings.IsActiveCursorTrackingEnabled)
         {
-            var relativeMousePosition = skCircleView.relativeMouseDragPos;
-            var mouseDownSize = skCircleView.mouseDownSize;
-
-            if (skCircleView.mouseDownPos == -1)
+            if (editorMode != EditorMode.PlaceNoteMode)
             {
-                _vm.PositionNumeric = theta;
+                skCircleView.Cursor.Move((uint)theta);
             }
-            else if (skCircleView.mouseDownPos != -1 && theta != skCircleView.lastMousePos)
+            else
             {
-                if (editorMode != EditorMode.PlaceNoteMode)
-                {
-                    return;
-                }
-
-                // Rollover calculation is tricky. You could move the mouse through the center of the circle
-                // which technically isn't moving clockwise or counterclockwise. Assume that the shorter of
-                // clockwise vs counterclockwise deltas is the direction we moved in. If we moved perfectly
-                // through the center of the circle such that the deltas are equal, choose counterclockwise.
-                var deltaClockwise = (skCircleView.lastMousePos - theta + 60) % 60;
-                var deltaCounterclockwise = (theta - skCircleView.lastMousePos + 60) % 60;
-                bool movedClockwise = deltaClockwise < deltaCounterclockwise;
-                int minSize = Math.Max(mouseDownSize, _vm.SizeNumericMinimum);
-
-                switch (rolloverState)
-                {
-                    case RolloverState.Counterclockwise:
-                    {
-                        // If rolled over counterclockwise, the mouse moved clockwise, and mouse down position
-                        // is between the delta, we are no longer rolled over
-                        var delta = ((skCircleView.mouseDownPos - theta + 60) % 60);
-                        if (movedClockwise && delta <= deltaClockwise)
-                        {
-                            rolloverState = RolloverState.None;
-                            relativeMousePosition -= delta;
-                        }
-                    }
-                    break;
-
-                    case RolloverState.Clockwise:
-                    {
-                        // If rolled over clockwise, the mouse moved counterclockwise, and mouse down position
-                        // plus the minimum size is between the delta, we are no longer rolled over
-                        var delta = ((theta - (skCircleView.mouseDownPos + minSize) + 60) % 60);
-                        if (!movedClockwise && delta <= deltaCounterclockwise)
-                        {
-                            rolloverState = RolloverState.None;
-                            relativeMousePosition += delta;
-                        }
-                    }
-                    break;
-
-                    default:
-                    {
-                        if (movedClockwise)
-                        {
-                            relativeMousePosition = Math.Max(relativeMousePosition - deltaClockwise, minSize - 60);
-
-                            if (relativeMousePosition <= minSize - 60)
-                            {
-                                rolloverState = RolloverState.Clockwise;
-                            }
-                        }
-                        else
-                        {
-                            relativeMousePosition = Math.Min(relativeMousePosition + deltaCounterclockwise, 60);
-
-                            if (relativeMousePosition >= 60)
-                            {
-                                rolloverState = RolloverState.Counterclockwise;
-                            }
-
-                            // If the mouse moved counterclockwise of the mouse down position
-                            // and the mouse down position plus the starting size is between the
-                            // delta, we can start decreasing the size.
-                            var delta = ((theta - (skCircleView.mouseDownPos + minSize - 1) + 120) % 60);
-                            if (delta <= deltaCounterclockwise)
-                            {
-                                mouseDownSize = -1;
-                                minSize = _vm.SizeNumericMinimum;
-                            }
-                        }
-                    }
-                    break;
-                }
-
-                // Calculate size and position based on mouse click position and relative drag position
-                if (relativeMousePosition >= 0)
-                {
-                    _vm.PositionNumeric = skCircleView.mouseDownPos;
-                    _vm.SizeNumeric = Math.Min(Math.Max(minSize, relativeMousePosition + 1), 60);
-                }
-                else
-                {
-                    _vm.PositionNumeric = (skCircleView.mouseDownPos + relativeMousePosition + 60) % 60;
-                    _vm.SizeNumeric = Math.Max(minSize, minSize - relativeMousePosition);
-                }
+                skCircleView.Cursor.Drag((uint)theta);
             }
 
-            skCircleView.UpdateMouseMove(theta, relativeMousePosition, mouseDownSize, rolloverState);
+            _vm.PositionNumeric = skCircleView.Cursor.Position;
+            _vm.SizeNumeric = skCircleView.Cursor.Size;
         }
         else
         {
             // If no left click was performed within the circle view, do nothing.
-            if (skCircleView.mouseDownPos == -1) return;
+            if (editorMode != EditorMode.PlaceNoteMode) return;
 
-            var initialSize = (int)_vm.SizeNumeric;
-            var delta = theta - skCircleView.lastMousePos;
-
-            // Handle rollover
-            if (delta == -59)
-            {
-                if (rolloverState == RolloverState.Clockwise)
-                    rolloverState = RolloverState.None;
-                else
-                    rolloverState = RolloverState.Counterclockwise;
-            }
-            else if (delta == 59)
-            {
-                if (rolloverState == RolloverState.Counterclockwise)
-                    rolloverState = RolloverState.None;
-                else
-                    rolloverState = RolloverState.Clockwise;
-            }
-
-            // Left click will alter the note width and possibly position depending on which direction we move
-            if (theta == skCircleView.mouseDownPos)
-            {
-                _vm.PositionNumeric = skCircleView.mouseDownPos;
-                initialSize = 1;
-            }
-            else if ((theta > skCircleView.mouseDownPos || rolloverState == RolloverState.Counterclockwise) && 
-                rolloverState != RolloverState.Clockwise)
-            {
-                _vm.PositionNumeric = skCircleView.mouseDownPos;
-                if (rolloverState == RolloverState.Counterclockwise)
-                    initialSize = Math.Min(theta + 60 - skCircleView.mouseDownPos + 1, 60);
-                else
-                    initialSize = theta - skCircleView.mouseDownPos + 1;
-            }
-            else if (theta < skCircleView.mouseDownPos || rolloverState == RolloverState.Clockwise)
-            {
-                _vm.PositionNumeric = theta;
-                if (rolloverState == RolloverState.Clockwise)
-                    initialSize = Math.Min(skCircleView.mouseDownPos + 60 - theta + 1, 60);
-                else
-                    initialSize = skCircleView.mouseDownPos - theta + 1;
-            }
-
-            if (initialSize < _vm.SizeNumericMinimum) _vm.SizeNumeric = _vm.SizeNumericMinimum;
-            else if (initialSize > 60) _vm.SizeNumeric = 60;
-            else _vm.SizeNumeric = initialSize;
-
-            // Only theta and rollover state matter if active cursor tracking is disabled
-            skCircleView.UpdateMouseMove(theta, 0, -1, rolloverState);
+            skCircleView.Cursor.Drag((uint)theta);
+            _vm.PositionNumeric = skCircleView.Cursor.Position;
+            _vm.SizeNumeric = skCircleView.Cursor.Size;
         }
     }
 
@@ -2209,6 +2110,8 @@ public partial class MainView : UserControl
                     selectedGimmickIndex = 0;
                 UpdateGimmickLabels();
                 chart.RecalcTime();
+                _vm.CursorBeatDepthNumeric = skCircleView.Cursor.ConfigureDepth(skCircleView.CalculateMaximumDepth(chart));
+                _vm.CursorBeatDepthNumericMaximum = skCircleView.Cursor.MaximumDepth;
             });
     }
 
@@ -2321,8 +2224,7 @@ public partial class MainView : UserControl
         window.DataContext = vm;
         window.SetGimmick(new Gimmick
         {
-            BeatInfo = new BeatInfo((int) _vm.MeasureNumeric,
-                (int) _vm.Beat1Numeric * 1920 / (int) _vm.Beat2Numeric),
+            BeatInfo = new BeatInfo(skCircleView.DepthToMeasure(skCircleView.Cursor.Depth)),
             GimmickType = GimmickType.BpmChange
         }, GimmicksViewModel.FormReason.New);
 
@@ -2353,8 +2255,7 @@ public partial class MainView : UserControl
         window.SetGimmick(
             new Gimmick
             {
-                BeatInfo = new BeatInfo((int) _vm.MeasureNumeric,
-                    (int) _vm.Beat1Numeric * 1920 / (int) _vm.Beat2Numeric),
+                BeatInfo = new BeatInfo(skCircleView.DepthToMeasure(skCircleView.Cursor.Depth)),
                 GimmickType = GimmickType.TimeSignatureChange
             }, GimmicksViewModel.FormReason.New);
         var dialog = new ContentDialog
@@ -2383,8 +2284,7 @@ public partial class MainView : UserControl
         window.SetGimmick(
             new Gimmick
             {
-                BeatInfo = new BeatInfo((int) _vm.MeasureNumeric,
-                    (int) _vm.Beat1Numeric * 1920 / (int) _vm.Beat2Numeric),
+                BeatInfo = new BeatInfo(skCircleView.DepthToMeasure(skCircleView.Cursor.Depth)),
                 GimmickType = GimmickType.HiSpeedChange
             }, GimmicksViewModel.FormReason.New);
         var dialog = new ContentDialog
@@ -2413,8 +2313,7 @@ public partial class MainView : UserControl
         window.SetGimmick(
             new Gimmick
             {
-                BeatInfo = new BeatInfo((int) _vm.MeasureNumeric,
-                    (int) _vm.Beat1Numeric * 1920 / (int) _vm.Beat2Numeric),
+                BeatInfo = new BeatInfo(skCircleView.DepthToMeasure(skCircleView.Cursor.Depth)),
                 GimmickType = GimmickType.StopStart
             }, GimmicksViewModel.FormReason.New);
         var dialog = new ContentDialog
@@ -2443,8 +2342,7 @@ public partial class MainView : UserControl
         window.SetGimmick(
             new Gimmick
             {
-                BeatInfo = new BeatInfo((int) _vm.MeasureNumeric,
-                    (int) _vm.Beat1Numeric * 1920 / (int) _vm.Beat2Numeric),
+                BeatInfo = new BeatInfo(skCircleView.DepthToMeasure(skCircleView.Cursor.Depth)),
                 GimmickType = GimmickType.ReverseStart
             }, GimmicksViewModel.FormReason.New);
         var dialog = new ContentDialog
@@ -2539,8 +2437,8 @@ public partial class MainView : UserControl
         var newNote = new Note
         {
             BeatInfo = currentNote.BeatInfo,
-            Position = (int) _vm.PositionNumeric,
-            Size = (int) _vm.SizeNumeric
+            Position = (int) skCircleView.Cursor.Position,
+            Size = (int) skCircleView.Cursor.Size
         };
         opManager.InvokeAndPush(new EditNote(currentNote, newNote));
         UpdateNoteLabels();
@@ -2710,7 +2608,7 @@ public partial class MainView : UserControl
                     }
                 }
 
-                updateTime();
+                UpdateTime();
             }
         }
         else
@@ -2750,7 +2648,7 @@ public partial class MainView : UserControl
                     }
                 }
 
-                updateTime();
+                UpdateTime();
             }
         }
     }
@@ -3021,7 +2919,7 @@ public partial class MainView : UserControl
             playButton.AppendHotkey(userSettings.HotkeySettings.PlayHotkey);
         }
 
-        updateTime();
+        UpdateTime();
     }
 
     private void UpdateSongVolume()

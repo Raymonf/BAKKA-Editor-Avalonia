@@ -15,13 +15,6 @@ internal struct SkArcInfo
     public float NoteScale;
 }
 
-internal enum RolloverState
-{
-    None,
-    Counterclockwise,
-    Clockwise
-}
-
 internal partial class SkCircleView
 {
     private SKCanvas canvas;
@@ -29,12 +22,9 @@ internal partial class SkCircleView
     public int lastMousePos = -1;
     public bool Playing { get; set; } = false; // TODO: move out
 
-    // Mouse information. Public so other GUI elements can be updated with their values.
-    public int mouseDownPos = -1;
-    public Point mouseDownPt;
-    public RolloverState rolloverState = RolloverState.None;
-    public int relativeMouseDragPos = 0;
-    public int mouseDownSize = -1;
+    // Cursor
+    public Cursor Cursor = new();
+
 
     public SkCircleView(UserSettings userSettings, SizeF size)
     {
@@ -47,7 +37,11 @@ internal partial class SkCircleView
     public PointF TopCorner { get; private set; }
     public PointF CenterPoint { get; private set; }
     public float Radius { get; private set; }
+    /// <summary>
+    /// The current measure at depth 0
+    /// </summary>
     public float CurrentMeasure { get; set; }
+    public uint BeatsPerMeasure { get; set; }
     public float Hispeed { get; set; } = 1.5f;
     public float BeatDivision { get; set; } = 2;
     public int GuideLineSelection { get; set; } = 0;
@@ -258,30 +252,6 @@ internal partial class SkCircleView
         return point;
     }
 
-    // Updates the mouse down position within the circle, and returns the new position.
-    public void UpdateMouseDown(float xCen, float yCen, Point mousePt, int size)
-    {
-        var theta = (float) (Math.Atan2(yCen, xCen) * 180.0f / Math.PI);
-        if (theta < 0)
-            theta += 360.0f;
-        // Left click moves the cursor
-        mouseDownPos = (int) (theta / 6.0f);
-        mouseDownPt = mousePt;
-        lastMousePos = mouseDownPos;
-        rolloverState = RolloverState.None;
-        relativeMouseDragPos = 0;
-        mouseDownSize = size;
-    }
-
-    public void UpdateMouseUp()
-    {
-        if (mouseDownPos <= -1) return;
-
-        // Reset position and point.
-        mouseDownPos = -1;
-        mouseDownPt = new Point();
-    }
-
     /// <summary>
     ///     Creates the background brush with the passed in color if it's null.
     /// </summary>
@@ -291,7 +261,14 @@ internal partial class SkCircleView
         canvas.Clear(Brushes.GetBackgroundColor(dark));
     }
 
-    // Returns the new position in degrees.
+    /// <summary>
+    /// Calculates a position around the ring given mouse coordinates relative to the center of the circle.
+    /// </summary>
+    /// <param name="xCen">Horizontal pixel location of the mouse relative to the center of the circle. 
+    /// Negative numbers are to the left of the center of the circle.</param>
+    /// <param name="yCen">Vertical pixel location of the mouse relative to the center of the circle.
+    /// Negative numbers are below the center of the circle.</param>
+    /// <returns>A position around the circle from 0 to 59.</returns>
     public int CalculateTheta(float xCen, float yCen)
     {
         var thetaCalc = (float) (Math.Atan2(yCen, xCen) * 180.0f / Math.PI);
@@ -299,15 +276,6 @@ internal partial class SkCircleView
             thetaCalc += 360.0f;
         var theta = (int) (thetaCalc / 6.0f);
         return theta;
-    }
-
-    // Updates cursor states.
-    public void UpdateMouseMove(int mousePosition, int relativeMousePosition, int minimumCursorSize, RolloverState state)
-    {
-        lastMousePos = mousePosition;
-        relativeMouseDragPos = relativeMousePosition;
-        mouseDownSize = minimumCursorSize;
-        rolloverState = state;
     }
 
     /*private void FillPie(SKPaint paint, SKRect rect, float startAngle, float sweepAngle)
@@ -964,9 +932,56 @@ internal partial class SkCircleView
         }
     }
 
-    public void DrawCursor(NoteType noteType, float startAngle, float sweepAngle)
+    private float DepthToTime(uint depth)
     {
-        canvas.DrawArc(DrawRect, -startAngle * 6.0f, -sweepAngle * 6.0f, false, Brushes.GetCursorPen(noteType));
+        return (float)depth / (float)BeatsPerMeasure;
+    }
+
+    public float DepthToMeasure(uint depth)
+    {
+        float measure = CurrentMeasure;
+        measure += DepthToTime(depth);
+        return measure;
+    }
+
+    public uint CalculateMaximumDepth(Chart chart)
+    {
+        float totalMeasureShowNotes = GetTotalMeasureShowNotes2(chart);
+        float startBeat = CurrentMeasure;
+        float endBeat = CurrentMeasure + totalMeasureShowNotes;
+        float stepSize = DepthToMeasure(1) - DepthToMeasure(0);
+
+        // Just in case, to avoid dividing by 0.
+        if (stepSize == 0)
+        {
+            return 0;
+        }
+
+        return (uint)Math.Floor((endBeat - startBeat) / stepSize);
+    }
+
+    public void DrawCursor(Chart chart, NoteType noteType, float startAngle, float sweepAngle, uint depth)
+    {
+        float measure = DepthToMeasure(depth);
+        var scale = GetNoteScaleFromMeasure2(chart, measure);
+        var measureArcInfo = GetScaledRect(chart, measure);
+        canvas.DrawArc(measureArcInfo.Rect, -startAngle * 6.0f,
+            -sweepAngle * 6.0f,
+            false,
+            Brushes.GetCursorPen(noteType, scale)
+        );
+    }
+
+    /// <summary>
+    /// Draws a transluscent ring at the current cursor beat position.
+    /// </summary>
+    /// <param name="depth">An index representing depth into the circle view. 0 is the outermost circle. Higher values go deeper into the view.</param>
+    public void DrawCursorBeatIndicator(Chart chart, uint depth)
+    {
+        float measure = DepthToMeasure(depth);
+        var scale = GetNoteScaleFromMeasure2(chart, measure);
+        var measureArcInfo = GetScaledRect(chart, measure);
+        canvas.DrawOval(measureArcInfo.Rect, Brushes.GetCursorMeasurePen(scale));
     }
     
     public void DrawMirrorAxis(int axis)
