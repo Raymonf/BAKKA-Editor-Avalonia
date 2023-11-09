@@ -44,7 +44,7 @@ public class ViewSettings
     public bool ShowGimmicks { get; set; } = true;
     public bool ShowGimmicksDuringPlayback { get; set; } = false;
     public bool ShowGimmickEffects { get; set; } = true;
-    public bool ShowMaskNotes { get; set; } = true;
+    public bool ShowMaskNotes { get; set; } = false;
     public bool ShowMaskNotesDuringPlayback { get; set; } = false;
     public bool ShowMaskEffects { get; set; } = true;
 }
