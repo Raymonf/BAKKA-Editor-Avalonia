@@ -153,13 +153,6 @@ public partial class AppSettingsViewModel : ViewModelBase
             Application.Current.RequestedThemeVariant = value ? ThemeVariant.Dark : ThemeVariant.Light;
     }
 
-    [ObservableProperty] private bool showNoteLinks = true;
-    partial void OnShowNoteLinksChanged(bool value)
-    {
-        if (UserSettings != null)
-            UserSettings.ViewSettings.ShowNoteLinks = value;
-    }
-
     [ObservableProperty] private bool showGimmickNotes = true;
     partial void OnShowGimmickNotesChanged(bool value)
     {

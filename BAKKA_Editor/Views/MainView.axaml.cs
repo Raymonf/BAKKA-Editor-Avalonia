@@ -338,7 +338,7 @@ public partial class MainView : UserControl
         {
             // LerpRound
             System.Diagnostics.Debug.WriteLine("LerpRound");
-            BakeHold.LerpRound(chart, selectedNote, nextNote, positionChange, opManager);
+            BakeHold.LerpRound(chart, selectedNote, nextNote, opManager);
         }
     }
 
@@ -2886,7 +2886,7 @@ public partial class MainView : UserControl
     private void OnPauseSong()
     {
         currentNoteIndex = 0;
-        skCircleView.IsPlaying = false;
+        skCircleView.RenderEngine.Playing = false;
         Dispatcher.UIThread.Invoke(() =>
         {
             playButton.Content = "Play";
@@ -2898,7 +2898,7 @@ public partial class MainView : UserControl
 
     private void OnPlaySong()
     {
-        skCircleView.IsPlaying = true;
+        skCircleView.RenderEngine.Playing = true;
         Dispatcher.UIThread.Invoke(() =>
         {
             playButton.Content = "Pause";

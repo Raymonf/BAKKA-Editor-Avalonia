@@ -13,6 +13,10 @@ internal class Brushes
         UserSettings = userSettings;
     }
 
+    // A Brush can be either a pen or a fill.
+    // A Pen is a brush that creates lines of a color.
+    // A Fill is a brush that creates areas of a color.
+
     private static readonly SKColor MeasurePenColor = SKColors.White;
     private const float MeasurePenStrokeWidth = 1.0f;
 
@@ -58,7 +62,7 @@ internal class Brushes
     private const float HighlightPenStrokeWidth = 20.0f;
 
     private static readonly SKColor LinkPenColor = SKColors.DeepSkyBlue.WithAlpha(0xDD);
-    private const float LinkPenStrokeWidth = 10.0f;
+    private const float LinkPenStrokeWidth = 3.0f;
 
     private static readonly SKColor EndcapPenColor = SKColors.DeepSkyBlue;
     private const float EndcapPenStrokeWidth = 8.0f;
@@ -222,10 +226,6 @@ internal class Brushes
 
     private float strokeWidthMultiplier = 1.0183333f;
 
-    // A Brush can be either a pen or a fill.
-    // A Pen is a brush that creates lines of a color.
-    // A Fill is a brush that creates areas of a color.
-
     public void UpdateBrushStrokeWidth(float panelSize)
     {
         // update window size multiplier
@@ -240,13 +240,6 @@ internal class Brushes
         MirrorAxisPen.StrokeWidth = MirrorAxisPenStrokeWidth * strokeWidthMultiplier;
         CursorPen.StrokeWidth = CursorPenStrokeWidth * strokeWidthMultiplier;
     }
-
-    /*public void ModifyBrush(this SKPaint brush, SKColor? newColor, float? newStrokeWidth, SKStrokeCap? newStrokeCap)
-    {
-        brush.Color = newColor ?? brush.Color;
-        brush.StrokeWidth = (newStrokeWidth ?? brush.StrokeWidth) * strokeWidthMultiplier;
-        brush.StrokeCap = newStrokeCap ?? brush.StrokeCap;
-    }*/
 
     public SKPaint GetCursorPen(NoteType noteType)
     {
@@ -312,21 +305,20 @@ internal class Brushes
         return EndCapPen;
     }
 
-    public SKPaint GetEndHoldPen(Note note, float noteScaleMultiplier)
+    public SKPaint GetHoldEndPen(Note note, float noteScaleMultiplier)
     {
         HoldEndPen.Color = NoteTypeToColor(note.NoteType);
         HoldEndPen.StrokeWidth = HoldEndPenStrokeWidth * strokeWidthMultiplier * noteScaleMultiplier;
         return HoldEndPen;
     }
 
-    public SKPaint GetHoldFill(SKPoint center, float radius)
+    public void SetHoldFill(SKPoint center, float radius)
     {
         var gradientColor0 = SKColor.Parse(UserSettings.ColorSettings.ColorNoteHoldGradient0);
         var gradientColor1 = SKColor.Parse(UserSettings.ColorSettings.ColorNoteHoldGradient1);
         SKColor[] holdColors = {gradientColor0, gradientColor1};
         var shader = SKShader.CreateRadialGradient(center, radius, holdColors, SKShaderTileMode.Clamp);
         HoldFill.Shader = shader;
-        return HoldFill;
     }
 
     public SKPaint GetBackgroundFill(bool dark)

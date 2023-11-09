@@ -3,6 +3,7 @@ using System;
 using System.Drawing;
 using System.Linq;
 using BAKKA_Editor.Enums;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace BAKKA_Editor.Rendering;
 
@@ -31,6 +32,7 @@ internal class RenderEngine
     public int GuideLineSelection { get; set; } = 0;
     public float ArrowMovementOffset { get; set; } = 0;
     public float VisibleMeasures { get; set; } = 1f;
+    public bool Playing { get; set; } = false;
 
     // ================ Setup & Updates ================
     public void SetCanvas(SKCanvas canvas)
@@ -65,6 +67,7 @@ internal class RenderEngine
         CanvasRadius = DrawRect.Width / 2.0f;
         CanvasCenterPoint = new PointF(CanvasTopCorner.X + CanvasRadius, CanvasTopCorner.Y + CanvasRadius);
         brushes.UpdateBrushStrokeWidth(PanelSize.Width);
+        brushes.SetHoldFill(new SKPoint(CanvasCenterPoint.X, CanvasCenterPoint.Y), CanvasRadius);
     }
 
     // ================ Helpers ================
@@ -83,20 +86,7 @@ internal class RenderEngine
         var scaledCurrentMeasure = userSettings.ViewSettings.ShowGimmickEffects ? ScaledCurrentMeasure : CurrentMeasure;
         var visionEndMeasure = scaledCurrentMeasure + VisibleMeasures;
 
-        var latestHiSpeedChange = chart.Gimmicks.LastOrDefault(x =>
-            x.GimmickType == GimmickType.HiSpeedChange
-            && CurrentMeasure >= x.Measure) ?? new Gimmick { HiSpeed = 1.0 };
-
-        if (latestHiSpeedChange.HiSpeed < 0)
-        {
-            // reverse
-            noteScale = (scaledPosition - scaledCurrentMeasure) / (visionEndMeasure - scaledCurrentMeasure);
-        }
-        else
-        {
-            // normal
-            noteScale = 1 - (scaledPosition - scaledCurrentMeasure) / (visionEndMeasure - scaledCurrentMeasure);
-        }
+        noteScale = 1 - (scaledPosition - scaledCurrentMeasure) / (visionEndMeasure - scaledCurrentMeasure);
 
         // cool scale math. it's just a curve for "perspective"
         // to not make the note scaling linear. I'm not smart enough to actually
@@ -183,7 +173,7 @@ internal class RenderEngine
     public void Render(Chart chart, NoteType currentNoteType, int selectedNoteIndex, int selectedGimmickIndex, bool isHoveringOverMirrorAxis, bool showCursor, int cursorStartAngle, int cursorArcAngle, int axis)
     {
         DrawBackground(userSettings.ViewSettings.DarkMode);
-        DrawMaskEffect(chart, userSettings.ViewSettings.DarkMode);
+        if (userSettings.ViewSettings.ShowMaskEffects) DrawMaskEffect(chart, userSettings.ViewSettings.DarkMode);
         DrawGuideLines();
         DrawCircleDividers(chart);
         DrawDegreeCircle();
@@ -191,7 +181,6 @@ internal class RenderEngine
         if (userSettings.ViewSettings.ShowGimmicks) DrawGimmickNotes(chart, userSettings.ViewSettings.HighlightViewedNote, selectedGimmickIndex);
         if (userSettings.ViewSettings.ShowMaskNotes) DrawMaskNotes(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex);
         DrawHolds(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex, userSettings.ViewSettings.NoteScaleMultiplier);
-        if (userSettings.ViewSettings.ShowNoteLinks) DrawNoteLinks(chart);
         DrawNotes(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex, userSettings.ViewSettings.NoteScaleMultiplier);
         if (userSettings.ViewSettings.ShowSlideSnapArrows) DrawArrows(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex);
         if (showCursor) DrawCursor(currentNoteType, cursorStartAngle, cursorArcAngle);
@@ -203,44 +192,31 @@ internal class RenderEngine
         canvas.Clear(Brushes.GetBackgroundColor(isDarkMode));
     }
 
+    private bool[] maskState = new bool[60];
     public void DrawMaskEffect(Chart chart, bool darkMode)
     {
-        // TODO: i undid this thing because it was so slow
-        // but it might not be drawing masks right
-        return;
-        // var masks = chart.Notes.Where(x => x.Measure <= CurrentMeasure && x.IsMask).ToList();
-        var notes = chart.Notes;
-        for (var i = 0; i < notes.Count; i++)
+        Array.Clear(maskState, 0, maskState.Length);
+
+        foreach (var note in chart.Notes)
         {
-            var mask = notes[i];
-            if (!mask.IsMask || mask.Measure > CurrentMeasure)
+            if (note.Measure > CurrentMeasure)
+                break;
+
+            if (!note.IsMask)
                 continue;
 
-            switch (mask.NoteType)
+            for (var i = 0; i < note.Size; i++)
             {
-                case NoteType.MaskAdd:
-                {
-                    var shouldDraw = true;
-                    for (var j = 0; j < chart.Notes.Count; j++)
-                    {
-                        var rem = notes[j];
-                        if (rem.NoteType == NoteType.MaskRemove && rem.Position == mask.Position &&
-                            rem.Size == mask.Size)
-                            if (rem.Measure >= mask.Measure)
-                            {
-                                shouldDraw = false;
-                                break;
-                            }
-                    }
+                var index = (note.Position + i) % 60;
+                maskState[index] = note.NoteType == NoteType.MaskAdd;
+            }
+        }
 
-                    if (shouldDraw)
-                        FillPie(brushes.MaskFill, DrawRect, mask.Position * 6.0f, mask.Size * 6.0f);
-                    break;
-                }
-                // Explicitly draw MaskRemove for edge cases
-                case NoteType.MaskRemove:
-                    FillPie(brushes.GetBackgroundFill(darkMode), DrawRect, mask.Position * 6.0f, mask.Size * 6.0f);
-                    break;
+        for (var i = 0; i < maskState.Length; i++)
+        {
+            if (maskState[i])
+            {
+                FillPie(brushes.MaskFill, DrawRect, i * 6.0f, 6.0f);
             }
         }
     }
@@ -462,7 +438,209 @@ internal class RenderEngine
     
     public void DrawHolds(Chart chart, bool highlightSelectedNote, int selectedNoteIndex, float noteScaleMultiplier)
     {
+        // awards for longest line(s) of code go to...
+        // ray, feel free to write this differently.
+        var visibleNotes = userSettings.ViewSettings.ShowGimmickEffects ?
+            chart.Notes.Where(x => x.IsHold && ((x.Measure >= CurrentMeasure && chart.GetScaledMeasurePosition(x.Measure) <= ScaledCurrentMeasure + VisibleMeasures) || (x.NextReferencedNote != null && (x.Measure < CurrentMeasure && chart.GetScaledMeasurePosition(x.NextReferencedNote.Measure) > ScaledCurrentMeasure + VisibleMeasures)))) :
+            chart.Notes.Where(x => x.IsHold && ((x.Measure >= CurrentMeasure && x.Measure <= CurrentMeasure + VisibleMeasures) || (x.Measure < CurrentMeasure && x.NextReferencedNote?.Measure > CurrentMeasure + VisibleMeasures)));
 
+        var endInfo = userSettings.ViewSettings.ShowGimmickEffects ?
+            GetRect(chart, ScaledCurrentMeasure + VisibleMeasures) :
+            GetRect(chart, CurrentMeasure + VisibleMeasures);
+
+        SKPoint centerPoint = new SKPoint(CanvasCenterPoint.X, CanvasCenterPoint.Y);
+        
+        foreach (var note in visibleNotes)
+        {
+            var currentInfo = GetArc(chart, note);
+
+            var currentNoteVisible = note.Measure >= CurrentMeasure;
+            var nextNoteVisible = note.NextReferencedNote?.Measure < CurrentMeasure + VisibleMeasures;
+            var prevNoteVisible = note.PrevReferencedNote?.Measure >= CurrentMeasure;
+
+            if (userSettings.ViewSettings.ShowGimmickEffects && note.NextReferencedNote != null)
+                nextNoteVisible = chart.GetScaledMeasurePosition(note.NextReferencedNote.Measure) < ScaledCurrentMeasure + VisibleMeasures;
+
+            // current note on-screen + next note on-screen
+            if (currentNoteVisible && nextNoteVisible && note.NextReferencedNote != null)
+            {
+                var nextInfo = GetArc(chart, note.NextReferencedNote);
+
+                // create arcs
+                var arc1StartAngle = currentInfo.StartAngle;
+                var arc1ArcLength = currentInfo.ArcAngle;
+                var arc2StartAngle = nextInfo.StartAngle + nextInfo.ArcAngle;
+                var arc2ArcLength = -nextInfo.ArcAngle;
+
+                // crop arcs
+                if (note.Size != 60)
+                {
+                    arc1StartAngle += 1.5f;
+                    arc2StartAngle -= 1.5f;
+                    arc1ArcLength -= 3.0f;
+                    arc2ArcLength += 3.0f;
+                }
+
+                var path = new SKPath();
+                path.ArcTo(currentInfo.Rect, arc1StartAngle, arc1ArcLength, true);
+                path.ArcTo(nextInfo.Rect, arc2StartAngle, arc2ArcLength, false);
+
+                canvas.DrawPath(path, brushes.HoldFill);
+            }
+
+            // current note on-screen + previous note off-screen
+            if (currentNoteVisible && !prevNoteVisible && note.PrevReferencedNote != null)
+            {
+                var previousInfo = GetArc(chart, note.PrevReferencedNote);
+
+                // ratio between current note size and previous note
+                var scaleRatio = (DrawRect.Width - currentInfo.Rect.Width) / (previousInfo.Rect.Width - currentInfo.Rect.Width);
+
+                var currentStartAngle = currentInfo.StartAngle;
+                var previousStartAngle = previousInfo.StartAngle;
+
+                // handle angles rolling over
+                if (Math.Abs(currentStartAngle - previousStartAngle) > 180)
+                {
+                    if (currentStartAngle > previousStartAngle)
+                        currentStartAngle -= 360;
+                    else
+                        previousStartAngle -= 360;
+                }
+
+                // calculate new startAngle and arcAngle for intermediate arc
+                var currentEndAngle = currentStartAngle - currentInfo.ArcAngle;
+                var newEndAngle = scaleRatio * (previousStartAngle - previousInfo.ArcAngle - (currentEndAngle)) + (currentEndAngle);
+
+                var newStartAngle = scaleRatio * (previousStartAngle - currentStartAngle) + currentStartAngle;
+                var newArcLength = newStartAngle - newEndAngle;
+
+                // create arcs
+                var arc1StartAngle = currentInfo.StartAngle;
+                var arc1ArcLength = currentInfo.ArcAngle;
+                var arc2StartAngle = newStartAngle + newArcLength;
+                var arc2ArcLength = -newArcLength;
+
+                // crop arcs to the right size
+                if (note.Size != 60)
+                {
+                    arc1StartAngle += 1.5f;
+                    arc2StartAngle -= 1.5f;
+                    arc1ArcLength -= 3.0f;
+                    arc2ArcLength += 3.0f;
+                }
+
+                var path = new SKPath();
+                path.ArcTo(currentInfo.Rect, arc1StartAngle, arc1ArcLength, true);
+                path.ArcTo(DrawRect, arc2StartAngle, arc2ArcLength, false);
+
+                canvas.DrawPath(path, brushes.HoldFill);
+            }
+
+            // current note on-screen + next note off-screen
+            if (currentNoteVisible && !nextNoteVisible && note.NextReferencedNote != null)
+            {
+                // create arcs
+                var arc1StartAngle = currentInfo.StartAngle;
+                var arc1ArcLength = currentInfo.ArcAngle;
+
+                // crop arcs to the right size
+                if (note.Size != 60)
+                {
+                    arc1StartAngle += 1.5f;
+                    arc1ArcLength -= 3.0f;
+                }
+
+                var path = new SKPath();
+                path.MoveTo(centerPoint);
+                path.ArcTo(currentInfo.Rect, arc1StartAngle, arc1ArcLength, false);
+
+                canvas.DrawPath(path, brushes.HoldFill);
+            }
+
+            // current note off-screen + next note off-screen
+            if (!currentNoteVisible && !nextNoteVisible && note.NextReferencedNote != null)
+            {
+                var nextInfo = GetArc(chart, note.NextReferencedNote);
+
+                // ratio between current note size and previous note
+                var scaleRatio = (DrawRect.Width - nextInfo.Rect.Width) / (currentInfo.Rect.Width - nextInfo.Rect.Width);
+
+                var currentStartAngle = nextInfo.StartAngle;
+                var previousStartAngle = currentInfo.StartAngle;
+
+                // handle angles rolling over
+                if (Math.Abs(currentStartAngle - previousStartAngle) > 180)
+                {
+                    if (currentStartAngle > previousStartAngle)
+                        currentStartAngle -= 360;
+                    else
+                        previousStartAngle -= 360;
+                }
+
+                // calculate new startAngle and arcAngle for intermediate arc
+                var currentEndAngle = currentStartAngle - nextInfo.ArcAngle;
+                var newEndAngle = scaleRatio * (previousStartAngle - currentInfo.ArcAngle - (currentEndAngle)) + (currentEndAngle);
+
+                var newStartAngle = scaleRatio * (previousStartAngle - currentStartAngle) + currentStartAngle;
+                var newArcLength = newStartAngle - newEndAngle;
+
+                // create arcs
+                var arc1StartAngle = newStartAngle + newArcLength;
+                var arc1ArcLength = -newArcLength;
+
+                // crop arcs to the right size
+                if (note.Size != 60)
+                {
+                    arc1StartAngle -= 1.5f;
+                    arc1ArcLength += 3.0f;
+                }
+
+                var path = new SKPath();
+                path.MoveTo(centerPoint);
+                path.ArcTo(DrawRect, arc1StartAngle, arc1ArcLength, false);
+
+                canvas.DrawPath(path, brushes.HoldFill);
+            }
+
+            if (currentInfo.Rect.Width < 1) continue;
+
+            var noteScale = currentInfo.NoteScale * noteScaleMultiplier;
+            var fullStartAngle = currentInfo.StartAngle + 1.5f;
+            var fullArcAngle = currentInfo.ArcAngle - 3.0f;
+
+            
+            // hold start notes
+            if (note.NoteType is NoteType.HoldStartNoBonus or NoteType.HoldStartBonusFlair && note.Measure >= CurrentMeasure)
+            {
+                if (note.IsFlair)
+                    canvas.DrawArc(currentInfo.Rect, fullStartAngle, fullArcAngle, false, brushes.GetFlairPen(noteScale));
+
+                if (note.Size != 60)
+                    DrawEndCaps(currentInfo.Rect, currentInfo.StartAngle, currentInfo.ArcAngle, noteScale);
+
+                canvas.DrawArc(currentInfo.Rect, currentInfo.StartAngle, currentInfo.ArcAngle, false, brushes.GetNotePen(note, noteScale));
+            }
+
+            // hold segments
+            if (note.NoteType is NoteType.HoldJoint && !Playing)
+            {
+                canvas.DrawArc(currentInfo.Rect, fullStartAngle, fullArcAngle, false, brushes.GetNotePen(note, noteScale));
+            }
+
+            // hold end notes
+            if (note.NoteType is NoteType.HoldEnd)
+            {
+                if (Playing)
+                    canvas.DrawArc(currentInfo.Rect, fullStartAngle, fullArcAngle, false, brushes.GetHoldEndPen(note, noteScale));
+                else
+                    canvas.DrawArc(currentInfo.Rect, fullStartAngle, fullArcAngle, false, brushes.GetNotePen(note, noteScale));
+            }
+
+            // highlight selection
+            if (highlightSelectedNote && selectedNoteIndex != -1 && note == chart.Notes[selectedNoteIndex])
+                canvas.DrawArc(currentInfo.Rect, fullStartAngle, fullArcAngle, false, brushes.GetHighlightPen(noteScale));
+        }
     }
 
     public void DrawEndCaps(SKRect rect, float start, float length, float noteScale)
@@ -515,12 +693,13 @@ internal class RenderEngine
             if (note.IsSlide)
             {
                 const float slideRadiusOffset = 0.79f;
-                const float slideArrowMinWidth = 0.04f;
+                const float slideArrowMinWidth = 0.03f;
                 const float slideArrowMaxWidth = 0.075f;
-                const float slideArrowLength = 3.5f;
+                const float slideArrowMinLength = 1.75f;
+                const float slideArrowMaxLength = 3.5f;
                 const float slideArrowExtrude = 5.0f;
 
-                var slideStartPoint = info.StartAngle - 9;
+                var slideStartPoint = info.StartAngle - 12;
                 var slideEndPoint = slideStartPoint + info.ArcAngle + 12;
 
                 const int interval = 12;
@@ -528,37 +707,38 @@ internal class RenderEngine
                 for (var i = slideStartPoint; i > slideEndPoint; i -= interval)
                 {
                     var progress = arrowDirection != 1 ? (i - slideStartPoint) / (slideEndPoint - slideStartPoint) : 1 - (i - slideStartPoint) / (slideEndPoint - slideStartPoint);
-                    var scaledArrowWidth = (1 - progress) * slideArrowMinWidth + progress * slideArrowMaxWidth;
+                    var scaledSlideArrowWidth = (1 - progress) * slideArrowMinWidth + progress * slideArrowMaxWidth;
+                    var scaledSlideArrowLength = (1 - progress) * slideArrowMinLength + progress * slideArrowMaxLength; 
 
                     var p1 = GetPointOnArc(
                         CanvasCenterPoint.X, CanvasCenterPoint.Y,
-                        radius * (slideRadiusOffset + scaledArrowWidth),
-                        ArrowMovementOffset * arrowDirection + i - slideArrowLength * arrowDirection * 0.5f);
+                        radius * (slideRadiusOffset + scaledSlideArrowWidth),
+                        ArrowMovementOffset * arrowDirection + i - scaledSlideArrowLength * arrowDirection * 0.5f);
 
                     var p2 = GetPointOnArc(
                         CanvasCenterPoint.X, CanvasCenterPoint.Y,
                         radius * slideRadiusOffset,
-                        ArrowMovementOffset * arrowDirection + i + slideArrowLength * arrowDirection);
+                        ArrowMovementOffset * arrowDirection + i + scaledSlideArrowLength * arrowDirection);
 
                     var p3 = GetPointOnArc(
                         CanvasCenterPoint.X, CanvasCenterPoint.Y,
-                        radius * (slideRadiusOffset - scaledArrowWidth),
-                        ArrowMovementOffset * arrowDirection + i - slideArrowLength * arrowDirection * 0.5f);
+                        radius * (slideRadiusOffset - scaledSlideArrowWidth),
+                        ArrowMovementOffset * arrowDirection + i - scaledSlideArrowLength * arrowDirection * 0.5f);
 
                     var p4 = GetPointOnArc(
                         CanvasCenterPoint.X, CanvasCenterPoint.Y,
-                        radius * (slideRadiusOffset - scaledArrowWidth),
-                        ArrowMovementOffset * arrowDirection + i - slideArrowLength * arrowDirection * 0.5f - slideArrowExtrude * arrowDirection);
+                        radius * (slideRadiusOffset - scaledSlideArrowWidth),
+                        ArrowMovementOffset * arrowDirection + i - scaledSlideArrowLength * arrowDirection * 0.5f - slideArrowExtrude * arrowDirection);
 
                     var p5 = GetPointOnArc(
                         CanvasCenterPoint.X, CanvasCenterPoint.Y,
                         radius * slideRadiusOffset,
-                        ArrowMovementOffset * arrowDirection + i + slideArrowLength * arrowDirection - slideArrowExtrude * arrowDirection);
+                        ArrowMovementOffset * arrowDirection + i + scaledSlideArrowLength * arrowDirection - slideArrowExtrude * arrowDirection);
                     
                     var p6 = GetPointOnArc(
                         CanvasCenterPoint.X,CanvasCenterPoint.Y,
-                        radius * (slideRadiusOffset + scaledArrowWidth),
-                        ArrowMovementOffset * arrowDirection + i - slideArrowLength * arrowDirection * 0.5f - slideArrowExtrude * arrowDirection);
+                        radius * (slideRadiusOffset + scaledSlideArrowWidth),
+                        ArrowMovementOffset * arrowDirection + i - scaledSlideArrowLength * arrowDirection * 0.5f - slideArrowExtrude * arrowDirection);
 
                     var path = new SKPath();
                     path.MoveTo(p1);
@@ -626,10 +806,5 @@ internal class RenderEngine
                 }
             }
         }
-    }
-
-    public void DrawNoteLinks(Chart chart)
-    {
-
     }
 }

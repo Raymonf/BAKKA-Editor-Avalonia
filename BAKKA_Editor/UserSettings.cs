@@ -41,7 +41,6 @@ public class ViewSettings
     public float NoteScaleMultiplier { get; set; } = 1;
     public float SlideNoteRotationSpeed { get; set; } = 1;
     public int EditorRefreshRate { get; set; } = 60;
-    public bool ShowNoteLinks { get; set; } = true;
     public bool ShowGimmicks { get; set; } = true;
     public bool ShowGimmicksDuringPlayback { get; set; } = false;
     public bool ShowGimmickEffects { get; set; } = true;

@@ -26,8 +26,6 @@
                       Content="{DynamicResource L.Settings.CheckBoxes.ShowBeatVisualSettings}" />
             <CheckBox IsChecked="{Binding ShowSlideSnapArrows}"
                       Content="{DynamicResource L.Settings.CheckBoxes.ShowSlideSnapArrows}" />
-            <CheckBox IsChecked="{Binding ShowNoteLinks}"
-                      Content="{DynamicResource L.Settings.CheckBoxes.ShowNoteLinks}" />
 
             <StackPanel Orientation="Horizontal">
               <CheckBox IsChecked="{Binding ShowGimmickNotes}"
