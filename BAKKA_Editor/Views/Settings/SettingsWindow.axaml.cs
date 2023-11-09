@@ -20,9 +20,10 @@ public partial class SettingsWindow : UserControl
             "General" => (UserControl) new GeneralSettingsView(),
             "Visual" => new VisualSettingsView(),
             "Color" => new ColorSettingsView(),
+            "Sound" => new SoundSettingsView(),
             _ => throw new ArgumentOutOfRangeException()
         };
         view.DataContext = DataContext;
-        ((NavigationView) sender).Content = view;
+        ((NavigationView) sender!).Content = view;
     }
 }

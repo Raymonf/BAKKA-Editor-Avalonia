@@ -111,7 +111,6 @@
 
     <system:String x:Key="L.MainView.Menu.File.Settings">Settings</system:String>
     <system:String x:Key="L.Settings.SettingsHeader">Settings</system:String>
-    <system:String x:Key="L.Settings.LanguageLabel">Language:</system:String>
     <system:String x:Key="L.Settings.Buttons.Save">Save</system:String>
     <system:String x:Key="L.Settings.CheckBoxes.ShowBeatVisualSettings">Show Beat Visual Settings</system:String>
     <system:String x:Key="L.Settings.CheckBoxes.ShowSlideSnapArrows">Show Arrows on Slide and Snap Notes</system:String>
@@ -126,6 +125,11 @@
     <system:String x:Key="L.Settings.Tabs.Color">Note Colors</system:String>
     <system:String x:Key="L.Settings.Tabs.General">General</system:String>
     <system:String x:Key="L.Settings.Tabs.Visual">Visual</system:String>
+    <system:String x:Key="L.Settings.Tabs.Sound">Sound</system:String>
+
+    <system:String x:Key="L.Settings.Labels.Language">Language:</system:String>
+    <system:String x:Key="L.Settings.CheckBoxes.UseSpaceKeyToPlay">Press Space to Play/Pause</system:String>
+    <system:String x:Key="L.Settings.Labels.UseSpaceKeyToPlayWarning">Please be advised that this option commits a few sins to make the Space key toggle playback when possible. It is possible that enabling this option may cause thermonuclear war.</system:String>
 
     <system:String x:Key="L.Settings.ColorLabels.HoldStart">Hold Start</system:String>
     <system:String x:Key="L.Settings.ColorLabels.HoldSegment">Hold Segment/End</system:String>
@@ -137,4 +141,9 @@
     <system:String x:Key="L.Settings.Labels.NoteScale">Note Scale:</system:String>
     <system:String x:Key="L.Settings.Labels.SlideNoteRotationSpeed">Slide Note Rotation Speed:</system:String>
     <system:String x:Key="L.Settings.Labels.ColorHint">To revert or choose a game-accurate color, click on a note type and check the palette (second) tab at the top :)</system:String>
+
+    <system:String x:Key="L.Settings.Buttons.SelectHitsoundPath">Select File</system:String>
+    <system:String x:Key="L.Settings.CheckBoxes.EnableHitsound">Enable Hitsounds</system:String>
+    <system:String x:Key="L.Settings.Labels.HitsoundOffsetMs">Additional Hitsound Offset (milliseconds):</system:String>
+    <system:String x:Key="L.Settings.Labels.HitsoundRestartRequiredWarning">Please be advised that changing the hitsound path will require a restart to take effect (for the time being).</system:String>
 </ResourceDictionary>

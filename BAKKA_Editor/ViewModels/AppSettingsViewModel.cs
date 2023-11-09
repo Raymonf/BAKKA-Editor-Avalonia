@@ -1,7 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Media;
+using Avalonia.Platform.Storage;
+using Avalonia.Utilities;
 using BAKKA_Editor;
 using BAKKA_Editor.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -264,5 +268,59 @@ public partial class AppSettingsViewModel : ViewModelBase
     {
         if (UserSettings != null)
             UserSettings.ColorSettings.ColorNoteHoldGradient1 = "#" + value.ToUInt32().ToString("X8");
+    }
+
+    [ObservableProperty] private bool useSpaceKeyToPlay = false;
+
+    partial void OnUseSpaceKeyToPlayChanged(bool value)
+    {
+        if (UserSettings != null)
+            UserSettings.ViewSettings.UseSpaceToPlaySink = value;
+    }
+
+    [ObservableProperty] private bool hitsoundEnabled = false;
+
+    partial void OnHitsoundEnabledChanged(bool value)
+    {
+        if (UserSettings != null)
+            UserSettings.SoundSettings.HitsoundEnabled = value;
+    }
+
+    [ObservableProperty] private string hitsoundPath = "";
+
+    partial void OnHitsoundPathChanged(string value)
+    {
+        if (UserSettings != null)
+            UserSettings.SoundSettings.HitsoundPath = value;
+    }
+
+    [ObservableProperty] private decimal hitsoundOffsetMs = 0;
+
+    partial void OnHitsoundOffsetMsChanged(decimal value)
+    {
+        if (UserSettings != null)
+            UserSettings.SoundSettings.HitsoundAdditionalOffsetMs = (int) value;
+    }
+
+    public async Task SelectHitsoundPathCommand()
+    {
+        // TODO: MOVE THIS OUT MOVE THIS OUT MOVE THIS OUT
+
+        var topLevel = TopLevel.GetTopLevel(Dialog);
+        if (topLevel == null)
+        {
+            return;
+        }
+
+        var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Open Hitsound File",
+            AllowMultiple = false
+        });
+
+        if (files.Count >= 1)
+        {
+            HitsoundPath = files[0].Path.AbsolutePath;
+        }
     }
 }
