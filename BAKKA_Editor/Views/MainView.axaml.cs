@@ -307,8 +307,6 @@ public partial class MainView : UserControl
         // size difference between notes
         int sizeChange = nextNote.Size - selectedNote.Size;
 
-        System.Diagnostics.Debug.WriteLine(positionChange + ", " + sizeChange);
-
         // absolute values of size/position difference
         var absolutePositionChange = Math.Abs(positionChange);
         var absoluteSizeChange = Math.Abs(sizeChange);
@@ -325,19 +323,16 @@ public partial class MainView : UserControl
         else if (sizeChange == positionChange * -2)
         {
             // StepSymmetric
-            System.Diagnostics.Debug.WriteLine("StepSymmetric");
             BakeHold.StepSymmetric(chart, selectedNote, nextNote, length, positionChange, sizeChange, opManager);
         }
         else if (absolutePositionChange == absoluteSizeChange || (positionChange == 0 && absoluteSizeChange > 1) || (absolutePositionChange > 1 && sizeChange == 0))
         {
             // StepAsymmetric
-            System.Diagnostics.Debug.WriteLine("StepAsymmetric");
             BakeHold.StepAsymmetric(chart, selectedNote, nextNote, length, positionChange, sizeChange, opManager);
         }
         else
         {
             // LerpRound
-            System.Diagnostics.Debug.WriteLine("LerpRound");
             BakeHold.LerpRound(chart, selectedNote, nextNote, opManager);
         }
     }

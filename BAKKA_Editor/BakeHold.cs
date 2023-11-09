@@ -166,8 +166,6 @@ namespace BAKKA_Editor
 
                     chart.Notes.Add(newNote);
                     chart.IsSaved = false;
-
-                    System.Diagnostics.Debug.WriteLine(newPosition + ", " + newSize + ", " + i);
                 }
             }
 
