@@ -59,6 +59,10 @@ public partial class AppSettingsViewModel : ViewModelBase
         ShowMaskNotesDuringPlayback = userSettings.ViewSettings.ShowMaskNotesDuringPlayback;
         ShowMaskEffects = userSettings.ViewSettings.ShowMaskEffects;
 
+        UseSpaceKeyToPlay = userSettings.ViewSettings.UseSpaceToPlaySink;
+        HitsoundEnabled = userSettings.SoundSettings.HitsoundEnabled;
+        HitsoundOffsetMs = userSettings.SoundSettings.HitsoundAdditionalOffsetMs;
+        HitsoundPath = userSettings.SoundSettings.HitsoundPath;
 
         ColorNoteTap = Color.Parse(userSettings.ColorSettings.ColorNoteTap);
         ColorNoteChain = Color.Parse(userSettings.ColorSettings.ColorNoteChain);
