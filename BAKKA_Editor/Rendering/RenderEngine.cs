@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using BAKKA_Editor.Enums;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace BAKKA_Editor.Rendering;
 
