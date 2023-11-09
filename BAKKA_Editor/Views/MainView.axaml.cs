@@ -517,7 +517,7 @@ public partial class MainView : UserControl
         playButton.AppendHotkey(userSettings.HotkeySettings.PlayHotkey);
 
         // Update circle view
-        skCircleView.BeatsPerMeasure = (uint)_vm.Beat2Numeric;
+        skCircleView.RenderEngine.BeatsPerMeasure = (uint)_vm.Beat2Numeric;
 
         // clamp refresh rate between 10 and 500
         clampedRefreshRate = int.Clamp(userSettings.ViewSettings.EditorRefreshRate, 10, 500);
@@ -646,15 +646,6 @@ public partial class MainView : UserControl
                 skCircleView.RenderEngine.CurrentMeasure = info.MeasureDecimal;
             if (valueTriggerEvent == EventSource.UpdateTick)
                 valueTriggerEvent = EventSource.None;
-
-
-            // TODO Fix hi-speed (it needs to be able to display multiple hi-speeds in the circle view at once)
-            //// Change hi-speed, if applicable
-            //var hispeed = chart.Gimmicks.Where(x => x.Measure <= info.Measure && x.GimmickType == GimmickType.HiSpeedChange).LastOrDefault();
-            //if (hispeed != null && hispeed.HiSpeed != circleView.TotalMeasureShowNotes)
-            //{
-            //    _vm.VisualHiSpeedNumeric = (decimal)hispeed.HiSpeed;
-            //}
         }
     }
 
@@ -837,7 +828,7 @@ public partial class MainView : UserControl
             UpdateNoteLabels(chart.Notes.Count > 0 ? 0 : -1);
             UpdateGimmickLabels(chart.Gimmicks.Count > 0 ? 0 : -1);
             // TODO(ray): move this out
-            _vm.CursorBeatDepthNumeric = skCircleView.Cursor.ConfigureDepth(skCircleView.CalculateMaximumDepth(chart));
+            _vm.CursorBeatDepthNumeric = skCircleView.Cursor.ConfigureDepth(skCircleView.RenderEngine.CalculateMaximumDepth(chart));
             _vm.CursorBeatDepthNumericMaximum = skCircleView.Cursor.MaximumDepth;
             if (!IsDesktop)
                 saveFileStream = openChartFileWriteStream;
@@ -916,24 +907,17 @@ public partial class MainView : UserControl
         skCircleView.RenderEngine.UpdateScaledCurrentMeasure(chart);
         skCircleView.RenderEngine.SetCanvas(canvas);
 
-        lock (chart)
-        {
-            skCircleView.RenderEngine.Render(chart, currentNoteType, selectedNoteIndex, selectedGimmickIndex, isHoveringOverMirrorAxis, showCursor, (int)_vm.PositionNumeric, (int)_vm.SizeNumeric, _vm.MirrorAxisNumeric);
-        }
-
         // Determine if cursor should be showing
         // var showCursor = userSettings.ViewSettings.ShowCursor;
         var showCursor = (userSettings.ViewSettings.ShowCursor || skCircleView.mouseDownPosition != -1) && (currentSong != null && !currentSong.Paused) ? userSettings.ViewSettings.ShowCursorDuringPlayback : true;
+
+        lock (chart)
+        {
+            skCircleView.RenderEngine.Render(chart, currentNoteType, selectedNoteIndex, selectedGimmickIndex, isHoveringOverMirrorAxis, showCursor, (int)skCircleView.Cursor.Position,(int)skCircleView.Cursor.Size, _vm.MirrorAxisNumeric);
+        }
+
         if (currentSong != null && !currentSong.Paused)
             showCursor = userSettings.ViewSettings.ShowCursorDuringPlayback;
-
-        // Draw cursor
-        if (showCursor)
-        {
-            skCircleView.DrawCursor(chart, currentNoteType, (float)skCircleView.Cursor.Position,
-                (float)skCircleView.Cursor.Size, skCircleView.Cursor.Depth);
-            skCircleView.DrawCursorBeatIndicator(chart, skCircleView.Cursor.Depth);
-        }
     }
 
     private void CircleControl_OnWheel(object? sender, PointerWheelEventArgs e)
@@ -1068,8 +1052,8 @@ public partial class MainView : UserControl
 
     private void Beat2Numeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)
     {
-        skCircleView.BeatsPerMeasure = (uint)(e.NewValue ?? 1);
-        _vm.CursorBeatDepthNumeric = skCircleView.Cursor.ConfigureDepth(skCircleView.CalculateMaximumDepth(chart));
+        skCircleView.RenderEngine.BeatsPerMeasure = (uint)(e.NewValue ?? 1);
+        _vm.CursorBeatDepthNumeric = skCircleView.Cursor.ConfigureDepth(skCircleView.RenderEngine.CalculateMaximumDepth(chart));
         _vm.CursorBeatDepthNumericMaximum = skCircleView.Cursor.MaximumDepth;
         UpdateTime();
     }
@@ -1341,7 +1325,7 @@ public partial class MainView : UserControl
                 (float) _vm.MeasureNumeric + (float) _vm.Beat1Numeric / (float) _vm.Beat2Numeric;
         }
 
-        var cursorMeasure = skCircleView.DepthToMeasure(skCircleView.Cursor.Depth);
+        var cursorMeasure = skCircleView.RenderEngine.DepthToMeasure(skCircleView.Cursor.Depth);
 
         if (currentNoteType is NoteType.HoldJoint or NoteType.HoldEnd)
             insertButton.IsEnabled = !(lastNote.BeatInfo.MeasureDecimal >= cursorMeasure);
@@ -1679,7 +1663,7 @@ public partial class MainView : UserControl
         if (!insertButton.IsEnabled)
             return;
 
-        var currentBeat = new BeatInfo(skCircleView.DepthToMeasure(skCircleView.Cursor.Depth));
+        var currentBeat = new BeatInfo(skCircleView.RenderEngine.DepthToMeasure(skCircleView.Cursor.Depth));
 
         if (currentGimmickType == GimmickType.NoGimmick)
         {
@@ -2033,7 +2017,7 @@ public partial class MainView : UserControl
 
                 skCircleView.RenderEngine.UpdateHiSpeed(chart, userSettings.ViewSettings.HispeedSetting);
 
-                _vm.CursorBeatDepthNumeric = skCircleView.Cursor.ConfigureDepth(skCircleView.CalculateMaximumDepth(chart));
+                _vm.CursorBeatDepthNumeric = skCircleView.Cursor.ConfigureDepth(skCircleView.RenderEngine.CalculateMaximumDepth(chart));
                 _vm.CursorBeatDepthNumericMaximum = skCircleView.Cursor.MaximumDepth;
             });
     }
@@ -2147,7 +2131,7 @@ public partial class MainView : UserControl
         window.DataContext = vm;
         window.SetGimmick(new Gimmick
         {
-            BeatInfo = new BeatInfo(skCircleView.DepthToMeasure(skCircleView.Cursor.Depth)),
+            BeatInfo = new BeatInfo(skCircleView.RenderEngine.DepthToMeasure(skCircleView.Cursor.Depth)),
             GimmickType = GimmickType.BpmChange
         }, GimmicksViewModel.FormReason.New);
 
@@ -2178,7 +2162,7 @@ public partial class MainView : UserControl
         window.SetGimmick(
             new Gimmick
             {
-                BeatInfo = new BeatInfo(skCircleView.DepthToMeasure(skCircleView.Cursor.Depth)),
+                BeatInfo = new BeatInfo(skCircleView.RenderEngine.DepthToMeasure(skCircleView.Cursor.Depth)),
                 GimmickType = GimmickType.TimeSignatureChange
             }, GimmicksViewModel.FormReason.New);
         var dialog = new ContentDialog
@@ -2207,7 +2191,7 @@ public partial class MainView : UserControl
         window.SetGimmick(
             new Gimmick
             {
-                BeatInfo = new BeatInfo(skCircleView.DepthToMeasure(skCircleView.Cursor.Depth)),
+                BeatInfo = new BeatInfo(skCircleView.RenderEngine.DepthToMeasure(skCircleView.Cursor.Depth)),
                 GimmickType = GimmickType.HiSpeedChange
             }, GimmicksViewModel.FormReason.New);
         var dialog = new ContentDialog
@@ -2236,7 +2220,7 @@ public partial class MainView : UserControl
         window.SetGimmick(
             new Gimmick
             {
-                BeatInfo = new BeatInfo(skCircleView.DepthToMeasure(skCircleView.Cursor.Depth)),
+                BeatInfo = new BeatInfo(skCircleView.RenderEngine.DepthToMeasure(skCircleView.Cursor.Depth)),
                 GimmickType = GimmickType.StopStart
             }, GimmicksViewModel.FormReason.New);
         var dialog = new ContentDialog
@@ -2265,7 +2249,7 @@ public partial class MainView : UserControl
         window.SetGimmick(
             new Gimmick
             {
-                BeatInfo = new BeatInfo(skCircleView.DepthToMeasure(skCircleView.Cursor.Depth)),
+                BeatInfo = new BeatInfo(skCircleView.RenderEngine.DepthToMeasure(skCircleView.Cursor.Depth)),
                 GimmickType = GimmickType.ReverseStart
             }, GimmicksViewModel.FormReason.New);
         var dialog = new ContentDialog

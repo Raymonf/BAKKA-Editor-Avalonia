@@ -11,11 +11,13 @@ internal class RenderEngine
 {
     private SKCanvas canvas;
     private Brushes brushes { get; set; }
+    private readonly SkCircleView circleView;
     private UserSettings userSettings;
 
-    public RenderEngine(UserSettings settings)
+    public RenderEngine(SkCircleView skCircleView, UserSettings settings)
     {
         brushes = new Brushes(settings);
+        circleView = skCircleView;
         userSettings = settings;
     }
 
@@ -27,6 +29,7 @@ internal class RenderEngine
 
     public float CurrentMeasure { get; set; }
     private float ScaledCurrentMeasure { get; set; }
+    public uint BeatsPerMeasure { get; set; }
     public float UserHiSpeed { get; set; } = 1.5f;
     public float BeatDivision { get; set; } = 2;
     public int GuideLineSelection { get; set; } = 0;
@@ -193,8 +196,12 @@ internal class RenderEngine
             userSettings.ViewSettings.NoteScaleMultiplier);
         if (userSettings.ViewSettings.ShowSlideSnapArrows)
             DrawArrows(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex);
+        // Draw cursor
         if (showCursor)
-            DrawCursor(currentNoteType, cursorStartAngle, cursorArcAngle);
+        {
+            DrawCursor(chart, currentNoteType, cursorStartAngle, cursorArcAngle, circleView.Cursor.Depth);
+            DrawCursorBeatIndicator(chart, circleView.Cursor.Depth);
+        }
     }
 
     // ==== UI
@@ -394,9 +401,16 @@ internal class RenderEngine
         canvas.DrawLine(startPoint, endPoint, brushes.MirrorAxisPen);
     }
 
-    private void DrawCursor(NoteType currentNoteType, float startAngle, float arcAngle)
+    private void DrawCursor(Chart chart, NoteType currentNoteType, float startAngle, float sweepAngle, uint depth)
     {
-        canvas.DrawArc(DrawRect, -startAngle * 6.0f, -arcAngle * 6.0f, false, brushes.GetCursorPen(currentNoteType));
+        float measure = DepthToMeasure(depth);
+        var scale = GetNoteScale(chart, measure);
+        var measureArcInfo = GetRect(chart, measure);
+        canvas.DrawArc(measureArcInfo.Rect, -startAngle * 6.0f,
+            -sweepAngle * 6.0f,
+            false,
+            brushes.GetCursorPen(currentNoteType, scale)
+        );
     }
 
     // ==== NOTES
@@ -903,5 +917,47 @@ internal class RenderEngine
                 }
             }
         }
+    }
+
+    // Depth Cursor
+
+    private float DepthToTime(uint depth)
+    {
+        return (float)depth / (float)BeatsPerMeasure;
+    }
+
+    public float DepthToMeasure(uint depth)
+    {
+        float measure = CurrentMeasure;
+        measure += DepthToTime(depth);
+        return measure;
+    }
+
+    public uint CalculateMaximumDepth(Chart chart)
+    {
+        // float totalMeasureShowNotes = GetTotalMeasureShowNotes2(chart);
+        float startBeat = CurrentMeasure;
+        float endBeat = CurrentMeasure + VisibleMeasures;
+        float stepSize = DepthToMeasure(1) - DepthToMeasure(0);
+
+        // Just in case, to avoid dividing by 0.
+        if (stepSize == 0)
+        {
+            return 0;
+        }
+
+        return (uint)Math.Floor((endBeat - startBeat) / stepSize);
+    }
+
+    /// <summary>
+    /// Draws a transluscent ring at the current cursor beat position.
+    /// </summary>
+    /// <param name="depth">An index representing depth into the circle view. 0 is the outermost circle. Higher values go deeper into the view.</param>
+    public void DrawCursorBeatIndicator(Chart chart, uint depth)
+    {
+        float measure = DepthToMeasure(depth);
+        var scale = GetNoteScale(chart, measure);
+        var measureArcInfo = GetRect(chart, measure);
+        canvas.DrawOval(measureArcInfo.Rect, brushes.GetCursorMeasurePen(scale));
     }
 }

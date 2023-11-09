@@ -26,6 +26,7 @@ internal enum RolloverState
 internal class SkCircleView
 {
     public RenderEngine RenderEngine;
+    public Cursor Cursor = new();
 
     public bool IsPlaying { get; set; } = false; // TODO: move out.  // to where? - yasu
 
@@ -39,7 +40,7 @@ internal class SkCircleView
 
     public SkCircleView(UserSettings userSettings, SizeF size)
     {
-        RenderEngine = new(userSettings);
+        RenderEngine = new(this, userSettings);
         RenderEngine.UpdateCanvasSize(size);
     }
 
