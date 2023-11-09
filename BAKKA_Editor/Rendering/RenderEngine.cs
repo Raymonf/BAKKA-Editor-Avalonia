@@ -23,7 +23,7 @@ internal class RenderEngine
     private SizeF PanelSize { get; set; }
     private SKRect DrawRect { get; set; }
     private PointF CanvasTopCorner { get; set; }
-    private PointF CanvasCenterPoint { get; set; }
+    public PointF CanvasCenterPoint { get; private set; }
     private float CanvasRadius { get; set; }
 
     public float CurrentMeasure { get; set; }
