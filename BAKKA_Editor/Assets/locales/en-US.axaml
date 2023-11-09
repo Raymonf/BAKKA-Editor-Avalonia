@@ -27,7 +27,7 @@
     <system:String x:Key="L.FromCenterRadio">From Center</system:String>
     <system:String x:Key="L.GimmickTypesHeader">Gimmick Types</system:String>
     <system:String x:Key="L.GimmickViewHeader">Gimmick Selection</system:String>
-    <system:String x:Key="L.HighlightViewedNoteMenuOption">Highlight Viewed Note</system:String>
+    <system:String x:Key="L.HighlightViewedNoteMenuOption">Highlight Selected Object</system:String>
     <system:String x:Key="L.HiSpeedLabel">Hi-Speed:</system:String>
     <system:String x:Key="L.HitsoundsLabel">Hitsounds</system:String>
     <system:String x:Key="L.HoldNoteButton">Hold</system:String>
@@ -67,8 +67,8 @@
     <system:String x:Key="L.SelectSongLabel">Select Song</system:String>
     <system:String x:Key="L.ShowCursorMenuOption">Show Cursor</system:String>
     <system:String x:Key="L.ShowCursorDuringPlaybackMenuOption">Show Cursor During Playback</system:String>
-    <system:String x:Key="L.ShowGimmicksDuringPlaybackMenuOption">Show Gimmicks During Playback</system:String>
-    <system:String x:Key="L.ShowGimmicksInCircleViewMenuOption">Show Gimmicks In Circle View</system:String>
+    <system:String x:Key="L.ShowGimmicksDuringPlaybackMenuOption">Show Gimmick Effects</system:String>
+    <system:String x:Key="L.ShowGimmicksInCircleViewMenuOption">Show Gimmick Notes</system:String>
     <system:String x:Key="L.ShowMeasureMovementButtonsMenuOption">Show Measure Movement Buttons</system:String>
     <system:String x:Key="L.SizeLabel">Size:</system:String>
     <system:String x:Key="L.SongFileLabel">Song File:</system:String>
@@ -117,7 +117,14 @@
     <system:String x:Key="L.Settings.Buttons.Save">Save</system:String>
     <system:String x:Key="L.Settings.CheckBoxes.ShowBeatVisualSettings">Show Beat Visual Settings</system:String>
     <system:String x:Key="L.Settings.CheckBoxes.ShowSlideSnapArrows">Show Arrows on Slide and Snap Notes</system:String>
-
+    <system:String x:Key="L.Settings.CheckBoxes.DarkMode">Dark Mode</system:String>
+    <system:String x:Key="L.Settings.CheckBoxes.ShowGimmickNotes">Show Gimmick Notes</system:String>
+    <system:String x:Key="L.Settings.CheckBoxes.ShowGimmickEffects">Show Gimmick Effects</system:String>
+    <system:String x:Key="L.Settings.CheckBoxes.ShowMaskNotes">Show Mask Notes</system:String>
+    <system:String x:Key="L.Settings.CheckBoxes.ShowMaskEffects">Show Mask Effects</system:String>
+    <system:String x:Key="L.Settings.CheckBoxes.ShowNoteLinks">Show Note Links</system:String>
+    <system:String x:Key="L.Settings.CheckBoxes.DuringPlayback">During Playback</system:String>
+  
     <system:String x:Key="L.Settings.Tabs.Color">Note Colors</system:String>
     <system:String x:Key="L.Settings.Tabs.General">General</system:String>
     <system:String x:Key="L.Settings.Tabs.Visual">Visual</system:String>

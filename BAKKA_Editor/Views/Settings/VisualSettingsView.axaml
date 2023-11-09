@@ -30,6 +30,27 @@
             <CheckBox IsChecked="{Binding ShowSlideSnapArrows}"
                       Content="{DynamicResource L.Settings.CheckBoxes.ShowSlideSnapArrows}" />
 
+            <StackPanel Orientation="Horizontal">
+              <CheckBox IsChecked="{Binding ShowGimmickNotes}"
+                      Content="{DynamicResource L.Settings.CheckBoxes.ShowGimmickNotes}"/>
+              <CheckBox IsChecked="{Binding ShowGimmickNotesDuringPlayback}"
+                        Content="{DynamicResource L.Settings.CheckBoxes.DuringPlayback}"/>
+            </StackPanel>
+            
+
+            <StackPanel Orientation="Horizontal">
+              <CheckBox IsChecked="{Binding ShowMaskNotes}"
+                        Content="{DynamicResource L.Settings.CheckBoxes.ShowMaskNotes}"/>
+              <CheckBox IsChecked="{Binding ShowMaskNotesDuringPlayback}"
+                        Content="{DynamicResource L.Settings.CheckBoxes.DuringPlayback}"/>
+            </StackPanel>
+
+            <CheckBox IsChecked="{Binding ShowGimmickEffects}"
+                      Content="{DynamicResource L.Settings.CheckBoxes.ShowGimmickEffects}"/>
+          
+            <CheckBox IsChecked="{Binding ShowMaskEffects}"
+                      Content="{DynamicResource L.Settings.CheckBoxes.ShowMaskEffects}"/>
+          
             <CheckBox IsChecked="{Binding IsActiveCursorTrackingEnabled}"
                       Content="{DynamicResource L.Settings.CheckBoxes.IsActiveCursorTrackingEnabled}" />
             <TextBlock Text="{DynamicResource L.Settings.Labels.ActiveCursorTrackingHelp}" />

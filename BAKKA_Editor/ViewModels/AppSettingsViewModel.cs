@@ -12,6 +12,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
 using SkiaSharp;
 using BAKKA_Editor.Rendering;
+using Avalonia.Styling;
+using Avalonia;
 
 namespace BAKKA_Editor.ViewModels;
 
@@ -41,8 +43,41 @@ public partial class AppSettingsViewModel : ViewModelBase
         Localizer.SetLanguage(selectedLanguage.Key); // initial call
     }
 
-    [ObservableProperty] private bool showBeatVisualSettings = true;
+    public void Setup(UserSettings userSettings)
+    {
+        DarkMode = userSettings.ViewSettings.DarkMode;
+        ShowBeatVisualSettings = userSettings.ViewSettings.ShowBeatVisualSettings;
+        IsActiveCursorTrackingEnabled = userSettings.CursorSettings.IsActiveCursorTrackingEnabled;
+        ShowSlideSnapArrows = userSettings.ViewSettings.ShowSlideSnapArrows;
+        SlideNoteRotationSpeedNumeric = userSettings.ViewSettings.SlideNoteRotationSpeed;
 
+        ShowGimmickNotes = userSettings.ViewSettings.ShowGimmicks;
+        ShowGimmickNotesDuringPlayback = userSettings.ViewSettings.ShowGimmicksDuringPlayback;
+        ShowGimmickEffects = userSettings.ViewSettings.ShowGimmickEffects;
+
+        ShowMaskNotes = userSettings.ViewSettings.ShowMaskNotes;
+        ShowMaskNotesDuringPlayback = userSettings.ViewSettings.ShowMaskNotesDuringPlayback;
+        ShowMaskEffects = userSettings.ViewSettings.ShowMaskEffects;
+
+        UseSpaceKeyToPlay = userSettings.ViewSettings.UseSpaceToPlaySink;
+        HitsoundEnabled = userSettings.SoundSettings.HitsoundEnabled;
+        HitsoundOffsetMs = userSettings.SoundSettings.HitsoundAdditionalOffsetMs;
+        HitsoundPath = userSettings.SoundSettings.HitsoundPath;
+
+        ColorNoteTap = Color.Parse(userSettings.ColorSettings.ColorNoteTap);
+        ColorNoteChain = Color.Parse(userSettings.ColorSettings.ColorNoteChain);
+        ColorNoteSlideCw = Color.Parse(userSettings.ColorSettings.ColorNoteSlideCw);
+        ColorNoteSlideCcw = Color.Parse(userSettings.ColorSettings.ColorNoteSlideCcw);
+        ColorNoteSnapFw = Color.Parse(userSettings.ColorSettings.ColorNoteSnapFw);
+        ColorNoteSnapBw = Color.Parse(userSettings.ColorSettings.ColorNoteSnapBw);
+        ColorNoteHoldStart = Color.Parse(userSettings.ColorSettings.ColorNoteHoldStart);
+        ColorNoteHoldSegment = Color.Parse(userSettings.ColorSettings.ColorNoteHoldSegment);
+        ColorNoteHoldGradient0 = Color.Parse(userSettings.ColorSettings.ColorNoteHoldGradient0);
+        ColorNoteHoldGradient1 = Color.Parse(userSettings.ColorSettings.ColorNoteHoldGradient1);
+    }
+
+
+    [ObservableProperty] private bool showBeatVisualSettings = true;
     partial void OnShowBeatVisualSettingsChanged(bool show)
     {
         if (UserSettings != null)
@@ -52,7 +87,6 @@ public partial class AppSettingsViewModel : ViewModelBase
     }
 
     [ObservableProperty] private bool showSlideSnapArrows = true;
-
     partial void OnShowSlideSnapArrowsChanged(bool value)
     {
         if (UserSettings != null)
@@ -64,7 +98,6 @@ public partial class AppSettingsViewModel : ViewModelBase
     [ObservableProperty] private float noteScaleMultiplierNumeric = 1.0f;
     [ObservableProperty] private float noteScaleMultiplierNumericMaximum = 3.0f;
     [ObservableProperty] private float noteScaleMultiplierNumericMinimum = 0.5f;
-
     partial void OnNoteScaleMultiplierNumericChanged(float value)
     {
         if (UserSettings != null)
@@ -73,12 +106,9 @@ public partial class AppSettingsViewModel : ViewModelBase
         }
     }
 
-    [ObservableProperty] private bool isActiveCursorTrackingEnabled = false;
-
     [ObservableProperty] private float slideNoteRotationSpeedNumeric = 1.0f;
     [ObservableProperty] private float slideNoteRotationSpeedNumericMaximum = 3.0f;
     [ObservableProperty] private float slideNoteRotationSpeedNumericMinimum = 0.0f;
-
     partial void OnSlideNoteRotationSpeedNumericChanged(float value)
     {
         if (UserSettings != null)
@@ -87,6 +117,7 @@ public partial class AppSettingsViewModel : ViewModelBase
         }
     }
 
+    [ObservableProperty] private bool isActiveCursorTrackingEnabled = false;
     partial void OnIsActiveCursorTrackingEnabledChanged(bool value)
     {
         if (UserSettings != null)
@@ -96,7 +127,6 @@ public partial class AppSettingsViewModel : ViewModelBase
     }
 
     [ObservableProperty] private KeyValuePair<string, string> selectedLanguage;
-
     partial void OnSelectedLanguageChanged(KeyValuePair<string, string> kv)
     {
         Localizer?.SetLanguage(kv.Key);
@@ -121,6 +151,58 @@ public partial class AppSettingsViewModel : ViewModelBase
         return true;
     }
 
+    [ObservableProperty] private bool darkMode = false;
+    partial void OnDarkModeChanged(bool value)
+    {
+        if (UserSettings != null)
+            UserSettings.ViewSettings.DarkMode = value;
+
+        if (Application.Current != null)
+            Application.Current.RequestedThemeVariant = value ? ThemeVariant.Dark : ThemeVariant.Light;
+    }
+
+    [ObservableProperty] private bool showGimmickNotes = true;
+    partial void OnShowGimmickNotesChanged(bool value)
+    {
+        if (UserSettings != null)
+            UserSettings.ViewSettings.ShowGimmicks = value;
+    }
+
+    [ObservableProperty] private bool showGimmickNotesDuringPlayback = true;
+    partial void OnShowGimmickNotesDuringPlaybackChanged(bool value)
+    {
+        if (UserSettings != null)
+            UserSettings.ViewSettings.ShowGimmicksDuringPlayback = value;
+    }
+
+    [ObservableProperty] private bool showGimmickEffects = true;
+    partial void OnShowGimmickEffectsChanged(bool value)
+    {
+        if (UserSettings != null)
+            UserSettings.ViewSettings.ShowGimmickEffects = value;
+    }
+
+    [ObservableProperty] private bool showMaskNotes = true;
+    partial void OnShowMaskNotesChanged(bool value)
+    {
+        if (UserSettings != null)
+            UserSettings.ViewSettings.ShowMaskNotes = value;
+    }
+
+    [ObservableProperty] private bool showMaskNotesDuringPlayback = false;
+    partial void OnShowMaskNotesDuringPlaybackChanged(bool value)
+    {
+        if (UserSettings != null)
+            UserSettings.ViewSettings.ShowMaskNotesDuringPlayback = value;
+    }
+
+    [ObservableProperty] private bool showMaskEffects = true;
+    partial void OnShowMaskEffectsChanged(bool value)
+    {
+        if (UserSettings != null)
+            UserSettings.ViewSettings.ShowMaskEffects = value;
+    }
+
     [ObservableProperty] private static IColorPalette _notePalette = new NoteColorPalette();
     [ObservableProperty] private Color colorNoteTap = _notePalette.GetColor(0, 0);
     [ObservableProperty] private Color colorNoteChain = _notePalette.GetColor(0, 1);
@@ -132,7 +214,6 @@ public partial class AppSettingsViewModel : ViewModelBase
     [ObservableProperty] private Color colorNoteHoldSegment = _notePalette.GetColor(1, 1);
     [ObservableProperty] private Color colorNoteHoldGradient0 = _notePalette.GetColor(1, 2);
     [ObservableProperty] private Color colorNoteHoldGradient1 = _notePalette.GetColor(1, 3);
-
     partial void OnColorNoteTapChanged(Color value)
     {
         if (UserSettings != null)

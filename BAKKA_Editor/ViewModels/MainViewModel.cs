@@ -9,6 +9,7 @@ using BAKKA_Editor.Data;
 using BAKKA_Editor.Views;
 using BAKKA_Editor.Rendering;
 using CommunityToolkit.Mvvm.ComponentModel;
+using System;
 
 namespace BAKKA_Editor.ViewModels;
 
@@ -31,8 +32,6 @@ public partial class MainViewModel : ViewModelBase
     // TODO: move this stuff out of here
     [ObservableProperty] private bool showCursor = true;
     [ObservableProperty] private bool showCursorDuringPlayback;
-    [ObservableProperty] private bool showGimmicksDuringPlaybackInCircleView = true;
-    [ObservableProperty] private bool showGimmicksInCircleView = true;
     [ObservableProperty] private bool placeNoteOnDrag = true;
     [ObservableProperty] private bool showNotesOnBeat = false;
     
@@ -122,8 +121,21 @@ public partial class MainViewModel : ViewModelBase
             mainWindow.UpdateTime();
     }
 
-    public void Initialize(ref Cursor cursor)
+    public void Setup(UserSettings userSettings, ref Cursor cursor)
     {
+        ShowCursor = userSettings.ViewSettings.ShowCursor;
+        ShowCursorDuringPlayback = userSettings.ViewSettings.ShowCursorDuringPlayback;
+        HighlightViewedNote = userSettings.ViewSettings.HighlightViewedNote;
+        SelectLastInsertedNote = userSettings.ViewSettings.SelectLastInsertedNote;
+        AreMeasureButtonsVisible = userSettings.ViewSettings.ShowMeasureButtons;
+        PlaceNoteOnDrag = userSettings.ViewSettings.PlaceNoteOnDrag;
+        VisualHiSpeedNumeric = (decimal)userSettings.ViewSettings.HispeedSetting;
+        VolumeTrackBar = userSettings.ViewSettings.Volume;
+        HitsoundVolumeTrackBar = Math.Clamp(userSettings.SoundSettings.HitsoundVolume, 0, 100);
+        ShowNotesOnBeat = userSettings.ViewSettings.ShowNotesOnBeat;
+        VisualBeatDivisionNumeric = (decimal)userSettings.ViewSettings.BeatDivision;
+        GuideLineSelectedIndex = userSettings.ViewSettings.GuideLineSelection;
+
         Cursor = cursor;
     }
 
@@ -230,39 +242,12 @@ public partial class MainViewModel : ViewModelBase
         return true;
     }
 
-    public bool ToggleGimmicksInCircleViewCommand()
-    {
-        ShowGimmicksInCircleView = !ShowGimmicksInCircleView;
-
-        var mainWindow = Target();
-        mainWindow?.SetShowGimmicksInCircleView(ShowGimmicksInCircleView);
-        return true;
-    }
-
     public bool TogglePlaceNoteOnDragCommand()
     {
         PlaceNoteOnDrag = !PlaceNoteOnDrag;
 
         var mainWindow = Target();
         mainWindow?.SetPlaceNoteOnDrag(PlaceNoteOnDrag);
-        return true;
-    }
-
-    public bool ToggleShowGimmicksDuringPlaybackInCircleViewCommand()
-    {
-        ShowGimmicksDuringPlaybackInCircleView = !ShowGimmicksDuringPlaybackInCircleView;
-
-        var mainWindow = Target();
-        mainWindow?.SetShowGimmicksDuringPlaybackInCircleView(ShowGimmicksDuringPlaybackInCircleView);
-        return true;
-    }
-
-    public bool ToggleDarkModeViewCommand()
-    {
-        DarkMode = !DarkMode;
-
-        var mainWindow = Target();
-        mainWindow?.SetDarkMode(DarkMode);
         return true;
     }
 

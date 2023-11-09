@@ -22,8 +22,6 @@ public class ViewSettings
     public bool ShowCursorDuringPlayback { get; set; } = false;
     public bool HighlightViewedNote { get; set; } = true;
     public bool SelectLastInsertedNote { get; set; } = true;
-    public bool ShowGimmicks { get; set; } = true;
-    public bool ShowGimmicksDuringPlayback { get; set; } = true;
     public float HispeedSetting { get; set; } = 1.5f;
     public int Volume { get; set; } = 100;
     public bool DarkMode { get; set; } = false;
@@ -43,6 +41,12 @@ public class ViewSettings
     public float NoteScaleMultiplier { get; set; } = 1;
     public float SlideNoteRotationSpeed { get; set; } = 1;
     public int EditorRefreshRate { get; set; } = 60;
+    public bool ShowGimmicks { get; set; } = true;
+    public bool ShowGimmicksDuringPlayback { get; set; } = false;
+    public bool ShowGimmickEffects { get; set; } = true;
+    public bool ShowMaskNotes { get; set; } = false;
+    public bool ShowMaskNotesDuringPlayback { get; set; } = false;
+    public bool ShowMaskEffects { get; set; } = true;
 }
 
 public class SaveSettings

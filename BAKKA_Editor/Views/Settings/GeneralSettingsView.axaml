@@ -24,6 +24,9 @@
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
+          
+            <CheckBox IsChecked="{Binding DarkMode}"
+                      Content="{DynamicResource L.Settings.CheckBoxes.DarkMode}"/>
 
             <Rectangle Margin="0,8" />
 
