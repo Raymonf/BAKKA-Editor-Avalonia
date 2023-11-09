@@ -3103,10 +3103,11 @@ public partial class MainView : UserControl
             // update
             skCircleView.RenderEngine.UpdateHiSpeed(chart, value);
         }
-
         else
+        {
             // revert
             _vm.VisualHiSpeedNumeric = (decimal) skCircleView.RenderEngine.UserHiSpeed;
+        }
     }
 
     private void VisualBeatDivisionNumeric_OnValueChanged(object? sender, NumericUpDownValueChangedEventArgs e)

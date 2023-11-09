@@ -166,7 +166,8 @@ internal class Chart
             {
                 if (!notesByLine.ContainsKey(refByLine[i]))
                 {
-                    errors.Add($"Broken note found: referenced note index {refByLine[i]} (at index {i}) was not found in notesByLine (max = {notesByLine.Count - 1})");
+                    errors.Add(
+                        $"Broken note found: referenced note index {refByLine[i]} (at index {i}) was not found in notesByLine (max = {notesByLine.Count - 1})");
                     continue;
                 }
 
@@ -247,6 +248,9 @@ internal class Chart
         return true;
     }
 
+    /// <summary>
+    ///     Recalculate the time events and start times for the chart, and then rebuild the scaled measure position cache
+    /// </summary>
     public void RecalcTime()
     {
         Gimmicks = Gimmicks.OrderBy(x => x.Measure).ToList();
@@ -332,6 +336,7 @@ internal class Chart
         {
             return BeatInfo.GetMeasureDecimal(-1, 0);
         }
+
         var evt = TimeEvents.LastOrDefault(x => time >= x.StartTime) ?? TimeEvents[0];
         return (float) ((time - evt.StartTime) / (60000.0 / evt.BPM * 4.0f * evt.TimeSig.Ratio) +
                         evt.Measure);
@@ -364,25 +369,38 @@ internal class Chart
         return GetTime(beatInfo.MeasureDecimal);
     }
 
+    /// <summary>
+    ///     Get the scaled position for the note at the given measure
+    /// </summary>
+    /// <param name="measureDecimal">A note or gimmick's measure</param>
+    /// <returns>The scaled position for the note at the given measure</returns>
     public float GetScaledMeasurePosition(float measureDecimal)
     {
         // return GetScaledMeasurePositionOpt(this, measureDecimal);
         return GetScaledMeasurePositionFromCache(measureDecimal);
     }
 
+    /// <summary>
+    ///     Rebuild the scaled measure position cache after a change to the chart's gimmicks
+    /// </summary>
     public void RebuildScaledMeasurePositionCache()
     {
         ScaledMeasurePositions.Clear();
 
         foreach (var gimmick in Gimmicks)
         {
-            // TODO: can we only update the required ones, as opposed to all at once
+            // TODO: we can only update the required ones, as opposed to all at once
             ScaledMeasurePositions.Add(GetScaledMeasurePositionOptForCache(gimmick.Measure));
         }
 
         ScaledMeasurePositions.Add(GetScaledMeasurePositionOptForCache(float.PositiveInfinity));
     }
 
+    /// <summary>
+    ///     Fancy binary search thing
+    /// </summary>
+    /// <param name="measure">The measure to search for</param>
+    /// <returns>The first gimmick in the cache that starts after the given measure</returns>
     private ScaledMeasurePositionInfo? FindFirstGimmickStartMeasureGreaterThan(float measure)
     {
         var left = 0;
@@ -406,6 +424,11 @@ internal class Chart
         return result;
     }
 
+    /// <summary>
+    ///     Use the fancy binary search thing to find the closest gimmick in the cache
+    /// </summary>
+    /// <param name="measureDecimal">A note or gimmick's measure</param>
+    /// <returns>The scaled position for the note at the given measure</returns>
     public float GetScaledMeasurePositionFromCache(float measureDecimal)
     {
         var info = FindFirstGimmickStartMeasureGreaterThan(measureDecimal);
@@ -413,12 +436,18 @@ internal class Chart
         {
             return measureDecimal; // ?
         }
+
         var scaledPosition = measureDecimal + info.PartialScaledPosition;
         float finalDistance = measureDecimal - info.LastMeasurePosition;
         scaledPosition += finalDistance * info.CurrentHiSpeedValue * info.CurrentTimeSigValue - finalDistance;
         return scaledPosition;
     }
 
+    /// <summary>
+    ///     Get the data required to quickly calculate scaled position at a given measure for caching purposes
+    /// </summary>
+    /// <param name="measureDecimal">A note or gimmick's measure</param>
+    /// <returns>The data required to quickly calculate scaled position at a given measure for caching purposes</returns>
     public ScaledMeasurePositionInfo GetScaledMeasurePositionOptForCache(float measureDecimal)
     {
         float scaledPosition = 0;
@@ -441,14 +470,13 @@ internal class Chart
             // Update the current values.
             if (scaleChange.GimmickType == GimmickType.TimeSignatureChange)
             {
-                currentTimeSigValue = (float)scaleChange.TimeSig.Ratio;
+                currentTimeSigValue = (float) scaleChange.TimeSig.Ratio;
             }
             else if (scaleChange.GimmickType == GimmickType.HiSpeedChange)
             {
-                currentHiSpeedValue = (float)scaleChange.HiSpeed;
+                currentHiSpeedValue = (float) scaleChange.HiSpeed;
             }
         }
-
 
         return new ScaledMeasurePositionInfo
         {
@@ -458,96 +486,5 @@ internal class Chart
             CurrentHiSpeedValue = currentHiSpeedValue,
             CurrentTimeSigValue = currentTimeSigValue
         };
-    }
-
-    public static float GetScaledMeasurePositionOpt(Chart chart, float measureDecimal)
-    {
-        float scaledPosition = measureDecimal;
-        float lastMeasurePosition = 0;
-        float currentHiSpeedValue = 1;
-        float currentTimeSigValue = 1;
-
-        var relevantScaleChanges = chart.Gimmicks
-            .Where(x => x.Measure < measureDecimal &&
-                        x.GimmickType is GimmickType.HiSpeedChange or GimmickType.TimeSignatureChange);
-
-        foreach (var scaleChange in relevantScaleChanges)
-        {
-            // Apply the scale change up to this point.
-            float distance = scaleChange.Measure - lastMeasurePosition;
-            scaledPosition += (distance * currentHiSpeedValue * currentTimeSigValue) - distance;
-
-            lastMeasurePosition = scaleChange.Measure;
-
-            // Update the current values.
-            if (scaleChange.GimmickType == GimmickType.TimeSignatureChange)
-            {
-                currentTimeSigValue = (float)scaleChange.TimeSig.Ratio;
-            }
-            else if (scaleChange.GimmickType == GimmickType.HiSpeedChange)
-            {
-                currentHiSpeedValue = (float)scaleChange.HiSpeed;
-            }
-        }
-
-        // Apply the final scale change for the remaining distance.
-        float finalDistance = measureDecimal - lastMeasurePosition;
-        scaledPosition += (finalDistance * currentHiSpeedValue * currentTimeSigValue) - finalDistance;
-
-        return scaledPosition;
-    }
-
-
-    /// <summary>
-    /// Returns MeasureDecimal scaled by all previous HiSpeed changes and Time Signatures.
-    /// <br>Avoid using this in realtime, it's very expensive.</br>
-    /// </summary>
-    /// <param name="chart">Current Chart</param>
-    /// <param name="measureDecimal">Position in MeasureDecimals</param>
-    public static float GetScaledMeasurePositionOld(Chart chart, float measureDecimal)
-    {
-        float scaledPosition = measureDecimal;
-
-        // scaleChange = HiSpeed or TimeSig change
-        var previousScaleChanges = chart.Gimmicks.Where(x =>
-            x.Measure < measureDecimal &&
-            x.GimmickType is GimmickType.HiSpeedChange or GimmickType.TimeSignatureChange).ToList();
-
-        if (previousScaleChanges.Count > 0)
-        {
-            for (var i = 0; i < previousScaleChanges.Count; i++)
-            {
-                var currentScaleChangePosition = previousScaleChanges[i].Measure;
-
-                var timeSigChange = previousScaleChanges.LastOrDefault(x => x.Measure <= currentScaleChangePosition && x.GimmickType is GimmickType.TimeSignatureChange);
-                var timeSigValue = timeSigChange != null ? (float)timeSigChange.TimeSig.Ratio : 1;
-
-                var hiSpeedChange = previousScaleChanges.LastOrDefault(x => x.Measure <= currentScaleChangePosition && x.GimmickType is GimmickType.HiSpeedChange);
-                var hiSpeedValue = hiSpeedChange != null ? (float)hiSpeedChange.HiSpeed : 1;
-
-                // if it's not the last Scale change in the list
-                if (i != previousScaleChanges.Count - 1)
-                {
-                    // get distance from current to next Scale change
-                    var nextScaleChangePosition = (float)previousScaleChanges[i + 1].Measure;
-                    var distance = nextScaleChangePosition - currentScaleChangePosition;
-
-                    // scale distance and apply change to scaledPosition
-                    scaledPosition += (distance * hiSpeedValue * timeSigValue) - distance;
-                }
-
-                // if it's the last Scale change in the list
-                else
-                {
-                    // get distance from current Scale change to position that should be scaled
-                    var distance = measureDecimal - currentScaleChangePosition;
-
-                    // scale distance and apply change to scaledPosition
-                    scaledPosition += (distance * hiSpeedValue * timeSigValue) - distance;
-                }
-            }
-        }
-
-        return scaledPosition;
     }
 }
