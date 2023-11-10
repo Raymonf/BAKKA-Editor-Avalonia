@@ -723,7 +723,7 @@ internal class RenderEngine
                 canvas.DrawPath(path, brushes.HoldFill);
             }
 
-            if (currentInfo.Rect.Width < 1) continue;
+            if (currentInfo.Rect.Width < 1 || note.Measure < CurrentMeasure) continue;
 
             var noteScale = currentInfo.NoteScale * noteScaleMultiplier;
             var fullStartAngle = currentInfo.StartAngle + 1.5f;
