@@ -7,4 +7,5 @@ public class ScaledMeasurePositionInfo
     public float LastMeasurePosition { get; set; }
     public float CurrentHiSpeedValue { get; set; }
     public float CurrentTimeSigValue { get; set; }
+    public float CurrentBpmValue { get; set; }
 }

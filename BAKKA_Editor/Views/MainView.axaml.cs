@@ -1962,6 +1962,15 @@ public partial class MainView : UserControl
 
                 chartSettingsViewModel.SaveSettings = false;
                 chartSettingsViewModel.Dialog = null;
+
+                if (chartSettingsViewModel.Bpm <= 0)
+                {
+                    Dispatcher.UIThread.Post(
+                                async () => await ShowBlockingMessageBox("Invalid BPM",
+                                    "BPM must be greater than 0."));
+                    return;
+                }
+
                 var initBpm =
                     chart.Gimmicks.FirstOrDefault(x => x.Measure == 0.0f && x.GimmickType == GimmickType.BpmChange);
                 if (initBpm != null)
@@ -2144,8 +2153,19 @@ public partial class MainView : UserControl
             async () =>
             {
                 var result = await dialog.ShowAsync();
-                if (vm.DialogSuccess)
-                    InsertGimmick(vm.OutGimmicks);
+
+                if (!vm.DialogSuccess)
+                    return;
+
+                if (vm.Bpm <= 0)
+                {
+                    Dispatcher.UIThread.Post(
+                                async () => await ShowBlockingMessageBox("Invalid BPM",
+                                    "BPM must be greater than 0."));
+                    return;
+                }
+
+                InsertGimmick(vm.OutGimmicks);
             });
     }
 
@@ -2645,7 +2665,17 @@ public partial class MainView : UserControl
                 async () =>
                 {
                     var result = await dialog.ShowAsync();
+
                     if (!vm.DialogSuccess) return;
+
+                    if (vm.Bpm <= 0)
+                    {
+                        Dispatcher.UIThread.Post(
+                                async () => await ShowBlockingMessageBox("Invalid BPM",
+                                    "BPM must be greater than 0."));
+                        return;
+                    }
+
                     var opList = new List<EditGimmick>();
 
                     switch (gimmick.GimmickType)
