@@ -248,13 +248,12 @@ internal class Brushes
         DegreeCircleMediumPen.StrokeWidth = DegreeCircleMediumPenStrokeWidth * strokeWidthMultiplier;
         DegreeCircleMinorPen.StrokeWidth = DegreeCircleMinorPenStrokeWidth * strokeWidthMultiplier;
         MirrorAxisPen.StrokeWidth = MirrorAxisPenStrokeWidth * strokeWidthMultiplier;
-        CursorPen.StrokeWidth = CursorPenStrokeWidth * strokeWidthMultiplier;
     }
 
     public SKPaint GetCursorPen(NoteType noteType, float scale)
     {
         CursorPen.Color = NoteTypeToColor(noteType).WithAlpha(0x80);
-        CursorPen.StrokeWidth = CursorPenStrokeWidth * scale;
+        CursorPen.StrokeWidth = CursorPenStrokeWidth * scale * strokeWidthMultiplier;
         return CursorPen;
     }
 
