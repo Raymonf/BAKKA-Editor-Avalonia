@@ -202,18 +202,6 @@ internal class RenderEngine
         return (uint)Math.Floor((endBeat - startBeat) / stepSize);
     }
 
-    /// <summary>
-    /// Draws a transluscent ring at the current cursor beat position.
-    /// </summary>
-    /// <param name="depth">An index representing depth into the circle view. 0 is the outermost circle. Higher values go deeper into the view.</param>
-    public void DrawCursorBeatIndicator(Chart chart, uint depth)
-    {
-        float measure = DepthToMeasure(depth);
-        var scale = GetNoteScale(chart, measure);
-        var measureArcInfo = GetRect(chart, measure);
-        canvas.DrawOval(measureArcInfo.Rect, brushes.GetCursorMeasurePen(scale));
-    }
-
     // ================ Rendering ================
     public void Render(Chart chart, NoteType currentNoteType, int selectedNoteIndex, int selectedGimmickIndex,
         bool isHoveringOverMirrorAxis, bool showCursor, int cursorStartAngle, int cursorArcAngle, int axis)
@@ -449,6 +437,18 @@ internal class RenderEngine
             false,
             brushes.GetCursorPen(currentNoteType, scale)
         );
+    }
+
+    /// <summary>
+    /// Draws a transluscent ring at the current cursor beat position.
+    /// </summary>
+    /// <param name="depth">An index representing depth into the circle view. 0 is the outermost circle. Higher values go deeper into the view.</param>
+    public void DrawCursorBeatIndicator(Chart chart, uint depth)
+    {
+        float measure = DepthToMeasure(depth);
+        var scale = GetNoteScale(chart, measure);
+        var measureArcInfo = GetRect(chart, measure);
+        canvas.DrawOval(measureArcInfo.Rect, brushes.GetCursorMeasurePen(scale));
     }
 
     // ==== NOTES
