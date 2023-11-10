@@ -47,6 +47,7 @@ public class ViewSettings
     public bool ShowMaskNotes { get; set; } = false;
     public bool ShowMaskNotesDuringPlayback { get; set; } = false;
     public bool ShowMaskEffects { get; set; } = true;
+    public bool ShowCursorDepth { get; set; } = true;
 }
 
 public class SaveSettings

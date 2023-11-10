@@ -124,6 +124,7 @@
     <system:String x:Key="L.Settings.CheckBoxes.ShowMaskEffects">Show Mask Effects</system:String>
     <system:String x:Key="L.Settings.CheckBoxes.ShowNoteLinks">Show Note Links</system:String>
     <system:String x:Key="L.Settings.CheckBoxes.DuringPlayback">During Playback</system:String>
+    <system:String x:Key="L.Settings.CheckBoxes.ShowCursorDepth">Show Cursor Depth</system:String>
   
     <system:String x:Key="L.Settings.Tabs.Color">Note Colors</system:String>
     <system:String x:Key="L.Settings.Tabs.General">General</system:String>
