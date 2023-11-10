@@ -438,7 +438,7 @@ internal class Chart
 
         var scaledPosition = measureDecimal + info.PartialScaledPosition;
         float finalDistance = measureDecimal - info.LastMeasurePosition;
-        scaledPosition += finalDistance * info.CurrentHiSpeedValue * info.CurrentTimeSigValue - finalDistance;
+        scaledPosition += finalDistance * info.CurrentHiSpeedValue * info.CurrentTimeSigValue * info.CurrentBpmValue - finalDistance;
         return scaledPosition;
     }
 
@@ -453,27 +453,36 @@ internal class Chart
         float lastMeasurePosition = 0;
         float currentHiSpeedValue = 1;
         float currentTimeSigValue = 1;
+        float currentBpmValue = 1;
 
         var relevantScaleChanges = Gimmicks
             .Where(x => x.Measure < measureDecimal &&
-                        x.GimmickType is GimmickType.HiSpeedChange or GimmickType.TimeSignatureChange);
+                        x.GimmickType is GimmickType.HiSpeedChange or GimmickType.TimeSignatureChange or GimmickType.BpmChange);
+
+        var startBpm = Gimmicks.First(x => x.GimmickType is GimmickType.BpmChange).BPM;
 
         foreach (var scaleChange in relevantScaleChanges)
         {
             // Apply the scale change up to this point.
             float distance = scaleChange.Measure - lastMeasurePosition;
-            scaledPosition += (distance * currentHiSpeedValue * currentTimeSigValue) - distance;
+            scaledPosition += (distance * currentHiSpeedValue * currentTimeSigValue * currentBpmValue) - distance;
 
             lastMeasurePosition = scaleChange.Measure;
 
             // Update the current values.
-            if (scaleChange.GimmickType == GimmickType.TimeSignatureChange)
+            switch (scaleChange.GimmickType)
             {
-                currentTimeSigValue = (float) scaleChange.TimeSig.Ratio;
-            }
-            else if (scaleChange.GimmickType == GimmickType.HiSpeedChange)
-            {
-                currentHiSpeedValue = (float) scaleChange.HiSpeed;
+                case GimmickType.TimeSignatureChange:
+                    currentTimeSigValue = (float)scaleChange.TimeSig.Ratio;
+                    break;
+
+                case GimmickType.HiSpeedChange:
+                    currentHiSpeedValue = (float)scaleChange.HiSpeed;
+                    break;
+
+                case GimmickType.BpmChange:
+                    currentBpmValue = (float)(startBpm / scaleChange.BPM);
+                    break;
             }
         }
 
@@ -483,7 +492,8 @@ internal class Chart
             PartialScaledPosition = scaledPosition,
             LastMeasurePosition = lastMeasurePosition,
             CurrentHiSpeedValue = currentHiSpeedValue,
-            CurrentTimeSigValue = currentTimeSigValue
+            CurrentTimeSigValue = currentTimeSigValue,
+            CurrentBpmValue = currentBpmValue
         };
     }
 }
