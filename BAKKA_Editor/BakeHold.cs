@@ -33,7 +33,7 @@ namespace BAKKA_Editor
                     // avoid decimal/floating point errors that would
                     // otherwise cause two segments on the same beat
                     // if i is just *barely* less than endNote.Measure.
-                    if (chart.GetBeat((double) i) == chart.GetBeat(endNote.Measure))
+                    if (chart.GetBeatInfoFromTime((double) i) == chart.GetBeatInfoFromTime(endNote.Measure))
                         break;
 
                     newPosition += positionStep;
@@ -87,7 +87,7 @@ namespace BAKKA_Editor
             {
                 for (decimal i = (decimal) startNote.Measure + interval; i < (decimal) endNote.Measure; i += interval)
                 {
-                    if (chart.GetBeat((double) i) == chart.GetBeat(endNote.Measure))
+                    if (chart.GetBeatInfoFromTime((double) i) == chart.GetBeatInfoFromTime(endNote.Measure))
                         break;
 
                     newPosition += positionStep;
@@ -118,14 +118,18 @@ namespace BAKKA_Editor
             operationManager.Push(new BakeHoldNote(chart, startNote, endNote, segmentList));
         }
 
-        public static void LerpRound(Chart chart, Note startNote, Note endNote, int positionChange,
-            OperationManager operationManager)
+        public static void LerpRound(Chart chart, Note startNote, Note endNote, OperationManager operationManager)
         {
             decimal interval = 0.015625m;
 
             int newPosition = startNote.Position;
             int newSize = startNote.Size;
-            int direction = int.Sign(positionChange);
+
+            var virtualPosStart0 = startNote.Position;
+            var virtualPosEnd0 = endNote.Position;
+
+            var virtualPosStart1 = startNote.Position + startNote.Size;
+            var virtualPosEnd1 = endNote.Position + endNote.Size;
 
             var lastNote = startNote;
             List<Note> segmentList = new List<Note>();
@@ -134,19 +138,13 @@ namespace BAKKA_Editor
             {
                 for (decimal i = (decimal) startNote.Measure + interval; i < (decimal) endNote.Measure; i += interval)
                 {
-                    if (chart.GetBeat((double) i) == chart.GetBeat(endNote.Measure))
+                    if (chart.GetBeatInfoFromTime((double) i) == chart.GetBeatInfoFromTime(endNote.Measure))
                         break;
 
                     float lerpTime = ((float) i - startNote.Measure) / (endNote.Measure - startNote.Measure);
 
-                    var virtualPosStart0 = startNote.Position;
-                    var virtualPosEnd0 = endNote.Position;
-
-                    var virtualPosStart1 = startNote.Position + startNote.Size;
-                    var virtualPosEnd1 = endNote.Position + endNote.Size;
-
-                    newPosition = (int) MathF.Round(ShortLerp(direction, virtualPosStart0, virtualPosEnd0, lerpTime));
-                    newSize = (int) MathF.Round(ShortLerp(direction, virtualPosStart1, virtualPosEnd1, lerpTime)) -
+                    newPosition = (int) MathF.Round(ShortLerp(virtualPosStart0, virtualPosEnd0, lerpTime));
+                    newSize = (int) MathF.Round(ShortLerp(virtualPosStart1, virtualPosEnd1, lerpTime)) -
                               newPosition;
 
                     var newNote = new Note()
@@ -154,7 +152,7 @@ namespace BAKKA_Editor
                         BeatInfo = new((float) i),
                         NoteType = NoteType.HoldJoint,
                         Position = (newPosition + 60) % 60,
-                        Size = newSize,
+                        Size = (newSize + 60) % 60,
                         HoldChange = false,
                         PrevReferencedNote = lastNote,
                         NextReferencedNote = endNote
@@ -168,21 +166,21 @@ namespace BAKKA_Editor
 
                     chart.Notes.Add(newNote);
                     chart.IsSaved = false;
-
-                    // System.Diagnostics.Debug.WriteLine(newPosition + ", " + newSize + ", " + i);
                 }
             }
 
             operationManager.Push(new BakeHoldNote(chart, startNote, endNote, segmentList));
         }
 
-        private static float ShortLerp(int direction, int a, int b, float t)
+        private static float ShortLerp(int a, int b, float t)
         {
-            if (direction > 0 && a > b)
-                a -= 60;
-
-            if (direction < 0 && a < b)
-                a += 60;
+            if (int.Abs(a - b) > 30)
+            {
+                if (a > b)
+                    a -= 60;
+                else
+                    b -= 60;
+            }
 
             return (1 - t) * a + t * b;
         }

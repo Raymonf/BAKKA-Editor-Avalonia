@@ -10,6 +10,7 @@ internal class BeatInfo
     public readonly int Beat;
     public readonly int Measure;
     public readonly float MeasureDecimal;
+    public readonly float ScaledMeasureDecimal;
 
     public BeatInfo(int measure, int beat)
     {

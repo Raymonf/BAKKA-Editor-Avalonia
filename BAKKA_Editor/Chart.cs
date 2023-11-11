@@ -24,6 +24,7 @@ internal class Chart
 
     public List<Note> Notes { get; set; }
     public List<Gimmick> Gimmicks { get; set; }
+    private List<ScaledMeasurePositionInfo> ScaledMeasurePositions { get; set; } = new();
 
     /// <summary>
     ///     Offset in seconds.
@@ -164,7 +165,8 @@ internal class Chart
             {
                 if (!notesByLine.ContainsKey(refByLine[i]))
                 {
-                    errors.Add($"Broken note found: referenced note index {refByLine[i]} (at index {i}) was not found in notesByLine (max = {notesByLine.Count - 1})");
+                    errors.Add(
+                        $"Broken note found: referenced note index {refByLine[i]} (at index {i}) was not found in notesByLine (max = {notesByLine.Count - 1})");
                     continue;
                 }
 
@@ -245,6 +247,9 @@ internal class Chart
         return true;
     }
 
+    /// <summary>
+    ///     Recalculate the time events and start times for the chart, and then rebuild the scaled measure position cache
+    /// </summary>
     public void RecalcTime()
     {
         Gimmicks = Gimmicks.OrderBy(x => x.Measure).ToList();
@@ -295,6 +300,9 @@ internal class Chart
                 (TimeEvents[i].Measure - TimeEvents[i - 1].Measure) *
                 (4.0f * TimeEvents[i - 1].TimeSig.Ratio * (60000.0 / TimeEvents[i - 1].BPM)) +
                 TimeEvents[i - 1].StartTime;
+
+        // Generate scaled measure position cache
+        RebuildScaledMeasurePositionCache();
     }
     /*
     ((60000.0 / evt.BPM) * 4.0 * evt.TimeSig.Ratio) * measure = time
@@ -302,11 +310,11 @@ internal class Chart
     */
 
     /// <summary>
-    ///     Translate clock time to beats
+    ///     Translate milliseconds to BeatInfo
     /// </summary>
-    /// <param name="time">Current timestamp in ms</param>
+    /// <param name="time">Timestamp in milliseconds</param>
     /// <returns></returns>
-    public BeatInfo GetBeat(double time)
+    public BeatInfo GetBeatInfoFromTime(double time)
     {
         if (TimeEvents == null || TimeEvents.Count == 0)
             return new BeatInfo(-1, 0);
@@ -319,23 +327,24 @@ internal class Chart
     /// <summary>
     ///     Translate MeasureDecimal to beats
     /// </summary>
-    /// <param name="time">Current timestamp in ms</param>
+    /// <param name="time">Timestamp in milliseconds</param>
     /// <returns></returns>
-    public float GetBeatFromMeasureDecimal(double time)
+    public float GetMeasureDecimalFromTime(double time)
     {
         if (TimeEvents == null || TimeEvents.Count == 0)
         {
             return BeatInfo.GetMeasureDecimal(-1, 0);
         }
+
         var evt = TimeEvents.LastOrDefault(x => time >= x.StartTime) ?? TimeEvents[0];
         return (float) ((time - evt.StartTime) / (60000.0 / evt.BPM * 4.0f * evt.TimeSig.Ratio) +
                         evt.Measure);
     }
 
     /// <summary>
-    ///     Translate measures into clock time
+    ///     Translate MeasureDecimals into milliseconds
     /// </summary>
-    /// <param name="beat"></param>
+    /// <param name="measureDecimal">Timestamp in MeasureDecimals</param>
     /// <returns></returns>
     public int GetTime(float measureDecimal)
     {
@@ -350,12 +359,141 @@ internal class Chart
     }
 
     /// <summary>
-    ///     Translate measures into clock time
+    ///     Translate BeatInfo into milliseconds
     /// </summary>
-    /// <param name="beat"></param>
+    /// <param name="beat">BeatInfo</param>
     /// <returns></returns>
-    public int GetTime(BeatInfo beat)
+    public int GetTime(BeatInfo beatInfo)
     {
-        return GetTime(beat.MeasureDecimal);
+        return GetTime(beatInfo.MeasureDecimal);
+    }
+
+    /// <summary>
+    ///     Get the scaled position for the note at the given measure
+    /// </summary>
+    /// <param name="measureDecimal">A note or gimmick's measure</param>
+    /// <returns>The scaled position for the note at the given measure</returns>
+    public float GetScaledMeasurePosition(float measureDecimal)
+    {
+        // return GetScaledMeasurePositionOpt(this, measureDecimal);
+        return GetScaledMeasurePositionFromCache(measureDecimal);
+    }
+
+    /// <summary>
+    ///     Rebuild the scaled measure position cache after a change to the chart's gimmicks
+    /// </summary>
+    public void RebuildScaledMeasurePositionCache()
+    {
+        ScaledMeasurePositions.Clear();
+
+        foreach (var gimmick in Gimmicks)
+        {
+            // TODO: we can only update the required ones, as opposed to all at once
+            ScaledMeasurePositions.Add(GetScaledMeasurePositionOptForCache(gimmick.Measure));
+        }
+
+        ScaledMeasurePositions.Add(GetScaledMeasurePositionOptForCache(float.PositiveInfinity));
+    }
+
+    /// <summary>
+    ///     Fancy binary search thing
+    /// </summary>
+    /// <param name="measure">The measure to search for</param>
+    /// <returns>The first gimmick in the cache that starts after the given measure</returns>
+    private ScaledMeasurePositionInfo? FindFirstGimmickStartMeasureGreaterThan(float measure)
+    {
+        var left = 0;
+        var right = ScaledMeasurePositions.Count - 1;
+        ScaledMeasurePositionInfo? result = null;
+
+        while (left <= right)
+        {
+            var mid = left + (right - left) / 2;
+            if (ScaledMeasurePositions[mid].GimmickStartMeasure <= measure)
+            {
+                left = mid + 1;
+            }
+            else
+            {
+                result = ScaledMeasurePositions[mid];
+                right = mid - 1;
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    ///     Use the fancy binary search thing to find the closest gimmick in the cache
+    /// </summary>
+    /// <param name="measureDecimal">A note or gimmick's measure</param>
+    /// <returns>The scaled position for the note at the given measure</returns>
+    public float GetScaledMeasurePositionFromCache(float measureDecimal)
+    {
+        var info = FindFirstGimmickStartMeasureGreaterThan(measureDecimal);
+        if (info == null)
+        {
+            return measureDecimal; // ?
+        }
+
+        var scaledPosition = measureDecimal + info.PartialScaledPosition;
+        float finalDistance = measureDecimal - info.LastMeasurePosition;
+        scaledPosition += finalDistance * info.CurrentHiSpeedValue * info.CurrentTimeSigValue * info.CurrentBpmValue - finalDistance;
+        return scaledPosition;
+    }
+
+    /// <summary>
+    ///     Get the data required to quickly calculate scaled position at a given measure for caching purposes
+    /// </summary>
+    /// <param name="measureDecimal">A note or gimmick's measure</param>
+    /// <returns>The data required to quickly calculate scaled position at a given measure for caching purposes</returns>
+    public ScaledMeasurePositionInfo GetScaledMeasurePositionOptForCache(float measureDecimal)
+    {
+        float scaledPosition = 0;
+        float lastMeasurePosition = 0;
+        float currentHiSpeedValue = 1;
+        float currentTimeSigValue = 1;
+        float currentBpmValue = 1;
+
+        var relevantScaleChanges = Gimmicks
+            .Where(x => x.Measure < measureDecimal &&
+                        x.GimmickType is GimmickType.HiSpeedChange or GimmickType.TimeSignatureChange or GimmickType.BpmChange);
+
+        var startBpm = Gimmicks.First(x => x.GimmickType is GimmickType.BpmChange).BPM;
+
+        foreach (var scaleChange in relevantScaleChanges)
+        {
+            // Apply the scale change up to this point.
+            float distance = scaleChange.Measure - lastMeasurePosition;
+            scaledPosition += (distance * currentHiSpeedValue * currentTimeSigValue * currentBpmValue) - distance;
+
+            lastMeasurePosition = scaleChange.Measure;
+
+            // Update the current values.
+            switch (scaleChange.GimmickType)
+            {
+                case GimmickType.TimeSignatureChange:
+                    currentTimeSigValue = (float)scaleChange.TimeSig.Ratio;
+                    break;
+
+                case GimmickType.HiSpeedChange:
+                    currentHiSpeedValue = (float)scaleChange.HiSpeed;
+                    break;
+
+                case GimmickType.BpmChange:
+                    currentBpmValue = (float)(startBpm / scaleChange.BPM);
+                    break;
+            }
+        }
+
+        return new ScaledMeasurePositionInfo
+        {
+            GimmickStartMeasure = measureDecimal,
+            PartialScaledPosition = scaledPosition,
+            LastMeasurePosition = lastMeasurePosition,
+            CurrentHiSpeedValue = currentHiSpeedValue,
+            CurrentTimeSigValue = currentTimeSigValue,
+            CurrentBpmValue = currentBpmValue
+        };
     }
 }
