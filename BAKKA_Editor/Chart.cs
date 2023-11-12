@@ -496,4 +496,27 @@ internal class Chart
             CurrentBpmValue = currentBpmValue
         };
     }
+
+    /// <summary>
+    ///     Check if the chart has any invalid position notes, caused by the early hold baking algorithm
+    /// </summary>
+    public bool HasInvalidPositionNotes()
+    {
+        return Notes.Any(x => x.Position is < 0 or >= 60);
+    }
+
+    /// <summary>
+    ///    Fix the chart's invalid position notes, caused by the early hold baking algorithm
+    /// </summary>
+    public void FixInvalidPositionNotes()
+    {
+        foreach (var note in Notes)
+        {
+            if (note.Position is < 0 or >= 60)
+            {
+                // use canonical modulo to handle negative numbers
+                note.Position = (note.Position % 60 + 60) % 60;
+            }
+        }
+    }
 }

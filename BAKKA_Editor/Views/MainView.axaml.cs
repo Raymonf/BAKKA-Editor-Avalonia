@@ -832,6 +832,26 @@ public partial class MainView : UserControl
             isNewFile = false;
             SetText();
             skCircleView.RenderEngine.UpdateHiSpeed(chart, userSettings.ViewSettings.HispeedSetting); // initialize hispeed on song load
+            
+            // early hold baking algorithm can cause negative position notes
+            // they render fine in the editor, but cause distorted polygons to render in the game
+            if (chart.HasInvalidPositionNotes())
+            {
+                Dispatcher.UIThread.Post(
+                    async () =>
+                    {
+                        var shouldFix = await ShowBlockingMessageBox("Invalid Notes Detected",
+                            $"Notes with invalid positions were detected. This may have been caused by using an early version of the hold baking algorithm.\n\n" +
+                            $"Do you want the invalid notes to be automatically fixed?",
+                            MessageBoxType.YesNo);
+                        if (shouldFix != ContentDialogResult.None)
+                        {
+                            chart.FixInvalidPositionNotes();
+                            UpdateNoteLabels(chart.Notes.Count > 0 ? 0 : -1);
+                            UpdateGimmickLabels(chart.Gimmicks.Count > 0 ? 0 : -1);
+                        }
+                    });
+            }
         }
 
         if (IsDesktop)
@@ -2764,7 +2784,7 @@ public partial class MainView : UserControl
         }
     }
 
-    private async Task<ContentDialogResult> ShowBlockingMessageBox(string title, string text,
+    private Task<ContentDialogResult> ShowBlockingMessageBox(string title, string text,
         MessageBoxType type = MessageBoxType.Ok)
     {
         string? primaryText = null;
@@ -2795,7 +2815,7 @@ public partial class MainView : UserControl
             SecondaryButtonText = secondaryText,
             CloseButtonText = closeText
         };
-        return await dialog.ShowAsync();
+        return dialog.ShowAsync();
     }
 
     private void OnPauseSong()
