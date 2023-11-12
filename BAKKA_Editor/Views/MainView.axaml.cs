@@ -2143,11 +2143,11 @@ public partial class MainView : UserControl
 
     private void maskButton_Click(object sender, RoutedEventArgs e)
     {
+        SetSelectedObject(GimmickType.NoGimmick);
         if (addMaskRadio.IsChecked.Value)
             SetSelectedObject(NoteType.MaskAdd);
         else
             SetSelectedObject(NoteType.MaskRemove);
-        SetSelectedObject(GimmickType.NoGimmick);
     }
 
     private void bpmChangeButton_Click(object sender, RoutedEventArgs e)
