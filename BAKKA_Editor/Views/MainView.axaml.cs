@@ -1247,8 +1247,10 @@ public partial class MainView : UserControl
                 break;
         }
 
-        if (_vm.SizeTrackBar < minSize) _vm.SizeTrackBar = minSize;
+        if (_vm.SizeTrackBar < minSize)
+            _vm.SizeTrackBar = minSize;
         _vm.SizeTrackBarMinimum = minSize;
+        _vm.SizeNumericMinimum = minSize;
 
         _vm.SizeNumeric = skCircleView.Cursor.ConfigureSize((uint)minSize);
     }
