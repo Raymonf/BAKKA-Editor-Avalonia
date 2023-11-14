@@ -688,8 +688,11 @@ public partial class MainView : UserControl
         {
             if ((chart.Notes.Count > 0 || chart.Gimmicks.Count > 0) && !chart.IsSaved)
             {
-                chart.WriteFile(fileStream, false);
-                File.WriteAllLines(tempStatusPath, new[] { "true", DateTime.Now.ToString("yyyy-MM-dd HH:mm") });
+                if (!CurrentlyInsertingHold())
+                {
+                    chart.WriteFile(fileStream, false);
+                    File.WriteAllLines(tempStatusPath, new[] {"true", DateTime.Now.ToString("yyyy-MM-dd HH:mm")});
+                }
             }
             else
             {
