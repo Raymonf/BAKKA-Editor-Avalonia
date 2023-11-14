@@ -117,12 +117,21 @@ internal class Chart
                     noteTemp.Position = Convert.ToInt32(parsed[5], _defaultParsingCulture);
                     noteTemp.Size = Convert.ToInt32(parsed[6], _defaultParsingCulture);
                     noteTemp.HoldChange = Convert.ToBoolean(Convert.ToInt32(parsed[7], _defaultParsingCulture));
-                    if (noteTemp.NoteType == NoteType.MaskAdd || noteTemp.NoteType == NoteType.MaskRemove)
+                    if (noteTemp.NoteType is NoteType.MaskAdd or NoteType.MaskRemove)
+                    {
                         noteTemp.MaskFill = (MaskType) Convert.ToInt32(parsed[8], _defaultParsingCulture);
+                    }
                     else if (noteTemp.NoteType == NoteType.HoldStartNoBonus ||
                              noteTemp.NoteType == NoteType.HoldJoint ||
                              noteTemp.NoteType == NoteType.HoldStartBonusFlair)
-                        refByLine[lineNum] = Convert.ToInt32(parsed[8], _defaultParsingCulture);
+                    {
+                        // If someone saves without the hold end, we won't have index 8 (next note ref ID)
+                        if (parsed.Length >= 9)
+                        {
+                            refByLine[lineNum] = Convert.ToInt32(parsed[8], _defaultParsingCulture);
+                        }
+                    }
+
                     Notes.Add(noteTemp);
                     notesByLine[lineNum] = Notes.Last();
                     break;
@@ -518,5 +527,23 @@ internal class Chart
                 note.Position = (note.Position % 60 + 60) % 60;
             }
         }
+    }
+
+    /// <summary>
+    ///     Get the measures where the chart has missing hold end notes
+    /// </summary>
+    public List<float> GetMissingHoldEndMeasures()
+    {
+        var missingHoldEndMeasures = new List<float>();
+
+        foreach (var note in Notes)
+        {
+            if (note is {NoteType: NoteType.HoldJoint, NextReferencedNote: null})
+            {
+                missingHoldEndMeasures.Add(note.BeatInfo.MeasureDecimal);
+            }
+        }
+
+        return missingHoldEndMeasures;
     }
 }

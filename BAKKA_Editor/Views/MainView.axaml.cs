@@ -177,6 +177,9 @@ public partial class MainView : UserControl
         if (!await PromptSave())
             return;
 
+        // reset to default note type UI state
+        ResetToDefaultNoteTypeUi();
+
         chart = new Chart();
         isNewFile = true;
         isRecoveredFile = false;
@@ -190,6 +193,14 @@ public partial class MainView : UserControl
         {
             chart.EditorSongFileName = Path.GetFileName(songFilePath);
         }
+    }
+
+    private void ResetToDefaultNoteTypeUi()
+    {
+        noBonusRadio.IsChecked = true;
+        SetNonHoldButtonState(true);
+        _vm.EndHoldChecked = false;
+        tapButton_Click(this, new RoutedEventArgs());
     }
 
     public async Task OpenChartSettings_OnClick()
@@ -832,7 +843,7 @@ public partial class MainView : UserControl
             isNewFile = false;
             SetText();
             skCircleView.RenderEngine.UpdateHiSpeed(chart, userSettings.ViewSettings.HispeedSetting); // initialize hispeed on song load
-            
+
             // early hold baking algorithm can cause negative position notes
             // they render fine in the editor, but cause distorted polygons to render in the game
             if (chart.HasInvalidPositionNotes())
@@ -852,6 +863,22 @@ public partial class MainView : UserControl
                         }
                     });
             }
+
+            var missingHoldEndMeasures = chart.GetMissingHoldEndMeasures();
+            if (missingHoldEndMeasures.Count > 0)
+            {
+                Dispatcher.UIThread.Post(
+                    async () =>
+                    {
+                        var notice = "The following hold joints are missing hold ends:\n\n";
+                        notice += GetMissingHoldEndMeasureText(missingHoldEndMeasures);
+                        notice += "\nHold ends are required for hold joints to function properly. " +
+                                  """To fix a broken joint, scroll to the hold joint without an end note and click "Jump To Nearest Note" to select the joint.""";
+                        await ShowBlockingMessageBox("Missing Hold Ends", notice);
+                    });
+            }
+
+            Dispatcher.UIThread.Post(() => ResetToDefaultNoteTypeUi());
         }
 
         if (IsDesktop)
@@ -2050,6 +2077,28 @@ public partial class MainView : UserControl
 
     private async Task<bool> SaveFile(bool prompt = true)
     {
+        // check if we are inserting a hold
+        if (CurrentlyInsertingHold())
+        {
+            var shouldSave = await ShowBlockingMessageBox("Save Warning",
+                "You are currently inserting a hold. Do you wish to save anyway?\n\nPlease note that this chart will cause the game to crash in its current state, and you will need to manually fix the hold upon loading the chart.", MessageBoxType.YesNo);
+            if (shouldSave == ContentDialogResult.None)
+                return false;
+        }
+
+        // check for missing hold ends
+        var missingHoldEndMeasures = chart.GetMissingHoldEndMeasures();
+        if (missingHoldEndMeasures.Count > 0)
+        {
+            var notice = "The following hold joints are missing hold ends:\n\n";
+            notice += GetMissingHoldEndMeasureText(missingHoldEndMeasures);
+            notice += "\nHold ends are required for hold joints to function properly. Do you wish to save anyway?\n\n" +
+                      """Please note that this chart will cause the game to crash in its current state. To fix a broken joint, scroll to the hold joint without an end note and click "Jump To Nearest Note" to select the joint.""";
+            var shouldSave = await ShowBlockingMessageBox("Save Warning", notice, MessageBoxType.YesNo);
+            if (shouldSave == ContentDialogResult.None)
+                return false;
+        }
+
         // check if we have an end of chart note
         var hasEndOfChart = chart.Notes.Any(x => x.NoteType == NoteType.EndOfChart);
         if (!hasEndOfChart)
@@ -2365,6 +2414,18 @@ public partial class MainView : UserControl
         {
             note = chart.Notes.FirstOrDefault(x => x.BeatInfo.MeasureDecimal <= currentMeasure);
             if (note != null) selectedNoteIndex = chart.Notes.IndexOf(note);
+        }
+
+        // temporary feature to edit holds without an end
+        if (note != null)
+        {
+            if (currentNoteType != NoteType.HoldJoint &&
+                note is {IsHold: true, NoteType: NoteType.HoldJoint, NextReferencedNote: null})
+            {
+                SetSelectedObject(NoteType.HoldJoint);
+                lastNote = note; // ?
+                SetNonHoldButtonState(false);
+            }
         }
 
         UpdateNoteLabels();
@@ -3415,5 +3476,23 @@ public partial class MainView : UserControl
             await dialog.ShowAsync();
             appSettingsVm.Dialog = null;
         });
+    }
+    
+    bool CurrentlyInsertingHold()
+    {
+        return currentNoteType is NoteType.HoldJoint or NoteType.HoldEnd;
+    }
+
+    private string GetMissingHoldEndMeasureText(List<float> missingHoldEndMeasures)
+    {
+        var result = "";
+        foreach (var measure in missingHoldEndMeasures)
+        {
+            var beatInfo = new BeatInfo(measure);
+            var quant = Utils.GetQuantization(beatInfo.Beat, 16);
+            result += $"* Measure {beatInfo.Measure} Beat {quant.Item1} / {quant.Item2}\n";
+        }
+
+        return result;
     }
 }
