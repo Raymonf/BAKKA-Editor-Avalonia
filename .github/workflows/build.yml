@@ -35,19 +35,19 @@ jobs:
         RuntimeIdentifier: ${{ matrix.runtimeIdentifier }}
 
     - name: Copy bass libraries (Linux)
-      run: cp ${{ env.ProjectName }}/lib/${{ env.RuntimeIdentifier }}/* ${{ env.ProjectName }}/bin/Release/net7.0/${{ env.RuntimeIdentifier }}/publish
+      run: cp ${{ env.ProjectName }}/lib/${{ env.RuntimeIdentifier }}/* ${{ env.ProjectName }}/bin/Release/net8.0/${{ env.RuntimeIdentifier }}/publish
       if: ${{ contains(env.RuntimeIdentifier, 'linux') }}
       env:
         RuntimeIdentifier: ${{ matrix.runtimeIdentifier }}
         
     - name: Copy bass libraries (Windows)
-      run: cp ${{ env.ProjectName }}/lib/win-x64/* ${{ env.ProjectName }}/bin/Release/net7.0/${{ env.RuntimeIdentifier }}/publish
+      run: cp ${{ env.ProjectName }}/lib/win-x64/* ${{ env.ProjectName }}/bin/Release/net8.0/${{ env.RuntimeIdentifier }}/publish
       if: ${{ !contains(env.RuntimeIdentifier, 'win') }}
       env:
         RuntimeIdentifier: ${{ matrix.runtimeIdentifier }}
 
     - name: Copy bass libraries (macOS)
-      run: cp ${{ env.ProjectName }}/lib/darwin/* ${{ env.ProjectName }}/bin/Release/net7.0/${{ env.RuntimeIdentifier }}/publish
+      run: cp ${{ env.ProjectName }}/lib/darwin/* ${{ env.ProjectName }}/bin/Release/net8.0/${{ env.RuntimeIdentifier }}/publish
       if: ${{ contains(env.RuntimeIdentifier, 'osx') }}
       env:
         RuntimeIdentifier: ${{ matrix.runtimeIdentifier }}
@@ -56,6 +56,6 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: ${{ env.RuntimeIdentifier }}
-        path: ${{ env.ProjectName }}/bin/Release/net7.0/${{ env.RuntimeIdentifier }}/publish/**/*
+        path: ${{ env.ProjectName }}/bin/Release/net8.0/${{ env.RuntimeIdentifier }}/publish/**/*
       env:
         RuntimeIdentifier: ${{ matrix.runtimeIdentifier }}
