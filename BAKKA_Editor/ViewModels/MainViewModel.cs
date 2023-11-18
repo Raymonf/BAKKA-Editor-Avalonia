@@ -55,7 +55,7 @@ public partial class MainViewModel : ViewModelBase
 
     [ObservableProperty] private decimal sizeNumeric = 4;
     [ObservableProperty] private int sizeNumericMinimum = 4;
-    [ObservableProperty] private int sizeNumericMaximum = 59;
+    [ObservableProperty] private int sizeNumericMaximum = 60;
 
     [ObservableProperty] private decimal positionNumeric = 0;
     [ObservableProperty] private int positionNumericMinimum = 0;
