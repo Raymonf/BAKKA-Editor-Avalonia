@@ -17,17 +17,50 @@
 
             <TextBlock Foreground="Firebrick" Text="{DynamicResource L.Settings.Labels.HitsoundRestartRequiredWarning}" />
 
-            <CheckBox IsChecked="{Binding HitsoundEnabled}"
+            <StackPanel Orientation="Horizontal">
+              <CheckBox IsChecked="{Binding HitsoundEnabled}"
                       Content="{DynamicResource L.Settings.CheckBoxes.EnableHitsound}" />
-
-            <TextBlock Margin="0,0,0,4" Text="{DynamicResource L.Settings.Labels.HitsoundOffsetMs}"  />
-            <NumericUpDown Value="{Binding HitsoundOffsetMs}" Minimum="-10000" Maximum="10000" Increment="1" FormatString="0" />
-
-            <TextBlock Margin="0,0,0,4" Text="{DynamicResource L.Settings.Labels.HitsoundPath}" />
-            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
-                <Button Content="{DynamicResource L.Settings.Buttons.SelectHitsoundPath}" Command="{Binding SelectHitsoundPathCommand}" IsEnabled="True" Margin="0,0,4,0" />
-                <TextBlock VerticalAlignment="Center" Text="{Binding HitsoundPath}" TextWrapping="WrapWithOverflow" />
+              <Button Content="{DynamicResource L.Settings.Buttons.SelectHitsoundPath}" Command="{Binding SelectHitsoundPathCommand}" IsEnabled="True" Margin="0,0,4,4" IsVisible="{Binding HitsoundEnabled}"/>
+            </StackPanel>
+            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Stretch" Margin="0,0,0,8">
+              <TextBlock VerticalAlignment="Center" Text="{Binding HitsoundPath}" TextWrapping="WrapWithOverflow" IsVisible="{Binding HitsoundEnabled}"/>
             </WrapPanel>
+
+            <StackPanel Orientation="Horizontal">
+              <CheckBox IsChecked="{Binding HitsoundSwipeEnabled}"
+                      Content="{DynamicResource L.Settings.CheckBoxes.EnableHitsoundSwipe}" />
+              <Button Content="{DynamicResource L.Settings.Buttons.SelectHitsoundPath}" Command="{Binding SelectHitsoundSwipePathCommand}" IsEnabled="True" Margin="0,0,4,4" IsVisible="{Binding HitsoundSwipeEnabled}"/>
+            </StackPanel>
+            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Stretch" Margin="0,0,0,8">
+              <TextBlock VerticalAlignment="Center" Text="{Binding HitsoundSwipePath}" TextWrapping="WrapWithOverflow" IsVisible="{Binding HitsoundSwipeEnabled}"/>
+            </WrapPanel>
+          
+            <StackPanel Orientation="Horizontal">
+              <CheckBox IsChecked="{Binding HitsoundBonusEnabled}"
+                      Content="{DynamicResource L.Settings.CheckBoxes.EnableHitsoundBonus}" />
+              <Button Content="{DynamicResource L.Settings.Buttons.SelectHitsoundPath}" Command="{Binding SelectHitsoundBonusPathCommand}" IsEnabled="True" Margin="0,0,4,4" IsVisible="{Binding HitsoundBonusEnabled}"/>
+            </StackPanel>
+            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Stretch" Margin="0,0,0,8">
+              <TextBlock VerticalAlignment="Center" Text="{Binding HitsoundBonusPath}" TextWrapping="WrapWithOverflow" IsVisible="{Binding HitsoundBonusEnabled}"/>
+            </WrapPanel>
+
+            <StackPanel Orientation="Horizontal">
+              <CheckBox IsChecked="{Binding HitsoundFlairEnabled}"
+                      Content="{DynamicResource L.Settings.CheckBoxes.EnableHitsoundFlair}" />
+              <Button Content="{DynamicResource L.Settings.Buttons.SelectHitsoundPath}" Command="{Binding SelectHitsoundFlairPathCommand}" IsEnabled="True" Margin="0,0,4,4" IsVisible="{Binding HitsoundFlairEnabled}"/>
+            </StackPanel>
+            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Stretch" Margin="0,0,0,8">
+              <TextBlock VerticalAlignment="Center" Text="{Binding HitsoundFlairPath}" TextWrapping="WrapWithOverflow" IsVisible="{Binding HitsoundFlairEnabled}"/>
+            </WrapPanel>
+
+            <StackPanel Orientation="Horizontal">
+              <NumericUpDown Value="{Binding HitsoundOffsetMs}" Minimum="-10000" Maximum="10000" Increment="1" FormatString="0" Width="50"/>
+              <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" Text="{DynamicResource L.Settings.Labels.HitsoundOffsetMs}"  />
+            </StackPanel>
+
+            
+
+            
         </StackPanel>
     </ScrollViewer>
 </UserControl>

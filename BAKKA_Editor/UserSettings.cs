@@ -85,7 +85,13 @@ public class HotkeySettings
 public class SoundSettings
 {
     public bool HitsoundEnabled { get; set; } = false;
+    public bool HitsoundSwipeEnabled { get; set; } = false;
+    public bool HitsoundBonusEnabled { get; set; } = false;
+    public bool HitsoundFlairEnabled { get; set; } = false;
     public string HitsoundPath { get; set; } = "";
+    public string HitsoundSwipePath { get; set; } = "";
+    public string HitsoundBonusPath { get; set; } = "";
+    public string HitsoundFlairPath { get; set; } = "";
     public int HitsoundVolume { get; set; } = 50;
     public int HitsoundAdditionalOffsetMs { get; set; } = 0;
 }
