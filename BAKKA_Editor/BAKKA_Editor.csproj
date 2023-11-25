@@ -7,20 +7,20 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <AvaloniaResource Include="Assets\**"/>
-        <TrimmerRootDescriptor Include="Roots.xml"/>
+        <AvaloniaResource Include="Assets\**" />
+        <TrimmerRootDescriptor Include="Roots.xml" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)"/>
-        <PackageReference Include="Avalonia.ReactiveUI" Version="$(AvaloniaVersion)"/>
-        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1"/>
-        <PackageReference Include="FluentAvaloniaUI" Version="2.0.4"/>
-        <PackageReference Include="ManagedBass" Version="3.1.1"/>
-        <PackageReference Include="ManagedBass.Flac" Version="3.1.1"/>
-        <PackageReference Include="ManagedBass.Fx" Version="3.1.1"/>
-        <PackageReference Include="Tomlyn" Version="0.16.2"/>
+        <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
+        <PackageReference Include="Avalonia.ReactiveUI" Version="$(AvaloniaVersion)" />
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
+        <PackageReference Include="FluentAvaloniaUI" Version="2.0.4" />
+        <PackageReference Include="ManagedBass" Version="3.1.1" />
+        <PackageReference Include="ManagedBass.Flac" Version="3.1.1" />
+        <PackageReference Include="ManagedBass.Fx" Version="3.1.1" />
+        <PackageReference Include="Tomlyn" Version="0.16.2" />
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)"/>
+        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
     </ItemGroup>
 </Project>

@@ -28,6 +28,7 @@ using FluentAvalonia.UI.Controls;
 using SkiaSharp;
 using Tomlyn;
 using AvColor = Avalonia.Media.Color;
+using BAKKA_Editor.Audio;
 
 namespace BAKKA_Editor.Views;
 
@@ -60,11 +61,7 @@ public partial class MainView : UserControl
 
     // Program info
     private string fileVersion = "";
-    private IBakkaSampleChannel? hitsoundChannel;
 
-    // Hitsounds
-    private IBakkaSample? hitsoundSample;
-    private DispatcherTimer hitsoundTimer;
     private bool isInsertingHold;
     private bool isNewFile = true;
     private bool isRecoveredFile;
@@ -101,6 +98,10 @@ public partial class MainView : UserControl
 
     // Timers
     private DispatcherTimer updateTimer;
+    private DispatcherTimer hitsoundTimer;
+
+    // Hitsounds
+    private Hitsounds hitsounds;
 
     // Settings
     private UserSettings userSettings = new();
@@ -450,6 +451,9 @@ public partial class MainView : UserControl
         skCircleView = new SkCircleView(userSettings, new SizeF(611, 611));
         opManager = new OperationManager();
 
+        hitsounds = new Hitsounds(userSettings, this);
+        HitsoundSetup();
+
         SetInitialSong();
 
         // Operation Manager
@@ -543,8 +547,6 @@ public partial class MainView : UserControl
         // HACK HACK HACK HACK HACK: run on the render thread since we know it'll only render after everything is initialized :/
         // TODO: how do we fix this?
         Dispatcher.UIThread.Post(OnResize, DispatcherPriority.Render);
-
-        HitsoundSetup();
     }
 
     private void LoadInitialSettingsFile()
@@ -571,14 +573,18 @@ public partial class MainView : UserControl
 
     private void HitsoundSetup()
     {
-        if (!userSettings.SoundSettings.HitsoundEnabled)
+        if (!userSettings.SoundSettings.HitsoundEnabled && !userSettings.SoundSettings.HitsoundSwipeEnabled && !userSettings.SoundSettings.HitsoundBonusEnabled && userSettings.SoundSettings.HitsoundFlairEnabled)
         {
             Dispatcher.UIThread.Post(async () => { HitsoundPanel.IsVisible = false; });
             return;
         }
 
         var hitsoundPath = userSettings.SoundSettings.HitsoundPath;
-        if (!File.Exists(hitsoundPath))
+        var hitsoundSwipePath = userSettings.SoundSettings.HitsoundSwipePath;
+        var hitsoundBonusPath = userSettings.SoundSettings.HitsoundBonusPath;
+        var hitsoundFlairPath = userSettings.SoundSettings.HitsoundFlairPath;
+
+        if (userSettings.SoundSettings.HitsoundEnabled && !File.Exists(hitsoundPath))
         {
             Dispatcher.UIThread.Post(
                 async () => await ShowBlockingMessageBox("Hitsound Error",
@@ -586,12 +592,36 @@ public partial class MainView : UserControl
             return;
         }
 
+        if (userSettings.SoundSettings.HitsoundSwipeEnabled && !File.Exists(hitsoundSwipePath))
+        {
+            Dispatcher.UIThread.Post(
+                async () => await ShowBlockingMessageBox("Hitsound Error",
+                    "Swipe Hitsounds were enabled but the path to the hitsound file is not valid (not found)."));
+            return;
+        }
+
+        if (userSettings.SoundSettings.HitsoundBonusEnabled && !File.Exists(hitsoundBonusPath))
+        {
+            Dispatcher.UIThread.Post(
+                async () => await ShowBlockingMessageBox("Hitsound Error",
+                    "Bonus Hitsounds were enabled but the path to the hitsound file is not valid (not found)."));
+            return;
+        }
+
+        if (userSettings.SoundSettings.HitsoundFlairEnabled && !File.Exists(hitsoundFlairPath))
+        {
+            Dispatcher.UIThread.Post(
+                async () => await ShowBlockingMessageBox("Hitsound Error",
+                    "R Note Hitsounds were enabled but the path to the hitsound file is not valid (not found)."));
+            return;
+        }
+
+
         try
         {
-            hitsoundSample = new BassBakkaSample(hitsoundPath);
-            if (hitsoundSample.Loaded)
-                hitsoundChannel = hitsoundSample.GetChannel();
-            else
+            hitsounds.LoadSamples(hitsoundPath, hitsoundSwipePath, hitsoundBonusPath, hitsoundFlairPath);
+
+            if (hitsounds.LoadError())
                 Dispatcher.UIThread.Post(async () => await ShowBlockingMessageBox("Error",
                     "Failed to load the hitsound. Ensure it is a valid flac, wav, or ogg (Vorbis) file."));
         }
@@ -657,24 +687,25 @@ public partial class MainView : UserControl
 
     private void HitsoundTimer_Tick(object? sender, EventArgs e)
     {
-        if (hitsoundChannel == null || currentSong == null)
+        if (!hitsounds.ChannelsExist() || currentSong == null)
             return;
 
         // we call bass_init with the latency flag, so we can get the latency from bass_info
         var latency = soundEngine.GetLatency();
         var offset = 0.0;
+
         if (userSettings.SoundSettings.HitsoundAdditionalOffsetMs != 0)
             offset = userSettings.SoundSettings.HitsoundAdditionalOffsetMs / 1000.0;
+
         var info = chart.GetBeatInfoFromTime(currentSong.PlayPosition);
+
         var currentMeasure = info.MeasureDecimal + latency + offset; // offset by latency
+
         while (currentNoteIndex < chart.Notes.Count &&
                chart.Notes[currentNoteIndex].BeatInfo.MeasureDecimal <= currentMeasure)
         {
             var note = chart.Notes[currentNoteIndex];
-            var isSoundedNote =
-                (int) note.NoteType is >= (int) NoteType.TouchNoBonus and <= (int) NoteType.HoldStartNoBonus
-                or >= (int) NoteType.Chain || (int) note.NoteType == (int) NoteType.HoldEnd;
-            if (isSoundedNote && note.BeatInfo.MeasureDecimal > lastMeasure) hitsoundChannel?.Play(true);
+            hitsounds.Play(note, lastMeasure);
             currentNoteIndex++;
         }
     }
@@ -2911,8 +2942,6 @@ public partial class MainView : UserControl
 
     private void PlayButton_OnClick(object? sender, RoutedEventArgs e)
     {
-        currentNoteIndex = 0;
-
         if (currentSong != null)
         {
             if (!chart.HasInitEvents)
@@ -2938,6 +2967,9 @@ public partial class MainView : UserControl
             playButton.AppendHotkey(userSettings.HotkeySettings.PlayHotkey);
         }
 
+        // prevent hitsound trigger when hitting play while not on any note
+        currentNoteIndex = chart.Notes.FindIndex(x => x.Measure >= skCircleView.RenderEngine.CurrentMeasure);
+
         UpdateTime();
     }
 
@@ -2947,8 +2979,7 @@ public partial class MainView : UserControl
             currentSong.Volume = (float) _vm.VolumeTrackBar / (float) _vm.VolumeTrackBarMaximum;
 
         // just in case, we'll set the hitsound volume too
-        hitsoundChannel?.SetVolume(
-            Math.Clamp((float) _vm.HitsoundVolumeTrackBar / (float) _vm.HitsoundVolumeMaximum, 0.0f, 1.0f));
+        hitsounds?.SetVolume(Math.Clamp((float)_vm.HitsoundVolumeTrackBar / (float)_vm.HitsoundVolumeMaximum, 0.0f, 1.0f));
     }
 
     private async Task ShowOpenSongDialog()
@@ -3304,7 +3335,7 @@ public partial class MainView : UserControl
     {
         userSettings.SoundSettings.HitsoundVolume = (int) e.NewValue;
         var volume = (float) _vm.HitsoundVolumeTrackBar / (float) _vm.HitsoundVolumeMaximum;
-        hitsoundChannel?.SetVolume(Math.Clamp(volume, 0.0f, 1.0f));
+        hitsounds?.SetVolume(Math.Clamp(volume, 0.0f, 1.0f));
     }
 
     private void MeasurePrevButton_OnClick(object? sender, RoutedEventArgs e)

@@ -14,6 +14,7 @@ using SkiaSharp;
 using BAKKA_Editor.Rendering;
 using Avalonia.Styling;
 using Avalonia;
+using BAKKA_Editor.Audio;
 
 namespace BAKKA_Editor.ViewModels;
 
@@ -22,6 +23,7 @@ public partial class AppSettingsViewModel : ViewModelBase
     private UserSettings? UserSettings { get; }
     private MainViewModel? MainViewModel { get; }
     private Localizer? Localizer { get; }
+    private Hitsounds? Hitsounds { get; }
     public ContentDialog? Dialog { get; set; }
 
     private Dictionary<string, string> SupportedLanguages { get; } = new()
@@ -60,9 +62,18 @@ public partial class AppSettingsViewModel : ViewModelBase
         ShowMaskEffects = userSettings.ViewSettings.ShowMaskEffects;
 
         UseSpaceKeyToPlay = userSettings.ViewSettings.UseSpaceToPlaySink;
+
         HitsoundEnabled = userSettings.SoundSettings.HitsoundEnabled;
-        HitsoundOffsetMs = userSettings.SoundSettings.HitsoundAdditionalOffsetMs;
+        HitsoundSwipeEnabled = userSettings.SoundSettings.HitsoundSwipeEnabled;
+        HitsoundBonusEnabled = userSettings.SoundSettings.HitsoundBonusEnabled;
+        HitsoundFlairEnabled = userSettings.SoundSettings.HitsoundFlairEnabled;
+
         HitsoundPath = userSettings.SoundSettings.HitsoundPath;
+        HitsoundSwipePath = userSettings.SoundSettings.HitsoundSwipePath;
+        HitsoundBonusPath = userSettings.SoundSettings.HitsoundBonusPath;
+        HitsoundFlairPath = userSettings.SoundSettings.HitsoundFlairPath;
+
+        HitsoundOffsetMs = userSettings.SoundSettings.HitsoundAdditionalOffsetMs;
 
         ColorNoteTap = Color.Parse(userSettings.ColorSettings.ColorNoteTap);
         ColorNoteChain = Color.Parse(userSettings.ColorSettings.ColorNoteChain);
@@ -305,6 +316,48 @@ public partial class AppSettingsViewModel : ViewModelBase
             UserSettings.SoundSettings.HitsoundPath = value;
     }
 
+    [ObservableProperty] private bool hitsoundSwipeEnabled = false;
+    partial void OnHitsoundSwipeEnabledChanged(bool value)
+    {
+        if (UserSettings != null)
+            UserSettings.SoundSettings.HitsoundSwipeEnabled = value;
+    }
+
+    [ObservableProperty] private string hitsoundSwipePath = "";
+    partial void OnHitsoundSwipePathChanged(string value)
+    {
+        if (UserSettings != null)
+            UserSettings.SoundSettings.HitsoundSwipePath = value;
+    }
+
+    [ObservableProperty] private bool hitsoundBonusEnabled = false;
+    partial void OnHitsoundBonusEnabledChanged(bool value)
+    {
+        if (UserSettings != null)
+            UserSettings.SoundSettings.HitsoundBonusEnabled = value;
+    }
+
+    [ObservableProperty] private string hitsoundBonusPath = "";
+    partial void OnHitsoundBonusPathChanged(string value)
+    {
+        if (UserSettings != null)
+            UserSettings.SoundSettings.HitsoundBonusPath = value;
+    }
+
+    [ObservableProperty] private bool hitsoundFlairEnabled = false;
+    partial void OnHitsoundFlairEnabledChanged(bool value)
+    {
+        if (UserSettings != null)
+            UserSettings.SoundSettings.HitsoundFlairEnabled = value;
+    }
+
+    [ObservableProperty] private string hitsoundFlairPath = "";
+    partial void OnHitsoundFlairPathChanged(string value)
+    {
+        if (UserSettings != null)
+            UserSettings.SoundSettings.HitsoundFlairPath = value;
+    }
+
     [ObservableProperty] private decimal hitsoundOffsetMs = 0;
 
     partial void OnHitsoundOffsetMsChanged(decimal value)
@@ -331,7 +384,74 @@ public partial class AppSettingsViewModel : ViewModelBase
 
         if (files.Count >= 1)
         {
-            HitsoundPath = files[0].Path.AbsolutePath;
+            HitsoundPath = System.Uri.UnescapeDataString(files[0].Path.AbsolutePath);
+        }
+    }
+
+    public async Task SelectHitsoundSwipePathCommand()
+    {
+        // TODO: MOVE THIS OUT MOVE THIS OUT MOVE THIS OUT
+
+        var topLevel = TopLevel.GetTopLevel(Dialog);
+        if (topLevel == null)
+        {
+            return;
+        }
+
+        var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Open Hitsound File",
+            AllowMultiple = false
+        });
+
+        if (files.Count >= 1)
+        {
+            HitsoundSwipePath = System.Uri.UnescapeDataString(files[0].Path.AbsolutePath);
+        }
+    }
+
+    public async Task SelectHitsoundBonusPathCommand()
+    {
+        // TODO: MOVE THIS OUT MOVE THIS OUT MOVE THIS OUT
+
+        var topLevel = TopLevel.GetTopLevel(Dialog);
+        if (topLevel == null)
+        {
+            return;
+        }
+
+        var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Open Hitsound File",
+            AllowMultiple = false
+        });
+
+        if (files.Count >= 1)
+        {
+            HitsoundBonusPath = System.Uri.UnescapeDataString(files[0].Path.AbsolutePath);
+        }
+    }
+
+    public async Task SelectHitsoundFlairPathCommand()
+    {
+        // TODO: MOVE THIS OUT MOVE THIS OUT MOVE THIS OUT
+
+        var topLevel = TopLevel.GetTopLevel(Dialog);
+        if (topLevel == null)
+        {
+            return;
+        }
+
+        var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Open Hitsound File",
+            AllowMultiple = false
+        });
+
+        if (files.Count >= 1)
+        {
+            // unescape path to allow for spaces in filenames/directories
+            HitsoundFlairPath = System.Uri.UnescapeDataString(files[0].Path.AbsolutePath);
         }
     }
 }
