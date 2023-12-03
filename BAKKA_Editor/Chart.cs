@@ -78,11 +78,23 @@ internal class Chart
 
             var offset = Utils.GetTag(line, "#OFFSET");
             if (offset != null)
-                Offset = Convert.ToDouble(offset, _defaultParsingCulture);
+                Offset = -Convert.ToDouble(offset, _defaultParsingCulture);
+
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (Offset == -0.0)
+            {
+                Offset = 0.0;
+            }
 
             offset = Utils.GetTag(line, "#MOVIEOFFSET");
             if (offset != null)
-                MovieOffset = Convert.ToDouble(offset, _defaultParsingCulture);
+                MovieOffset = -Convert.ToDouble(offset, _defaultParsingCulture);
+
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (MovieOffset == -0.0)
+            {
+                MovieOffset = 0.0;
+            }
 
             if (line.Contains("#BODY"))
             {
@@ -213,8 +225,19 @@ internal class Chart
             sw.WriteLine($"#MUSIC_FILE_PATH {SongFileName}");
             if (EditorSongFileName != null)
                 sw.WriteLine($"#X_BAKKA_MUSIC_FILENAME {EditorSongFileName}");
-            sw.WriteLine($"#OFFSET {Offset:F6}");
-            sw.WriteLine($"#MOVIEOFFSET {MovieOffset:F6}");
+
+            var outOffset = -Offset;
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (outOffset == -0.0)
+                outOffset = 0.0;
+
+            var outMovieOffset = -MovieOffset;
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (outMovieOffset == -0.0)
+                outMovieOffset = 0.0;
+
+            sw.WriteLine($"#OFFSET {outOffset:F6}");
+            sw.WriteLine($"#MOVIEOFFSET {outMovieOffset:F6}");
             sw.WriteLine("#BODY");
 
             foreach (var gimmick in Gimmicks)
