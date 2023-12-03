@@ -69,6 +69,17 @@ public class HotkeySettings
     public int ChainHotkey { get; set; } = Convert.ToInt32(Key.D6, DefaultParsingCulture);
     public int HoldHotkey { get; set; } = Convert.ToInt32(Key.D7, DefaultParsingCulture);
     public int PlayHotkey { get; set; } = Convert.ToInt32(Key.P, DefaultParsingCulture);
+
+    public bool EnableMeasureChangeHotkeys { get; set; } = true;
+    public int MeasureDecreaseHotkey { get; set; } = Convert.ToInt32(Key.Left, DefaultParsingCulture);
+    public int MeasureIncreaseHotkey { get; set; } = Convert.ToInt32(Key.Right, DefaultParsingCulture);
+    public bool EnableBeatChangeHotkeys { get; set; } = true;
+    public int BeatDecreaseHotkey { get; set; } = Convert.ToInt32(Key.Down, DefaultParsingCulture);
+    public int BeatIncreaseHotkey { get; set; } = Convert.ToInt32(Key.Up, DefaultParsingCulture);
+    public int MeasureChangeHotkeyDelta { get; set; } = 1;
+    public int MeasureChangeHotkeyHighDelta { get; set; } = 2;
+    public int BeatChangeHotkeyDelta { get; set; } = 1;
+    public int BeatChangeHotkeyHighDelta { get; set; } = 2;
 }
 
 public class SoundSettings

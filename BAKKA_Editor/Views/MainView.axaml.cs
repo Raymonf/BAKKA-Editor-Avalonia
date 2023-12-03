@@ -3158,6 +3158,47 @@ public partial class MainView : UserControl
 
         try
         {
+            if (userSettings.HotkeySettings.EnableBeatChangeHotkeys && !e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+            {
+                var hkSettings = userSettings.HotkeySettings;
+
+                var intKey = (int) e.Key;
+                if (intKey == hkSettings.BeatIncreaseHotkey || intKey == hkSettings.BeatDecreaseHotkey)
+                {
+                    // beat change
+                    var delta = intKey == hkSettings.BeatIncreaseHotkey ? 1 : -1;
+                    if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
+                        delta *= hkSettings.BeatChangeHotkeyHighDelta;
+                    if (_vm.Beat1Numeric + delta >= _vm.Beat1NumericMinimum &&
+                        _vm.Beat1Numeric + delta <= _vm.Beat1NumericMaximum)
+                    {
+                        _vm.Beat1Numeric += delta;
+                    }
+                    else
+                    {
+                        // wrap around
+                        _vm.Beat1Numeric = _vm.Beat2Numeric + delta;
+                    }
+
+                    e.Handled = true;
+                    return;
+                }
+
+                if (intKey == hkSettings.MeasureIncreaseHotkey || intKey == hkSettings.MeasureDecreaseHotkey)
+                {
+                    // measure change
+                    var delta = intKey == hkSettings.MeasureIncreaseHotkey ? hkSettings.MeasureChangeHotkeyDelta : -hkSettings.MeasureChangeHotkeyDelta;
+                    if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
+                        delta *= hkSettings.MeasureChangeHotkeyHighDelta;
+                    if (_vm.MeasureNumeric + delta >= _vm.MeasureNumericMinimum &&
+                        _vm.MeasureNumeric + delta <= _vm.MeasureNumericMaximum)
+                        _vm.MeasureNumeric += delta;
+
+                    e.Handled = true;
+                    return;
+                }
+            }
+
             switch (e.Key)
             {
                 case Key.Space:
@@ -3177,10 +3218,12 @@ public partial class MainView : UserControl
                     return;
                 case Key.Up:
                 case Key.Down:
-                    if (!e.KeyModifiers.HasFlag(KeyModifiers.Shift))
-                        return;
-                    playbackVolumeChange(e.Key == Key.Up);
-                    e.Handled = true;
+                    if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+                    {
+                        // volume change
+                        playbackVolumeChange(e.Key == Key.Up);
+                        e.Handled = true;
+                    }
                     return;
                 default:
                     var key = (int) e.Key;
