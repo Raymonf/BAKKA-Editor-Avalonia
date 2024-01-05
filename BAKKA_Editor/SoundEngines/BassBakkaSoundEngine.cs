@@ -42,11 +42,11 @@ public class BassBakkaSoundEngine : IBakkaSoundEngine
 
     public IBakkaSound Play2D(string soundFilename, bool playLooped, bool startPaused)
     {
-        // create decode channel
-        var decodeChannel = Bass.CreateStream(soundFilename, 0, 0, BassFlags.Decode);
+        // try loading as flac first to avoid the buggy flac implementation
+        var decodeChannel = BassFlac.CreateStream(soundFilename, 0, 0, BassFlags.Decode);
         if (decodeChannel == 0 && Bass.LastError == Errors.FileFormat)
-            // try loading as flac if we get a file format error
-            decodeChannel = BassFlac.CreateStream(soundFilename, 0, 0, BassFlags.Decode);
+            // try loading normally if we get a file format error
+            decodeChannel = Bass.CreateStream(soundFilename, 0, 0, BassFlags.Decode);
 
         if (decodeChannel == 0)
         {
