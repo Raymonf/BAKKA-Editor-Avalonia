@@ -33,8 +33,9 @@ namespace BAKKA_Editor
                     // avoid decimal/floating point errors that would
                     // otherwise cause two segments on the same beat
                     // if i is just *barely* less than endNote.Measure.
-                    if (chart.GetBeatInfoFromTime((double) i) == chart.GetBeatInfoFromTime(endNote.Measure))
-                        break;
+                    var info0 = new BeatInfo((float) i);
+                    var info1 = new BeatInfo(endNote.Measure);
+                    if (info0.Measure == info1.Measure && info0.Beat == info1.Beat) break;
 
                     newPosition += positionStep;
                     newSize += sizeStep;
@@ -87,8 +88,9 @@ namespace BAKKA_Editor
             {
                 for (decimal i = (decimal) startNote.Measure + interval; i < (decimal) endNote.Measure; i += interval)
                 {
-                    if (chart.GetBeatInfoFromTime((double) i) == chart.GetBeatInfoFromTime(endNote.Measure))
-                        break;
+                    var info0 = new BeatInfo((float) i);
+                    var info1 = new BeatInfo(endNote.Measure);
+                    if (info0.Measure == info1.Measure && info0.Beat == info1.Beat) break;
 
                     newPosition += positionStep;
                     newSize += sizeStep;
@@ -138,8 +140,9 @@ namespace BAKKA_Editor
             {
                 for (decimal i = (decimal) startNote.Measure + interval; i < (decimal) endNote.Measure; i += interval)
                 {
-                    if (chart.GetBeatInfoFromTime((double) i) == chart.GetBeatInfoFromTime(endNote.Measure))
-                        break;
+                    var info0 = new BeatInfo((float) i);
+                    var info1 = new BeatInfo(endNote.Measure);
+                    if (info0.Measure == info1.Measure && info0.Beat == info1.Beat) break;
 
                     float lerpTime = ((float) i - startNote.Measure) / (endNote.Measure - startNote.Measure);
 
