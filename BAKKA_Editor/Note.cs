@@ -21,9 +21,9 @@ internal class BeatInfo
 
     public BeatInfo(float measure)
     {
-        Measure = (int) Math.Floor(measure);
-        Beat = (int) ((measure - Measure) * 1920.0f);
-        MeasureDecimal = GetMeasureDecimal(Measure, Beat);
+        Measure = (int) measure;
+        Beat = (int) MathF.Round((measure - Measure) * 1920.0f);
+        MeasureDecimal = measure;
     }
 
     public BeatInfo(BeatInfo info)
