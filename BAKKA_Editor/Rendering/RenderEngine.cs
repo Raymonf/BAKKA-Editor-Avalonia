@@ -204,7 +204,7 @@ internal class RenderEngine
 
     // ================ Rendering ================
     public void Render(Chart chart, NoteType currentNoteType, int selectedNoteIndex, int selectedGimmickIndex,
-        bool isHoveringOverMirrorAxis, bool showCursor, int cursorStartAngle, int cursorArcAngle, int axis)
+        bool isHoveringOverMirrorAxis, bool showCursor, int cursorStartAngle, int cursorArcAngle, int axis, List<Note> multiSelectNotes)
     {
         DrawBackground(userSettings.ViewSettings.DarkMode);
         if (userSettings.ViewSettings.ShowMaskEffects)
@@ -217,9 +217,9 @@ internal class RenderEngine
         if ((!Playing && userSettings.ViewSettings.ShowGimmicks) || (Playing && userSettings.ViewSettings.ShowGimmicksDuringPlayback))
             DrawGimmickNotes(chart, userSettings.ViewSettings.HighlightViewedNote, selectedGimmickIndex);
         DrawHolds(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex,
-            userSettings.ViewSettings.NoteScaleMultiplier);
+            userSettings.ViewSettings.NoteScaleMultiplier, multiSelectNotes);
         DrawNotes(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex,
-            userSettings.ViewSettings.NoteScaleMultiplier);
+            userSettings.ViewSettings.NoteScaleMultiplier, multiSelectNotes);
         if (userSettings.ViewSettings.ShowSlideSnapArrows)
             DrawArrows(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex);
         if (showCursor)
@@ -472,7 +472,7 @@ internal class RenderEngine
         }
     }
 
-    private void DrawNotes(Chart chart, bool highlightSelectedNote, int selectedNoteIndex, float noteScaleMultiplier)
+    private void DrawNotes(Chart chart, bool highlightSelectedNote, int selectedNoteIndex, float noteScaleMultiplier, List<Note> multiSelectNotes)
     {
         var visibleNotes = userSettings.ViewSettings.ShowGimmickEffects
             ? chart.Notes.Where(x =>
@@ -529,12 +529,14 @@ internal class RenderEngine
             }
 
             if (highlightSelectedNote && selectedNoteIndex != -1 && note == chart.Notes[selectedNoteIndex])
-                canvas.DrawArc(info.Rect, fullStartAngle, fullArcAngle, false,
-                    brushes.GetHighlightPen(info.NoteScale * noteScaleMultiplier));
+                canvas.DrawArc(info.Rect, fullStartAngle, fullArcAngle, false, brushes.GetHighlightPen(info.NoteScale * noteScaleMultiplier));
+
+            if (multiSelectNotes.Count != 0 && multiSelectNotes.Contains(note))
+                canvas.DrawArc(info.Rect, fullStartAngle, fullArcAngle, false, brushes.GetMultiSelectPen(info.NoteScale * noteScaleMultiplier));
         }
     }
 
-    private void DrawHolds(Chart chart, bool highlightSelectedNote, int selectedNoteIndex, float noteScaleMultiplier)
+    private void DrawHolds(Chart chart, bool highlightSelectedNote, int selectedNoteIndex, float noteScaleMultiplier, List<Note> multiSelectNotes)
     {
         // awards for longest line(s) of code go to...
         // ray, feel free to write this differently.
@@ -580,7 +582,8 @@ internal class RenderEngine
             // current note on-screen + next note on-screen
             if (currentNoteVisible && nextNoteVisible && note.NextReferencedNote != null)
             {
-                var nextInfo = GetArc(chart, note.NextReferencedNote);
+                var nextNote = note.NextReferencedNote;
+                var nextInfo = GetArc(chart, nextNote);
 
                 // create arcs
                 var arc1StartAngle = currentInfo.StartAngle;
@@ -592,8 +595,11 @@ internal class RenderEngine
                 if (note.Size != 60)
                 {
                     arc1StartAngle += 1.5f;
-                    arc2StartAngle -= 1.5f;
                     arc1ArcLength -= 3.0f;
+                }
+                if (note.NextReferencedNote.Size != 60)
+                {
+                    arc2StartAngle -= 1.5f;
                     arc2ArcLength += 3.0f;
                 }
 
@@ -765,6 +771,9 @@ internal class RenderEngine
             if (highlightSelectedNote && selectedNoteIndex != -1 && note == chart.Notes[selectedNoteIndex])
                 canvas.DrawArc(currentInfo.Rect, fullStartAngle, fullArcAngle, false,
                     brushes.GetHighlightPen(noteScale));
+
+            if (multiSelectNotes.Count != 0 && multiSelectNotes.Contains(note))
+                canvas.DrawArc(currentInfo.Rect, fullStartAngle, fullArcAngle, false, brushes.GetMultiSelectPen(currentInfo.NoteScale * noteScaleMultiplier));
         }
     }
 

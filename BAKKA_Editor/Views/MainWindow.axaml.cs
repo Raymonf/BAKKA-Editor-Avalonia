@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Threading;
+using BAKKA_Editor.Operations;
 using ReactiveUI;
 
 namespace BAKKA_Editor.Views;
@@ -21,6 +22,8 @@ public partial class MainWindow : Window
     public ReactiveCommand<Unit, Unit> RedoCommand { get; set; }
     public ReactiveCommand<Unit, Unit> BakeHoldCommand { get; set; }
     public ReactiveCommand<Unit, Unit> InsertHoldSegmentCommand { get; set; }
+    public ReactiveCommand<Unit, Unit> DeleteEntireHoldCommand { get; set; }
+    public ReactiveCommand<Unit, Unit> SelectHighlightedNoteCommand { get; set; }
 
     public MainWindow()
     {
@@ -36,6 +39,8 @@ public partial class MainWindow : Window
         RedoCommand = ReactiveCommand.Create(OnRedoCommand);
         BakeHoldCommand = ReactiveCommand.Create(OnBakeHoldCommand);
         InsertHoldSegmentCommand = ReactiveCommand.Create(OnInsertHoldSegmentCommand);
+        DeleteEntireHoldCommand = ReactiveCommand.Create(OnDeleteEntireHoldCommand);
+        SelectHighlightedNoteCommand = ReactiveCommand.Create(OnSelectHighlightedNoteCommand);
     }
 
     private MainView? GetMainView() => this.FindControl<MainView>("View");
@@ -132,6 +137,24 @@ public partial class MainWindow : Window
         RunInView(view =>
         {
             view?.InsertHoldSegmentMenuItem_OnClick();
+            return Task.CompletedTask;
+        });
+    }
+
+    private void OnDeleteEntireHoldCommand()
+    {
+        RunInView(view =>
+        {
+            view?.DeleteEntireHoldMenuItem_OnClick();
+            return Task.CompletedTask;
+        });
+    }
+
+    private void OnSelectHighlightedNoteCommand()
+    {
+        RunInView(view =>
+        {
+            view?.OnSelectHighlightedNote_OnClick();
             return Task.CompletedTask;
         });
     }

@@ -86,6 +86,9 @@ public partial class MainView : UserControl
     private int selectedGimmickIndex = -1;
     private int selectedNoteIndex = -1;
 
+    // MultiSelect
+    private List<Note> multiSelectNotes = new();
+
     // Playfield
     private SkCircleView? skCircleView;
     private string? songFilePath;
@@ -335,17 +338,17 @@ public partial class MainView : UserControl
         else if (sizeChange == positionChange * -2)
         {
             // StepSymmetric
-            BakeHold.StepSymmetric(chart, selectedNote, nextNote, length, positionChange, sizeChange, opManager);
+            BakeHold.StepSymmetric(chart, multiSelectNotes, selectedNote, nextNote, length, positionChange, sizeChange, opManager);
         }
-        else if (absolutePositionChange == absoluteSizeChange || (positionChange == 0 && absoluteSizeChange > 1) || (absolutePositionChange > 1 && sizeChange == 0))
+        else if (absolutePositionChange == absoluteSizeChange || absolutePositionChange == absoluteSizeChange * 2 || (positionChange == 0 && absoluteSizeChange > 1) || (absolutePositionChange > 1 && sizeChange == 0))
         {
             // StepAsymmetric
-            BakeHold.StepAsymmetric(chart, selectedNote, nextNote, length, positionChange, sizeChange, opManager);
+            BakeHold.StepAsymmetric(chart, multiSelectNotes, selectedNote, nextNote, length, positionChange, sizeChange, opManager);
         }
         else
         {
             // LerpRound
-            BakeHold.LerpRound(chart, selectedNote, nextNote, opManager);
+            BakeHold.LerpRound(chart, multiSelectNotes, selectedNote, nextNote, opManager);
         }
     }
 
@@ -394,10 +397,129 @@ public partial class MainView : UserControl
         selectedNote.PrevReferencedNote.NextReferencedNote = newNote;
         selectedNote.PrevReferencedNote = newNote;
 
-        lock (chart) chart.Notes.Add(newNote);
+        lock (chart)
+        {
+            chart.Notes.Add(newNote);
+            multiSelectNotes.Add(newNote);
+        }
         chart.IsSaved = false;
 
-        opManager.Push(new InsertHoldSegment(chart, selectedNote, newNote));
+        opManager.Push(new InsertHoldSegment(chart, multiSelectNotes, selectedNote, newNote));
+    }
+
+    public void DeleteEntireHoldMenuItem_OnClick()
+    {
+        if (selectedNoteIndex == -1)
+            return;
+
+        var selectedNote = chart.Notes[selectedNoteIndex];
+        var currentBeat = new BeatInfo((int)_vm.MeasureNumeric,
+            (int)_vm.Beat1Numeric * 1920 / (int)_vm.Beat2Numeric);
+
+        if (!selectedNote.IsHold)
+            return;
+
+        List<Note> holdSegments = [selectedNote];
+        var current = selectedNote;
+        while (current.PrevReferencedNote != null)
+        {
+            holdSegments.Add(current.PrevReferencedNote);
+            current = current.PrevReferencedNote;
+        }
+
+        current = selectedNote;
+        while (current.NextReferencedNote != null)
+        {
+            holdSegments.Add(current.NextReferencedNote);
+            current = current.NextReferencedNote;
+        }
+
+        lock (chart)
+        {
+            foreach (Note note in holdSegments)
+            {
+                chart.Notes.Remove(note);
+                multiSelectNotes.Remove(note);
+            }
+        }
+
+        chart.IsSaved = false;
+        opManager.Push(new DeleteEntireHold(chart, multiSelectNotes, holdSegments));
+    }
+
+    public void OnSelectHighlightedNote_OnClick()
+    {
+        if (selectedNoteIndex == -1) return;
+
+        var selectedNote = chart.Notes[selectedNoteIndex];
+
+
+        if (multiSelectNotes.Contains(selectedNote))
+        {
+            RemoveNoteFromMultiSelect(selectedNote);
+        }
+        else
+        {
+            AddNoteToMultiSelect(selectedNote);
+        }
+    }
+
+    private void AddNoteToMultiSelect(Note note)
+    {
+        if (!note.IsHold)
+        {
+            multiSelectNotes.Add(note);
+            return;
+        }
+
+        List<Note> holdSegments = [note];
+        var current = note;
+        while (current.PrevReferencedNote != null)
+        {
+            holdSegments.Add(current.PrevReferencedNote);
+            current = current.PrevReferencedNote;
+        }
+
+        current = note;
+        while (current.NextReferencedNote != null)
+        {
+            holdSegments.Add(current.NextReferencedNote);
+            current = current.NextReferencedNote;
+        }
+
+        foreach (Note segment in holdSegments)
+        {
+            multiSelectNotes.Add(segment);
+        }
+    }
+
+    private void RemoveNoteFromMultiSelect(Note note)
+    {
+        if (!note.IsHold)
+        {
+            multiSelectNotes.Remove(note);
+            return;
+        }
+
+        List<Note> holdSegments = [note];
+        var current = note;
+        while (current.PrevReferencedNote != null)
+        {
+            holdSegments.Add(current.PrevReferencedNote);
+            current = current.PrevReferencedNote;
+        }
+
+        current = note;
+        while (current.NextReferencedNote != null)
+        {
+            holdSegments.Add(current.NextReferencedNote);
+            current = current.NextReferencedNote;
+        }
+
+        foreach (Note segment in holdSegments)
+        {
+            multiSelectNotes.Remove(segment);
+        }
     }
 
     public void SetShowCursor(bool value)
@@ -989,7 +1111,7 @@ public partial class MainView : UserControl
 
         lock (chart)
         {
-            skCircleView.RenderEngine.Render(chart, currentNoteType, selectedNoteIndex, selectedGimmickIndex, isHoveringOverMirrorAxis, showCursor, (int)skCircleView.Cursor.Position,(int)skCircleView.Cursor.Size, _vm.MirrorAxisNumeric);
+            skCircleView.RenderEngine.Render(chart, currentNoteType, selectedNoteIndex, selectedGimmickIndex, isHoveringOverMirrorAxis, showCursor, (int)skCircleView.Cursor.Position,(int)skCircleView.Cursor.Size, _vm.MirrorAxisNumeric, multiSelectNotes);
         }
 
         if (currentSong != null && !currentSong.Paused)
@@ -1376,6 +1498,8 @@ public partial class MainView : UserControl
         _vm.InsertHoldSegmentMenuItemIsEnabled = note.NoteType is NoteType.HoldJoint
                                                  or NoteType.HoldEnd
                                                  && !isInsertingHold;
+
+        _vm.DeleteEntireHoldMenuItemIsEnabled = note.IsHold && !isInsertingHold;
     }
 
     private void ResetChartTime()
@@ -1830,10 +1954,10 @@ public partial class MainView : UserControl
                 case NoteType.HoldStartBonusFlair:
                 case NoteType.HoldJoint:
                 case NoteType.HoldEnd:
-                    opManager.Push(new InsertHoldNote(chart, tempNote));
+                    opManager.Push(new InsertHoldNote(chart, multiSelectNotes, tempNote));
                     break;
                 default:
-                    opManager.Push(new InsertNote(chart, tempNote));
+                    opManager.Push(new InsertNote(chart, multiSelectNotes, tempNote));
                     break;
             }
         }
@@ -2467,20 +2591,56 @@ public partial class MainView : UserControl
 
     private void NoteEditSelectedButton_OnClick(object? sender, RoutedEventArgs e)
     {
+        EditSelectedNotes();
+    }
+
+    private void EditSelectedNotes()
+    {
         if (selectedNoteIndex == -1)
             return;
-        var currentNote = chart.Notes[selectedNoteIndex];
 
-        if (currentNote.NoteType == NoteType.EndOfChart)
+        if (multiSelectNotes.Count != 0)
+        {
+            EditNoteBulk(multiSelectNotes);
+            return;
+        }
+
+        EditNote(chart.Notes[selectedNoteIndex]);
+    }
+
+    private void EditNoteBulk(List<Note> notes)
+    {
+        List<Note> newNotes = new();
+
+        foreach (Note note in notes)
+        {
+            if (note.NoteType == NoteType.EndOfChart) return;
+
+            var temp = new Note
+            {
+                BeatInfo = note.BeatInfo,
+                Position = (int)skCircleView.Cursor.Position,
+                Size = (int)skCircleView.Cursor.Size
+            };
+
+            newNotes.Add(temp);
+        }
+
+        opManager.InvokeAndPush(new EditNoteBulk(notes, newNotes));
+    }
+
+    private void EditNote(Note note)
+    {
+        if (note.NoteType == NoteType.EndOfChart)
             return;
 
         var newNote = new Note
         {
-            BeatInfo = currentNote.BeatInfo,
-            Position = (int) skCircleView.Cursor.Position,
-            Size = (int) skCircleView.Cursor.Size
+            BeatInfo = note.BeatInfo,
+            Position = (int)skCircleView.Cursor.Position,
+            Size = (int)skCircleView.Cursor.Size
         };
-        opManager.InvokeAndPush(new EditNote(currentNote, newNote));
+        opManager.InvokeAndPush(new EditNote(note, newNote));
         UpdateNoteLabels();
     }
 
@@ -2514,12 +2674,28 @@ public partial class MainView : UserControl
 
     private void NoteMirrorSelectedButton_OnClick(object? sender, RoutedEventArgs e)
     {
+        MirrorSelectedNotes();
+    }
+
+    private void MirrorSelectedNotes()
+    {
         if (selectedNoteIndex == -1)
             return;
 
-        var currentNote = chart.Notes[selectedNoteIndex];
+        if (multiSelectNotes.Count != 0)
+        {
+            foreach (Note note in multiSelectNotes)
+                MirrorNote(note);
 
-        var mirroredPosition = ((mirrorAxis - currentNote.Size) - currentNote.Position) % 60;
+            return;
+        }
+
+        MirrorNote(chart.Notes[selectedNoteIndex]);
+    }
+
+    private void MirrorNote(Note note)
+    {
+        var mirroredPosition = ((mirrorAxis - note.Size) - note.Position) % 60;
         if (mirroredPosition < 0)
             mirroredPosition += 60;
         if (mirroredPosition >= 60)
@@ -2528,86 +2704,99 @@ public partial class MainView : UserControl
         // create new note with flipped position
         var newNote = new Note
         {
-            BeatInfo = currentNote.BeatInfo,
+            BeatInfo = note.BeatInfo,
             Position = mirroredPosition,
-            Size = currentNote.Size
+            Size = note.Size
         };
 
         // swap slide directions when mirroring
-        switch (currentNote.NoteType)
+        newNote.NoteType = note.NoteType switch
         {
-            case NoteType.SlideGreenNoBonus:
-                newNote.NoteType = NoteType.SlideOrangeNoBonus;
-                break;
+            NoteType.SlideGreenNoBonus => NoteType.SlideOrangeNoBonus,
+            NoteType.SlideGreenBonus => NoteType.SlideOrangeBonus,
+            NoteType.SlideGreenBonusFlair => NoteType.SlideOrangeBonusFlair,
+            NoteType.SlideOrangeNoBonus => NoteType.SlideGreenNoBonus,
+            NoteType.SlideOrangeBonus => NoteType.SlideGreenBonus,
+            NoteType.SlideOrangeBonusFlair => NoteType.SlideGreenBonusFlair,
+            _ => note.NoteType,
+        };
 
-            case NoteType.SlideGreenBonus:
-                newNote.NoteType = NoteType.SlideOrangeBonus;
-                break;
-
-            case NoteType.SlideGreenBonusFlair:
-                newNote.NoteType = NoteType.SlideOrangeBonusFlair;
-                break;
-
-            case NoteType.SlideOrangeNoBonus:
-                newNote.NoteType = NoteType.SlideGreenNoBonus;
-                break;
-
-            case NoteType.SlideOrangeBonus:
-                newNote.NoteType = NoteType.SlideGreenBonus;
-                break;
-
-            case NoteType.SlideOrangeBonusFlair:
-                newNote.NoteType = NoteType.SlideGreenBonusFlair;
-                break;
-
-            case NoteType.Chain:
-            case NoteType.ChainBonusFlair:
-            case NoteType.TouchNoBonus:
-            case NoteType.TouchBonus:
-            case NoteType.TouchBonusFlair:
-            case NoteType.HoldStartNoBonus:
-            case NoteType.HoldStartBonusFlair:
-            case NoteType.HoldJoint:
-            case NoteType.HoldEnd:
-            case NoteType.SnapBlueNoBonus:
-            case NoteType.SnapBlueBonusFlair:
-            case NoteType.SnapRedNoBonus:
-            case NoteType.SnapRedBonusFlair:
-            case NoteType.MaskAdd:
-            case NoteType.MaskRemove:
-                newNote.NoteType = currentNote.NoteType;
-                break;
-                   
-        }
-
-        opManager.InvokeAndPush(new MirrorNote(currentNote, newNote));
+        opManager.InvokeAndPush(new MirrorNote(note, newNote));
         UpdateNoteLabels();
     }
 
     private void NoteDeleteSelectedButton_OnClick(object? sender, RoutedEventArgs e)
     {
+        DeleteSelectedNotes();
+    }
+
+    private void DeleteSelectedNotes()
+    {
         if (selectedNoteIndex == -1)
             return;
 
-        var delIndex = selectedNoteIndex;
-        NoteOperation op = chart.Notes[selectedNoteIndex].IsHold
-            ? new RemoveHoldNote(chart, chart.Notes[selectedNoteIndex])
-            : new RemoveNote(chart, chart.Notes[selectedNoteIndex]);
-        NoteOperation op2 = null;
-        if (chart.Notes[selectedNoteIndex].NoteType == NoteType.HoldStartBonusFlair ||
-            chart.Notes[selectedNoteIndex].NoteType == NoteType.HoldStartNoBonus)
-            if (chart.Notes[selectedNoteIndex].NextReferencedNote != null)
-                if (chart.Notes[selectedNoteIndex].NextReferencedNote.NoteType == NoteType.HoldEnd)
-                    op2 = new RemoveHoldNote(chart, chart.Notes[selectedNoteIndex].NextReferencedNote);
-        if (chart.Notes[selectedNoteIndex].NoteType == NoteType.HoldEnd)
-            if (chart.Notes[selectedNoteIndex].PrevReferencedNote != null)
-                if (chart.Notes[selectedNoteIndex].PrevReferencedNote.NoteType == NoteType.HoldStartBonusFlair ||
-                    chart.Notes[selectedNoteIndex].PrevReferencedNote.NoteType == NoteType.HoldStartNoBonus)
-                    op2 = new RemoveHoldNote(chart, chart.Notes[selectedNoteIndex].PrevReferencedNote);
-        opManager.InvokeAndPush(op);
-        if (op2 != null) opManager.InvokeAndPush(op2);
-        UpdateControlsFromOperation(op, OperationDirection.Redo);
-        if (selectedNoteIndex == delIndex) UpdateNoteLabels(delIndex - 1);
+        if (multiSelectNotes.Count != 0)
+        {
+            var tempList = new List<Note>(multiSelectNotes);
+            DeleteNoteBulk(tempList);
+            return;
+        }
+
+        DeleteNote(chart.Notes[selectedNoteIndex]);
+    }
+
+    private void DeleteNoteBulk(List<Note> notes)
+    {
+        // This function shouldn't exist.
+        // Yet it does. Problem for future me.
+        // Small hint from sleep-deprived past me:
+        // Hold notes were fucking up when bulk-deleted with the RemoveHoldNote operation, then being undone again.
+        // The bulk operation shall not give a fuck about the type of note it's deleting.
+
+        var deleteIndex = selectedNoteIndex;
+        var noteOp = new RemoveNoteBulk(chart, multiSelectNotes, notes);
+
+        opManager.InvokeAndPush(noteOp);
+        UpdateControlsFromOperation(noteOp, OperationDirection.Redo);
+
+        UpdateNoteLabels(deleteIndex - 1);
+    }
+
+    private void DeleteNote(Note note)
+    {
+        var deleteIndex = selectedNoteIndex;
+        NoteOperation noteOp = note.IsHold
+            ? new RemoveHoldNote(chart, multiSelectNotes, note)
+            : new RemoveNote(chart, multiSelectNotes, note);
+
+        NoteOperation noteOp2 = null;
+
+        // Deleting last note of a 2-segment hold
+        if (note.NoteType is NoteType.HoldEnd && note.PrevReferencedNote != null
+            && note.PrevReferencedNote.NoteType is NoteType.HoldStartBonusFlair or NoteType.HoldStartNoBonus)
+        {
+            noteOp2 = new RemoveHoldNote(chart, multiSelectNotes, note.PrevReferencedNote);
+
+            // kinda hacky but it works.
+            deleteIndex--;
+        }
+
+        // Deleting first note of a 2-segment hold
+        if ((note.NoteType is NoteType.HoldStartBonusFlair or NoteType.HoldStartNoBonus)
+            && note.NextReferencedNote != null && note.NextReferencedNote.NoteType is NoteType.HoldEnd)
+        {
+            noteOp2 = new RemoveHoldNote(chart, multiSelectNotes, note.NextReferencedNote);
+        }
+
+        opManager.InvokeAndPush(noteOp);
+        UpdateControlsFromOperation(noteOp, OperationDirection.Redo);
+
+        if (noteOp2 != null)
+        {
+            opManager.InvokeAndPush(noteOp2);
+        }
+
+        UpdateNoteLabels(deleteIndex - 1);
     }
 
     private void UpdateControlsFromOperation(IOperation op, OperationDirection dir)
@@ -3247,6 +3436,20 @@ public partial class MainView : UserControl
                     insertButton.Focus();
                     e.Handled = true;
                     return;
+                case Key.Delete:
+                    // Shift+Del is DeleteEntireHold, so if we're doing that ignore this command.
+                    if (!e.KeyModifiers.HasFlag(KeyModifiers.Shift)) DeleteSelectedNotes();
+                    e.Handled = true;
+                    return;
+                case Key.E:
+                    if (e.KeyModifiers.HasFlag(KeyModifiers.Shift)) EditSelectedNotes();
+                    e.Handled = true;
+                    return;
+                case Key.M:
+                    if (e.KeyModifiers.HasFlag(KeyModifiers.Shift)) MirrorSelectedNotes();
+                    e.Handled = true;
+                    return;
+
                 case Key.Up:
                 case Key.Down:
                     if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))

@@ -34,7 +34,7 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty] private bool showCursorDuringPlayback;
     [ObservableProperty] private bool placeNoteOnDrag = true;
     [ObservableProperty] private bool showNotesOnBeat = false;
-    
+
     // Note UI State
     public ObservableCollection<NoteOnBeatItem> NotesOnBeatList { get; } = new();
     [ObservableProperty] private bool endHoldChecked = false;
@@ -42,6 +42,7 @@ public partial class MainViewModel : ViewModelBase
     // Hold note editing
     [ObservableProperty] private bool bakeHoldMenuItemIsEnabled = false;
     [ObservableProperty] private bool insertHoldSegmentMenuItemIsEnabled = false;
+    [ObservableProperty] private bool deleteEntireHoldMenuItemIsEnabled = false;
 
     // Music UI State
     // TODO: move this stuff out of here
@@ -203,6 +204,20 @@ public partial class MainViewModel : ViewModelBase
     {
         var mainWindow = Target();
         mainWindow?.InsertHoldSegmentMenuItem_OnClick();
+        return true;
+    }
+
+    public bool DeleteEntireHoldCommand()
+    {
+        var mainWindow = Target();
+        mainWindow?.DeleteEntireHoldMenuItem_OnClick();
+        return true;
+    }
+
+    public bool SelectHighlightedNoteCommand()
+    {
+        var mainWindow = Target();
+        mainWindow?.OnSelectHighlightedNote_OnClick();
         return true;
     }
 
