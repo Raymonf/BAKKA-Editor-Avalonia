@@ -14,6 +14,7 @@
     <system:String x:Key="L.CurrentNoteSettingsHeader">Current Note Settings</system:String>
     <system:String x:Key="L.CurrentSelectionHeader">Current Note Type</system:String>
     <system:String x:Key="L.DarkModeMenuOption">Dark Mode</system:String>
+    <system:String x:Key="L.DeleteEntireHold">Delete Entire Hold</system:String>
     <system:String x:Key="L.DeleteGimmickButton">Delete Gimmick</system:String>
     <system:String x:Key="L.DeleteSelectedNoteButton">Delete Note</system:String>
     <system:String x:Key="L.DownArrowSnapNoteButton">↓ Snap</system:String>
@@ -63,6 +64,7 @@
     <system:String x:Key="L.SaveMenuOption">_Save...</system:String>
     <system:String x:Key="L.SaveAsMenuOption">_Save As...</system:String>
     <system:String x:Key="L.SelectFileDefaultLabel">Select File (*.ogg, *.wav, *.flac)</system:String>
+    <system:String x:Key="L.SelectHighlightedNote">Select Highlighted Note</system:String>
     <system:String x:Key="L.SelectLastInsertedNoteMenuOption">Select Last Inserted Note</system:String>
     <system:String x:Key="L.SelectSongLabel">Select Song</system:String>
     <system:String x:Key="L.ShowCursorMenuOption">Show Cursor</system:String>
@@ -82,6 +84,7 @@
     <system:String x:Key="L.ViewMenuItem">_View</system:String>
     <system:String x:Key="L.VisualSettingsHeader">Visual Settings</system:String>
     <system:String x:Key="L.VolumeLabel">Volume</system:String>
+    <system:String x:Key="L.SelectMenuItem">Select</system:String>
     <system:String x:Key="L.SpeedSliderLabel">Speed</system:String>
     <system:String x:Key="L.MeasureLabel">Measure:</system:String>
     <system:String x:Key="L.PreviousMeasureButton">&lt; Measure</system:String>

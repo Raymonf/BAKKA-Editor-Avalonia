@@ -71,7 +71,14 @@
                 <MenuItem Header="{DynamicResource L.InsertHoldSegmentMenuOption}" Name="InsertHoldSegmentMenuItem"
                           Command="{Binding InsertHoldSegmentCommand}"
                           InputGesture="Shift+H" IsEnabled="{Binding InsertHoldSegmentMenuItemIsEnabled}" />
-            </MenuItem>
+                <MenuItem Header="{DynamicResource L.DeleteEntireHold}" Name="DeleteEntireHoldMenuItem"
+                          Command="{Binding DeleteEntireHoldCommand}"
+                          InputGesture="Shift+Delete" IsEnabled="{Binding DeleteEntireHoldMenuItemIsEnabled}" />
+              </MenuItem>
+          <MenuItem Header="{DynamicResource L.SelectMenuItem}">
+            <MenuItem Header="{DynamicResource L.SelectHighlightedNote}" Command="{Binding SelectHighlightedNoteCommand}"
+                      InputGesture="Shift+S"/>
+          </MenuItem>
             <MenuItem Header="{DynamicResource L.ViewMenuItem}">
                 <MenuItem Header="{DynamicResource L.ShowCursorMenuOption}" Command="{Binding ToggleShowCursorCommand}">
                     <MenuItem.Icon>

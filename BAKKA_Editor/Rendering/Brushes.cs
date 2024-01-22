@@ -63,6 +63,9 @@ internal class Brushes
     private static readonly SKColor HighlightPenColor = SKColors.LightPink.WithAlpha(0x80);
     private const float HighlightPenStrokeWidth = 20.0f;
 
+    private static readonly SKColor MultiSelectPenColor = SKColors.Aqua.WithAlpha(0x80);
+    private const float MultiSelectPenStrokeWidth = 20.0f;
+
     private static readonly SKColor LinkPenColor = SKColors.DeepSkyBlue.WithAlpha(0xDD);
     private const float LinkPenStrokeWidth = 3.0f;
 
@@ -176,6 +179,15 @@ internal class Brushes
     {
         Color = HighlightPenColor,
         StrokeWidth = HighlightPenStrokeWidth,
+        StrokeCap = SKStrokeCap.Square,
+        Style = SKPaintStyle.Stroke,
+        IsAntialias = true
+    };
+
+    public SKPaint MultiSelectPen = new()
+    {
+        Color = MultiSelectPenColor,
+        StrokeWidth = MultiSelectPenStrokeWidth,
         StrokeCap = SKStrokeCap.Square,
         Style = SKPaintStyle.Stroke,
         IsAntialias = true
@@ -307,6 +319,12 @@ internal class Brushes
     {
         HighlightPen.StrokeWidth = HighlightPenStrokeWidth * strokeWidthMultiplier * noteScaleMultiplier;
         return HighlightPen;
+    }
+
+    public SKPaint GetMultiSelectPen(float noteScaleMultiplier)
+    {
+        MultiSelectPen.StrokeWidth = MultiSelectPenStrokeWidth * strokeWidthMultiplier * noteScaleMultiplier;
+        return MultiSelectPen;
     }
 
     public SKPaint GetLinkPen(float noteScaleMultiplier)

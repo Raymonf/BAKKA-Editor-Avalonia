@@ -1,19 +1,13 @@
-﻿using Avalonia.Markup.Xaml.Templates;
-using System;
+﻿using System;
 using BAKKA_Editor.Enums;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using BAKKA_Editor.Operations;
-using DynamicData;
-using System.Net;
 
 namespace BAKKA_Editor
 {
     internal class BakeHold
     {
-        public static void StepSymmetric(Chart chart, Note startNote, Note endNote, float length, int positionChange,
+        public static void StepSymmetric(Chart chart, List<Note> multiSelectNotes, Note startNote, Note endNote, float length, int positionChange,
             int sizeChange, OperationManager operationManager)
         {
             decimal interval = (decimal) (1 / (1 / length * Math.Abs(positionChange)));
@@ -25,6 +19,8 @@ namespace BAKKA_Editor
 
             var lastNote = startNote;
             List<Note> segmentList = new List<Note>();
+
+            bool select = multiSelectNotes.Contains(startNote);
 
             lock (chart)
             {
@@ -64,18 +60,22 @@ namespace BAKKA_Editor
                     segmentList.Add(newNote);
 
                     chart.Notes.Add(newNote);
+                    if (select) multiSelectNotes.Add(newNote);
                     chart.IsSaved = false;
                 }
             }
 
-            operationManager.Push(new BakeHoldNote(chart, startNote, endNote, segmentList));
+            operationManager.Push(new BakeHoldNote(chart, multiSelectNotes, startNote, endNote, segmentList));
         }
 
-        public static void StepAsymmetric(Chart chart, Note startNote, Note endNote, float length, int positionChange,
+        public static void StepAsymmetric(Chart chart, List<Note> multiSelectNotes, Note startNote, Note endNote, float length, int positionChange,
             int sizeChange, OperationManager operationManager)
         {
-            decimal interval = (decimal) (1 / (1 / length * Math.Max(Math.Abs(positionChange), Math.Abs(sizeChange))));
-            int positionStep = int.Sign(positionChange);
+            int ratio = sizeChange != 0 ? int.Abs(positionChange / sizeChange) : 1;
+
+            decimal interval = (decimal) (1 / (1 / length * Math.Max(1 / ratio * Math.Abs(positionChange), Math.Abs(sizeChange))));
+
+            int positionStep = ratio * int.Sign(positionChange);
             int sizeStep = int.Sign(sizeChange);
 
             int newPosition = startNote.Position;
@@ -83,6 +83,8 @@ namespace BAKKA_Editor
 
             var lastNote = startNote;
             List<Note> segmentList = new List<Note>();
+
+            bool select = multiSelectNotes.Contains(startNote);
 
             lock (chart)
             {
@@ -113,14 +115,15 @@ namespace BAKKA_Editor
                     segmentList.Add(newNote);
 
                     chart.Notes.Add(newNote);
+                    if (select) multiSelectNotes.Add(newNote);
                     chart.IsSaved = false;
                 }
             }
 
-            operationManager.Push(new BakeHoldNote(chart, startNote, endNote, segmentList));
+            operationManager.Push(new BakeHoldNote(chart, multiSelectNotes, startNote, endNote, segmentList));
         }
 
-        public static void LerpRound(Chart chart, Note startNote, Note endNote, OperationManager operationManager)
+        public static void LerpRound(Chart chart, List<Note> multiSelectNotes, Note startNote, Note endNote, OperationManager operationManager)
         {
             decimal interval = 0.015625m;
 
@@ -135,6 +138,8 @@ namespace BAKKA_Editor
 
             var lastNote = startNote;
             List<Note> segmentList = new List<Note>();
+
+            bool select = multiSelectNotes.Contains(startNote);
 
             lock (chart)
             {
@@ -168,11 +173,12 @@ namespace BAKKA_Editor
                     segmentList.Add(newNote);
 
                     chart.Notes.Add(newNote);
+                    if (select) multiSelectNotes.Add(newNote);
                     chart.IsSaved = false;
                 }
             }
 
-            operationManager.Push(new BakeHoldNote(chart, startNote, endNote, segmentList));
+            operationManager.Push(new BakeHoldNote(chart, multiSelectNotes, startNote, endNote, segmentList));
         }
 
         private static float ShortLerp(int a, int b, float t)
