@@ -15,7 +15,7 @@ A Marvelously simple and scuffed editor, but this time it's cross-platform (test
 * You can actually type in the number boxes (is this a feature?)
 * Checks and prompts for a "End of Chart" note before saving
 * Customizable note colors
-* **Bake holding** (smooth out holds to be more accurate)
+* **Hold Note baking** (smooth out holds to be more accurate)
 * Handles hi-speed gimmicks accurately
 * Slide note arrows
 * Cursor depth (change which beat notes are placed on)
