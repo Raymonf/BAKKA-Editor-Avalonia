@@ -130,16 +130,16 @@ namespace BAKKA_Editor
             int newPosition = startNote.Position;
             int newSize = startNote.Size;
 
-            var virtualPosStart0 = startNote.Position;
-            var virtualPosEnd0 = endNote.Position;
-
-            var virtualPosStart1 = startNote.Position + startNote.Size;
-            var virtualPosEnd1 = endNote.Position + endNote.Size;
+            var startPos = startNote.Position;
+            var endPos = endNote.Position;
+            var startSize = startNote.Size;
+            var endSize = endNote.Size;
 
             var lastNote = startNote;
             List<Note> segmentList = new List<Note>();
 
             bool select = multiSelectNotes.Contains(startNote);
+            bool shortPos = (int.Abs(endPos - startPos) > 30);
 
             lock (chart)
             {
@@ -151,9 +151,8 @@ namespace BAKKA_Editor
 
                     float lerpTime = ((float) i - startNote.Measure) / (endNote.Measure - startNote.Measure);
 
-                    newPosition = (int) MathF.Round(ShortLerp(virtualPosStart0, virtualPosEnd0, lerpTime));
-                    newSize = (int) MathF.Round(ShortLerp(virtualPosStart1, virtualPosEnd1, lerpTime)) -
-                              newPosition;
+                    newPosition = (int)MathF.Round(ShortLerp(shortPos, startPos, endPos, lerpTime));
+                    newSize = (int)MathF.Round(ShortLerp(false, startSize, endSize, lerpTime));
 
                     var newNote = new Note()
                     {
@@ -181,9 +180,9 @@ namespace BAKKA_Editor
             operationManager.Push(new BakeHoldNote(chart, multiSelectNotes, startNote, endNote, segmentList));
         }
 
-        private static float ShortLerp(int a, int b, float t)
+        private static float ShortLerp(bool shortPath, int a, int b, float t)
         {
-            if (int.Abs(a - b) > 30)
+            if (shortPath)
             {
                 if (a > b)
                     a -= 60;

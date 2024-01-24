@@ -25,7 +25,6 @@ public partial class MainWindow : Window
     public ReactiveCommand<Unit, Unit> PasteCommand { get; set; }
     public ReactiveCommand<Unit, Unit> BakeHoldCommand { get; set; }
     public ReactiveCommand<Unit, Unit> InsertHoldSegmentCommand { get; set; }
-    public ReactiveCommand<Unit, Unit> DeleteEntireHoldCommand { get; set; }
     public ReactiveCommand<Unit, Unit> SelectHighlightedNoteCommand { get; set; }
     public ReactiveCommand<Unit, Unit> DeselectNotesCommand { get; set; }
 
@@ -46,7 +45,6 @@ public partial class MainWindow : Window
         PasteCommand = ReactiveCommand.Create(OnPasteCommand);
         BakeHoldCommand = ReactiveCommand.Create(OnBakeHoldCommand);
         InsertHoldSegmentCommand = ReactiveCommand.Create(OnInsertHoldSegmentCommand);
-        DeleteEntireHoldCommand = ReactiveCommand.Create(OnDeleteEntireHoldCommand);
         SelectHighlightedNoteCommand = ReactiveCommand.Create(OnSelectHighlightedNoteCommand);
         DeselectNotesCommand = ReactiveCommand.Create(OnDeselectNotesCommand);
     }
@@ -172,15 +170,6 @@ public partial class MainWindow : Window
         RunInView(view =>
         {
             view?.InsertHoldSegmentMenuItem_OnClick();
-            return Task.CompletedTask;
-        });
-    }
-
-    private void OnDeleteEntireHoldCommand()
-    {
-        RunInView(view =>
-        {
-            view?.DeleteEntireHoldMenuItem_OnClick();
             return Task.CompletedTask;
         });
     }

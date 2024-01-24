@@ -342,47 +342,11 @@ internal class InsertHoldNote : NoteOperation
     }
 }
 
-internal class DeleteEntireHold : IOperation
-{
-    private List<Note> Notes;
-    private Chart Chart;
-    private List<Note> MultiSelect;
-
-    public DeleteEntireHold(Chart chart, List<Note> multiSelect, List<Note> notes)
-    {
-        Notes = notes;
-        MultiSelect = multiSelect;
-        Chart = chart;
-    }
-
-    public string Description => "Delete an entire hold note";
-    public void Redo()
-    {
-        lock (Chart)
-        {
-            foreach (Note note in Notes)
-            {
-                Chart.Notes.Remove(note);
-                MultiSelect.Remove(note);
-            }
-        }
-    }
-
-    public void Undo()
-    {
-        lock (Chart)
-        {
-            foreach (Note note in Notes)
-                Chart.Notes.Add(note);
-        }
-    }
-}
-
 internal class RemoveHoldNote : NoteOperation
 {
-    private readonly Note nextNote;
+    private readonly Note? nextNote;
     private readonly NoteType nextNoteType;
-    private readonly Note prevNote;
+    private readonly Note? prevNote;
     private readonly NoteType prevNoteType;
 
     public RemoveHoldNote(Chart chart, List<Note> multiSelect, Note item) : base(chart, multiSelect, item)
@@ -390,6 +354,7 @@ internal class RemoveHoldNote : NoteOperation
         prevNote = item.PrevReferencedNote;
         if (prevNote != null)
             prevNoteType = prevNote.NoteType;
+
         nextNote = item.NextReferencedNote;
         if (nextNote != null)
             nextNoteType = nextNote.NoteType;
@@ -463,6 +428,14 @@ internal class RemoveHoldNote : NoteOperation
 
 
         lock (Chart)
+        {
             Chart.Notes.Add(Note);
+
+            if ((Note.PrevReferencedNote != null && MultiSelect.Contains(Note.PrevReferencedNote))
+                || (Note.NextReferencedNote != null && MultiSelect.Contains(Note.NextReferencedNote)))
+            {
+                MultiSelect.Add(Note);
+            }
+        }
     }
 }
