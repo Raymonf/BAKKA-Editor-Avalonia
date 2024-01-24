@@ -193,6 +193,27 @@ public partial class MainViewModel : ViewModelBase
         return true;
     }
 
+    public bool CutCommand()
+    {
+        var mainWindow = Target();
+        mainWindow.CutMenuItem_OnClick();
+        return true;
+    }
+
+    public bool CopyCommand()
+    {
+        var mainWindow = Target();
+        mainWindow.CopyMenuItem_OnClick();
+        return true;
+    }
+
+    public bool PasteCommand()
+    {
+        var mainWindow = Target();
+        mainWindow.PasteMenuItem_OnClick();
+        return true;
+    }
+
     public bool BakeHoldCommand()
     {
         var mainWindow = Target();
@@ -218,6 +239,13 @@ public partial class MainViewModel : ViewModelBase
     {
         var mainWindow = Target();
         mainWindow?.OnSelectHighlightedNote_OnClick();
+        return true;
+    }
+
+    public bool DeselectNotesCommand()
+    {
+        var mainWindow = Target();
+        mainWindow?.OnDeselectNotes_OnClick();
         return true;
     }
 

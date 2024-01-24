@@ -65,6 +65,10 @@
                           Command="{Binding RedoCommand}"
                           InputGesture="Ctrl+Y" />
                 <Separator />
+                <MenuItem Header="{DynamicResource L.Cut}" Name="CutMenuItem" Command="{Binding CutCommand}" InputGesture="Ctrl+X"/>
+                <MenuItem Header="{DynamicResource L.Copy}" Name="CopyMenuItem" Command="{Binding CopyCommand}" InputGesture="Ctrl+C"/>
+                <MenuItem Header="{DynamicResource L.Paste}" Name="PasteMenuItem" Command="{Binding PasteCommand}" InputGesture="Ctrl+V"/>
+                <Separator />
                 <MenuItem Header="{DynamicResource L.BakeHoldMenuOption}" Name="BakeHoldMenuItem"
                           Command="{Binding BakeHoldCommand}"
                           InputGesture="Ctrl+Shift+B" IsEnabled="{Binding BakeHoldMenuItemIsEnabled}" />
@@ -78,6 +82,8 @@
           <MenuItem Header="{DynamicResource L.SelectMenuItem}">
             <MenuItem Header="{DynamicResource L.SelectHighlightedNote}" Command="{Binding SelectHighlightedNoteCommand}"
                       InputGesture="Shift+S"/>
+            <MenuItem Header="{DynamicResource L.DeselectNotes}" Command="{Binding DeselectNotesCommand}"
+                      InputGesture="Shift+D"/>
           </MenuItem>
             <MenuItem Header="{DynamicResource L.ViewMenuItem}">
                 <MenuItem Header="{DynamicResource L.ShowCursorMenuOption}" Command="{Binding ToggleShowCursorCommand}">
@@ -327,7 +333,7 @@
                                 </HeaderedContentControl>
                                 <Button Name="insertButton" Click="insertButton_Click" HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Center" Margin="0,4,8,0" Height="28"
-                                        Content="{Binding InsertButtonText}" />
+                                        Content="{Binding InsertButtonText}"/>
                             </StackPanel>
                         </ScrollViewer>
                     </StackPanel>

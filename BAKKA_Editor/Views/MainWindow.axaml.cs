@@ -20,10 +20,14 @@ public partial class MainWindow : Window
     public ReactiveCommand<Unit, Unit> SaveAsCommand { get; }
     public ReactiveCommand<Unit, Unit> UndoCommand { get; set; }
     public ReactiveCommand<Unit, Unit> RedoCommand { get; set; }
+    public ReactiveCommand<Unit, Unit> CutCommand { get; set; }
+    public ReactiveCommand<Unit, Unit> CopyCommand { get; set; }
+    public ReactiveCommand<Unit, Unit> PasteCommand { get; set; }
     public ReactiveCommand<Unit, Unit> BakeHoldCommand { get; set; }
     public ReactiveCommand<Unit, Unit> InsertHoldSegmentCommand { get; set; }
     public ReactiveCommand<Unit, Unit> DeleteEntireHoldCommand { get; set; }
     public ReactiveCommand<Unit, Unit> SelectHighlightedNoteCommand { get; set; }
+    public ReactiveCommand<Unit, Unit> DeselectNotesCommand { get; set; }
 
     public MainWindow()
     {
@@ -37,10 +41,14 @@ public partial class MainWindow : Window
         ExitCommand = ReactiveCommand.Create(ExitMenuItem_OnClick);
         UndoCommand = ReactiveCommand.Create(OnUndoCommand);
         RedoCommand = ReactiveCommand.Create(OnRedoCommand);
+        CutCommand = ReactiveCommand.Create(OnCutCommand);
+        CopyCommand = ReactiveCommand.Create(OnCopyCommand);
+        PasteCommand = ReactiveCommand.Create(OnPasteCommand);
         BakeHoldCommand = ReactiveCommand.Create(OnBakeHoldCommand);
         InsertHoldSegmentCommand = ReactiveCommand.Create(OnInsertHoldSegmentCommand);
         DeleteEntireHoldCommand = ReactiveCommand.Create(OnDeleteEntireHoldCommand);
         SelectHighlightedNoteCommand = ReactiveCommand.Create(OnSelectHighlightedNoteCommand);
+        DeselectNotesCommand = ReactiveCommand.Create(OnDeselectNotesCommand);
     }
 
     private MainView? GetMainView() => this.FindControl<MainView>("View");
@@ -123,6 +131,33 @@ public partial class MainWindow : Window
         });
     }
 
+    private void OnCutCommand()
+    {
+        RunInView(view =>
+        {
+            view?.CutMenuItem_OnClick();
+            return Task.CompletedTask;
+        });
+    }
+
+    private void OnCopyCommand()
+    {
+        RunInView(view =>
+        {
+            view?.CopyMenuItem_OnClick();
+            return Task.CompletedTask;
+        });
+    }
+
+    private void OnPasteCommand()
+    {
+        RunInView(view =>
+        {
+            view?.PasteMenuItem_OnClick();
+            return Task.CompletedTask;
+        });
+    }
+
     private void OnBakeHoldCommand()
     {
         RunInView(view =>
@@ -155,6 +190,15 @@ public partial class MainWindow : Window
         RunInView(view =>
         {
             view?.OnSelectHighlightedNote_OnClick();
+            return Task.CompletedTask;
+        });
+    }
+
+    private void OnDeselectNotesCommand()
+    {
+        RunInView(view =>
+        {
+            view?.OnDeselectNotes_OnClick();
             return Task.CompletedTask;
         });
     }

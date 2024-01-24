@@ -506,6 +506,9 @@ internal class RenderEngine
                     canvas.DrawArc(info.Rect, info.StartAngle + 6, info.ArcAngle - 12, false,
                         brushes.GetHighlightPen(info.NoteScale * noteScaleMultiplier));
 
+                if (multiSelectNotes.Count != 0 && multiSelectNotes.Contains(note))
+                    canvas.DrawArc(info.Rect, fullStartAngle, fullArcAngle, false, brushes.GetMultiSelectPen(info.NoteScale * noteScaleMultiplier));
+
                 continue;
             }
 
