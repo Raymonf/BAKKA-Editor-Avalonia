@@ -2,7 +2,7 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:system="clr-namespace:System;assembly=System.Runtime">
     <!-- TODO: namespaces, ordering, and grouping -->
-    <system:String x:Key="L.ApplicationVersion">BAKKA Avalonia - v2.18.3 Nightly // COPYPASTE TEST BUILD v4</system:String>
+    <system:String x:Key="L.ApplicationVersion">BAKKA Avalonia - v2.19.0 Nightly // COPYPASTE TEST BUILD v4</system:String>
   
     <system:String x:Key="L.AddMaskRadio">Add Mask</system:String>
     <system:String x:Key="L.BakeHoldMenuOption">Bake Selected Hold</system:String>
@@ -16,7 +16,6 @@
     <system:String x:Key="L.CurrentNoteSettingsHeader">Current Note Settings</system:String>
     <system:String x:Key="L.CurrentSelectionHeader">Current Note Type</system:String>
     <system:String x:Key="L.DarkModeMenuOption">Dark Mode</system:String>
-    <system:String x:Key="L.DeleteEntireHold">Delete Entire Hold</system:String>
     <system:String x:Key="L.DeleteGimmickButton">Delete Gimmick</system:String>
     <system:String x:Key="L.DeleteSelectedNoteButton">Delete Note</system:String>
     <system:String x:Key="L.DeselectNotes">Deselect Notes</system:String>

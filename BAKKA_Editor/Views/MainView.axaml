@@ -71,13 +71,10 @@
                 <Separator />
                 <MenuItem Header="{DynamicResource L.BakeHoldMenuOption}" Name="BakeHoldMenuItem"
                           Command="{Binding BakeHoldCommand}"
-                          InputGesture="Ctrl+Shift+B" IsEnabled="{Binding BakeHoldMenuItemIsEnabled}" />
+                          InputGesture="Shift+B" IsEnabled="{Binding BakeHoldMenuItemIsEnabled}" />
                 <MenuItem Header="{DynamicResource L.InsertHoldSegmentMenuOption}" Name="InsertHoldSegmentMenuItem"
                           Command="{Binding InsertHoldSegmentCommand}"
                           InputGesture="Shift+H" IsEnabled="{Binding InsertHoldSegmentMenuItemIsEnabled}" />
-                <MenuItem Header="{DynamicResource L.DeleteEntireHold}" Name="DeleteEntireHoldMenuItem"
-                          Command="{Binding DeleteEntireHoldCommand}"
-                          InputGesture="Shift+Delete" IsEnabled="{Binding DeleteEntireHoldMenuItemIsEnabled}" />
               </MenuItem>
           <MenuItem Header="{DynamicResource L.SelectMenuItem}">
             <MenuItem Header="{DynamicResource L.SelectHighlightedNote}" Command="{Binding SelectHighlightedNoteCommand}"

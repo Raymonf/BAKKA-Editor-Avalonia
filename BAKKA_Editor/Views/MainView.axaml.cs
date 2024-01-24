@@ -506,49 +506,9 @@ public partial class MainView : UserControl
         opManager.Push(new InsertHoldSegment(chart, multiSelectNotes, selectedNote, newNote));
     }
 
-    public void DeleteEntireHoldMenuItem_OnClick()
-    {
-        if (selectedNoteIndex == -1)
-            return;
-
-        var selectedNote = chart.Notes[selectedNoteIndex];
-        var currentBeat = new BeatInfo((int)_vm.MeasureNumeric,
-            (int)_vm.Beat1Numeric * 1920 / (int)_vm.Beat2Numeric);
-
-        if (!selectedNote.IsHold)
-            return;
-
-        List<Note> holdSegments = [selectedNote];
-        var current = selectedNote;
-        while (current.PrevReferencedNote != null)
-        {
-            holdSegments.Add(current.PrevReferencedNote);
-            current = current.PrevReferencedNote;
-        }
-
-        current = selectedNote;
-        while (current.NextReferencedNote != null)
-        {
-            holdSegments.Add(current.NextReferencedNote);
-            current = current.NextReferencedNote;
-        }
-
-        lock (chart)
-        {
-            foreach (Note note in holdSegments)
-            {
-                chart.Notes.Remove(note);
-                multiSelectNotes.Remove(note);
-            }
-        }
-
-        chart.IsSaved = false;
-        opManager.Push(new DeleteEntireHold(chart, multiSelectNotes, holdSegments));
-    }
-
     public void OnSelectHighlightedNote_OnClick()
     {
-        if (selectedNoteIndex == -1) return;
+        if (selectedNoteIndex == -1 || isInsertingHold) return;
 
         var selectedNote = chart.Notes[selectedNoteIndex];
 
@@ -1574,8 +1534,6 @@ public partial class MainView : UserControl
         _vm.InsertHoldSegmentMenuItemIsEnabled = note.NoteType is NoteType.HoldJoint
                                                  or NoteType.HoldEnd
                                                  && !isInsertingHold;
-
-        _vm.DeleteEntireHoldMenuItemIsEnabled = note.IsHold && !isInsertingHold;
     }
 
     private void ResetChartTime()
@@ -2643,6 +2601,11 @@ public partial class MainView : UserControl
 
     private void NoteJumpToCurrTimeButton_Click(object? sender, RoutedEventArgs e)
     {
+        HighlightClosestNote();
+    }
+
+    private void HighlightClosestNote()
+    {
         if (chart.Notes.Count == 0 || selectedNoteIndex >= chart.Notes.Count || skCircleView == null)
             return;
 
@@ -2662,7 +2625,7 @@ public partial class MainView : UserControl
         if (note != null)
         {
             if (currentNoteType != NoteType.HoldJoint &&
-                note is {IsHold: true, NoteType: NoteType.HoldJoint, NextReferencedNote: null})
+                note is { IsHold: true, NoteType: NoteType.HoldJoint, NextReferencedNote: null })
             {
                 SetSelectedObject(NoteType.HoldJoint);
                 lastNote = note; // ?
@@ -2802,6 +2765,8 @@ public partial class MainView : UserControl
 
         if (multiSelectNotes.Count != 0)
         {
+            if (isInsertingHold) return;
+
             var tempList = new List<Note>(multiSelectNotes);
             DeleteNoteBulk(tempList);
             return;
@@ -2846,6 +2811,9 @@ public partial class MainView : UserControl
         {
             noteOp2 = new RemoveHoldNote(chart, multiSelectNotes, note.NextReferencedNote);
         }
+
+        if (isInsertingHold && note.NoteType is NoteType.HoldJoint)
+            lastNote = note.PrevReferencedNote;
 
         opManager.InvokeAndPush(noteOp);
         UpdateControlsFromOperation(noteOp, OperationDirection.Redo);
@@ -3598,8 +3566,11 @@ public partial class MainView : UserControl
                     insertButton.Focus();
                     e.Handled = true;
                     return;
+                case Key.J:
+                    HighlightClosestNote();
+                    e.Handled = true;
+                    return;
                 case Key.Delete:
-                    // Shift+Del is DeleteEntireHold, so if we're doing that ignore this command.
                     if (!e.KeyModifiers.HasFlag(KeyModifiers.Shift)) DeleteSelectedNotes();
                     e.Handled = true;
                     return;
