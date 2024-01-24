@@ -71,7 +71,7 @@ namespace BAKKA_Editor
         public static void StepAsymmetric(Chart chart, List<Note> multiSelectNotes, Note startNote, Note endNote, float length, int positionChange,
             int sizeChange, OperationManager operationManager)
         {
-            int ratio = sizeChange != 0 ? int.Abs(positionChange / sizeChange) : 1;
+            int ratio = sizeChange != 0 && positionChange != 0 ? int.Abs(positionChange / sizeChange) : 1;
 
             decimal interval = (decimal) (1 / (1 / length * Math.Max(1 / ratio * Math.Abs(positionChange), Math.Abs(sizeChange))));
 

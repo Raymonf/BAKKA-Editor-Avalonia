@@ -29,6 +29,9 @@ using SkiaSharp;
 using Tomlyn;
 using AvColor = Avalonia.Media.Color;
 using BAKKA_Editor.Audio;
+using System.Globalization;
+using System.Security.Claims;
+using BAKKA_Editor;
 
 namespace BAKKA_Editor.Views;
 
@@ -88,6 +91,7 @@ public partial class MainView : UserControl
 
     // MultiSelect
     private List<Note> multiSelectNotes = new();
+    private List<Note> clipboard = new();
 
     // Playfield
     private SkCircleView? skCircleView;
@@ -299,9 +303,104 @@ public partial class MainView : UserControl
         }
     }
 
+    public void CutMenuItem_OnClick()
+    {
+        if (multiSelectNotes.Count == 0) return;
+
+        CopyToClipboard(multiSelectNotes);
+        DeleteNoteBulk(new(multiSelectNotes));
+        multiSelectNotes.Clear();
+        // Copy Selection to Clipboard
+        // Delete Selection
+    }
+
+    public void CopyMenuItem_OnClick()
+    {
+        if (multiSelectNotes.Count == 0) return;
+
+        CopyToClipboard(multiSelectNotes);
+        multiSelectNotes.Clear();
+    }
+
+    public void PasteMenuItem_OnClick()
+    {
+        if (clipboard.Count == 0) return;
+
+        multiSelectNotes.Clear();
+        var copy = DeepCloneList(clipboard);
+
+        lock (chart)
+        {
+            foreach (Note note in copy)
+            {
+                float noteMeasureDecimal = note.BeatInfo.MeasureDecimal;
+                float cursorMeasureDecimal = BeatInfo.GetMeasureDecimal((int)_vm.MeasureNumeric, (int)_vm.Beat1Numeric * 1920 / (int)_vm.Beat2Numeric);
+                note.BeatInfo = new(noteMeasureDecimal + cursorMeasureDecimal);
+                chart.Notes.Add(note);
+                multiSelectNotes.Add(note);
+            }
+        }
+
+        opManager.Push(new InsertNoteBulk(chart, multiSelectNotes, copy));
+    }
+
+    private void CopyToClipboard(List<Note> selected)
+    {
+        if (selected.Count == 0) return;
+
+        var sorted = selected.OrderBy(x => x.BeatInfo.MeasureDecimal).ToList();
+
+        BeatInfo startInfo = sorted[0].BeatInfo;
+        float startMeasureDecimal = startInfo.MeasureDecimal;
+
+        clipboard.Clear();
+        clipboard = DeepCloneList(sorted);
+
+        foreach (Note note in clipboard)
+        {
+            float measureDecimal = note.BeatInfo.MeasureDecimal - startMeasureDecimal;
+            note.BeatInfo = new(measureDecimal);
+        }
+    }
+
+    private static List<Note> DeepCloneList(List<Note> list)
+    {
+        Dictionary<Note, Note> originalToCloneMap = new();
+        List<Note> newList = new();
+
+        foreach (var note in list)
+        {
+            newList.Add(DeepCloneNote(note, originalToCloneMap));
+        }
+
+        return newList;
+    }
+
+    private static Note DeepCloneNote(Note note, Dictionary<Note, Note> originalToCloneMap)
+    {
+        if (originalToCloneMap.TryGetValue(note, out var existingClone))
+        {
+            return existingClone;
+        }
+
+        Note newNote = new(note);
+        originalToCloneMap.Add(note, newNote);
+
+        if (note.IsHold)
+        {
+            if (note.PrevReferencedNote != null) newNote.PrevReferencedNote = DeepCloneNote(note.PrevReferencedNote, originalToCloneMap);
+            if (note.NextReferencedNote != null) newNote.NextReferencedNote = DeepCloneNote(note.NextReferencedNote, originalToCloneMap);
+        }
+
+        return newNote;
+    }
+
     public void BakeHoldMenuItem_OnClick()
     {
         if (!_vm.BakeHoldMenuItemIsEnabled)
+            return;
+
+        if (selectedNoteIndex == -1)
             return;
 
         var selectedNote = chart.Notes[selectedNoteIndex];
@@ -361,13 +460,12 @@ public partial class MainView : UserControl
             return;
 
         var selectedNote = chart.Notes[selectedNoteIndex];
-        var currentBeat = new BeatInfo((int)_vm.MeasureNumeric,
-            (int)_vm.Beat1Numeric * 1920 / (int)_vm.Beat2Numeric);
+        var currentBeat = skCircleView.RenderEngine.DepthToMeasure(skCircleView.Cursor.Depth); 
 
         if (selectedNote.NoteType is NoteType.HoldStartNoBonus or NoteType.HoldStartBonusFlair)
             return;
 
-        if (selectedNote.PrevReferencedNote?.Measure > currentBeat.MeasureDecimal)
+        if (selectedNote.PrevReferencedNote?.Measure > currentBeat)
         {
             Dispatcher.UIThread.Post(
                             async () => await ShowBlockingMessageBox("Cannot insert segment.",
@@ -375,7 +473,7 @@ public partial class MainView : UserControl
             return;
         }
 
-        if (selectedNote.Measure < currentBeat.MeasureDecimal)
+        if (selectedNote.Measure < currentBeat)
         {
             Dispatcher.UIThread.Post(
                             async () => await ShowBlockingMessageBox("Cannot insert segment.",
@@ -385,7 +483,7 @@ public partial class MainView : UserControl
 
         var newNote = new Note()
         {
-            BeatInfo = currentBeat,
+            BeatInfo = new(currentBeat),
             NoteType = NoteType.HoldJoint,
             Position = (int)skCircleView.Cursor.Position,
             Size = (int)skCircleView.Cursor.Size,
@@ -400,7 +498,8 @@ public partial class MainView : UserControl
         lock (chart)
         {
             chart.Notes.Add(newNote);
-            multiSelectNotes.Add(newNote);
+            if (multiSelectNotes.Contains(selectedNote))
+                multiSelectNotes.Add(newNote);
         }
         chart.IsSaved = false;
 
@@ -453,6 +552,7 @@ public partial class MainView : UserControl
 
         var selectedNote = chart.Notes[selectedNoteIndex];
 
+        if (selectedNote.NoteType is NoteType.EndOfChart) return;
 
         if (multiSelectNotes.Contains(selectedNote))
         {
@@ -462,6 +562,11 @@ public partial class MainView : UserControl
         {
             AddNoteToMultiSelect(selectedNote);
         }
+    }
+
+    public void OnDeselectNotes_OnClick()
+    {
+        multiSelectNotes.Clear();
     }
 
     private void AddNoteToMultiSelect(Note note)
@@ -1306,6 +1411,91 @@ public partial class MainView : UserControl
             gimmickDeleteButton.IsEnabled = true;
     }
 
+    private static int GetMinNoteSize(NoteType type)
+    {
+        return type switch
+        {
+            NoteType.TouchNoBonus => 4,
+            NoteType.TouchBonus => 5,
+            NoteType.SnapRedNoBonus => 6,
+            NoteType.SnapBlueNoBonus => 6,
+            NoteType.SlideOrangeNoBonus => 5,
+            NoteType.SlideOrangeBonus => 7,
+            NoteType.SlideGreenNoBonus => 5,
+            NoteType.SlideGreenBonus => 7,
+            NoteType.HoldStartNoBonus => 2,
+            NoteType.HoldJoint => 1,
+            NoteType.HoldEnd => 1,
+            NoteType.MaskAdd => 1,
+            NoteType.MaskRemove => 1,
+            NoteType.EndOfChart => 60,
+            NoteType.Chain => 4,
+            NoteType.TouchBonusFlair => 6,
+            NoteType.SnapRedBonusFlair => 8,
+            NoteType.SnapBlueBonusFlair => 8,
+            NoteType.SlideOrangeBonusFlair => 10,
+            NoteType.SlideGreenBonusFlair => 10,
+            NoteType.HoldStartBonusFlair => 8,
+            NoteType.ChainBonusFlair => 10,
+            _ => 1
+        };
+    }
+
+    private string GetNoteLabel(NoteType type)
+    {
+        string label = type switch
+        {
+            NoteType.TouchNoBonus => "Touch",
+            NoteType.TouchBonus => "Touch [Bonus]",
+            NoteType.SnapRedNoBonus => "Snap (FW)",
+            NoteType.SnapBlueNoBonus => "Snap (BW)",
+            NoteType.SlideOrangeNoBonus => "Slide (CW)",
+            NoteType.SlideOrangeBonus => "Slide (CW) [Bonus]",
+            NoteType.SlideGreenNoBonus => "Slide (CCW)",
+            NoteType.SlideGreenBonus => "Slide (CCW) [Bonus]",
+            NoteType.HoldStartNoBonus => "Hold Start",
+            NoteType.HoldJoint => "Hold Segment",
+            NoteType.HoldEnd => "Hold End",
+            NoteType.MaskAdd => "Mask Add",
+            NoteType.MaskRemove => "Mask Remove",
+            NoteType.EndOfChart => "End of Chart",
+            NoteType.Chain => "Chain",
+            NoteType.TouchBonusFlair => "Touch [R Note]",
+            NoteType.SnapRedBonusFlair => "Snap (FW) [R Note]",
+            NoteType.SnapBlueBonusFlair => "Snap (BW) [R Note]",
+            NoteType.SlideOrangeBonusFlair => "Slide (CW) [R Note]",
+            NoteType.SlideGreenBonusFlair => "Slide (CCW) [R Note]",
+            NoteType.HoldStartBonusFlair => "Hold Start [R Note]",
+            NoteType.ChainBonusFlair => "Chain [R Note]",
+            _ => "None Selected"
+        };
+
+        if (type is NoteType.HoldJoint && _vm.EndHoldChecked)
+            label = "Hold End";
+        
+        if (type is NoteType.MaskAdd)
+        {
+            if (clockwiseMaskRadio.IsChecked!.Value)
+                label = "Mask Add (Clockwise)";
+            else if (cClockwiseMaskRadio.IsChecked!.Value)
+                label = "Mask Add (Counter-Clockwise)";
+            else
+                label = "Mask Add (From Center)";
+        }
+
+        if (type is NoteType.MaskRemove)
+        {
+            if (clockwiseMaskRadio.IsChecked!.Value)
+                label = "Mask Remove (Clockwise)";
+            else if (cClockwiseMaskRadio.IsChecked!.Value)
+                label = "Mask Remove (Counter-Clockwise)";
+            else
+                label = "Mask Remove (From Center)";
+        }
+
+        return label;
+    }
+
     private void SetSelectedObject(NoteType type)
     {
         currentNoteType = type;
@@ -1313,122 +1503,8 @@ public partial class MainView : UserControl
         // bonus variants are only for tap and slide
         bonusRadio.IsEnabled = currentNoteType.IsTouchNote() || currentNoteType.IsSlideNote();
 
-        var minSize = 1;
-        switch (type)
-        {
-            case NoteType.TouchNoBonus:
-                updateLabel("Touch");
-                minSize = 4;
-                break;
-            case NoteType.TouchBonus:
-                updateLabel("Touch [Bonus]");
-                minSize = 5;
-                break;
-            case NoteType.SnapRedNoBonus:
-                updateLabel("Snap (R)");
-                minSize = 6;
-                break;
-            case NoteType.SnapBlueNoBonus:
-                updateLabel("Snap (B)");
-                minSize = 6;
-                break;
-            case NoteType.SlideOrangeNoBonus:
-                updateLabel("Slide (O)");
-                minSize = 5;
-                break;
-            case NoteType.SlideOrangeBonus:
-                updateLabel("Slide (O) [Bonus]");
-                minSize = 7;
-                break;
-            case NoteType.SlideGreenNoBonus:
-                updateLabel("Slide (G)");
-                minSize = 5;
-                break;
-            case NoteType.SlideGreenBonus:
-                updateLabel("Slide (G) [Bonus]");
-                minSize = 7;
-                break;
-            case NoteType.HoldStartNoBonus:
-                updateLabel("Hold Start");
-                minSize = 2;
-                break;
-            case NoteType.HoldJoint:
-                if (_vm.EndHoldChecked)
-                {
-                    updateLabel("Hold End");
-                    currentNoteType = NoteType.HoldEnd;
-                    minSize = 1;
-                }
-                else
-                {
-                    updateLabel("Hold Middle");
-                    minSize = 0;
-                }
-
-                break;
-            case NoteType.HoldEnd:
-                updateLabel("Hold End");
-                minSize = 1;
-                break;
-            case NoteType.MaskAdd:
-                if (clockwiseMaskRadio.IsChecked!.Value)
-                    updateLabel("Mask Add (Clockwise)");
-                else if (cClockwiseMaskRadio.IsChecked!.Value)
-                    updateLabel("Mask Add (Counter-Clockwise)");
-                else
-                    updateLabel("Mask Add (From Center)");
-                minSize = 1;
-                break;
-            case NoteType.MaskRemove:
-                if (clockwiseMaskRadio.IsChecked!.Value)
-                    updateLabel("Mask Remove (Clockwise)");
-                else if (cClockwiseMaskRadio.IsChecked!.Value)
-                    updateLabel("Mask Remove (Counter-Clockwise)");
-                else
-                    updateLabel("Mask Remove (From Center)");
-                minSize = 1;
-                break;
-            case NoteType.EndOfChart:
-                updateLabel("End of Chart");
-                minSize = 60;
-                break;
-            case NoteType.Chain:
-                updateLabel("Chain");
-                minSize = 4;
-                break;
-            case NoteType.TouchBonusFlair:
-                updateLabel("Touch [R Note]");
-                minSize = 6;
-                break;
-            case NoteType.SnapRedBonusFlair:
-                updateLabel("Snap (R) [R Note]");
-                minSize = 8;
-                break;
-            case NoteType.SnapBlueBonusFlair:
-                updateLabel("Snap (B) [R Note]");
-                minSize = 8;
-                break;
-            case NoteType.SlideOrangeBonusFlair:
-                updateLabel("Slide (O) [R Note]");
-                minSize = 10;
-                break;
-            case NoteType.SlideGreenBonusFlair:
-                updateLabel("Slide (G) [R Note]");
-                minSize = 10;
-                break;
-            case NoteType.HoldStartBonusFlair:
-                updateLabel("Hold Start [R Note]");
-                minSize = 8;
-                break;
-            case NoteType.ChainBonusFlair:
-                updateLabel("Chain [R Note]");
-                minSize = 10;
-                break;
-            default:
-                updateLabel("None Selected");
-                minSize = 1;
-                break;
-        }
+        var minSize = GetMinNoteSize(type);
+        UpdateLabel(GetNoteLabel(type));
 
         if (_vm.SizeTrackBar < minSize)
             _vm.SizeTrackBar = minSize;
@@ -1438,7 +1514,7 @@ public partial class MainView : UserControl
         _vm.SizeNumeric = skCircleView.Cursor.ConfigureSize((uint)minSize);
     }
 
-    private void updateLabel(string text)
+    private void UpdateLabel(string text)
     {
         currentSelectionLabel.Text = text;
     }
@@ -1446,7 +1522,7 @@ public partial class MainView : UserControl
     private void SetSelectedObject(GimmickType gimmick)
     {
         currentGimmickType = gimmick;
-        updateLabel(gimmick.ToLabel());
+        UpdateLabel(gimmick.ToLabel());
     }
 
     private void UpdateNoteLabels(int val = -2)
@@ -2451,8 +2527,16 @@ public partial class MainView : UserControl
             async () =>
             {
                 var result = await dialog.ShowAsync();
-                if (vm.DialogSuccess)
-                    InsertGimmick(vm.OutGimmicks);
+
+                if (vm.HiSpeed < 0.001m)
+                {
+                    var shouldPlace = await ShowBlockingMessageBox("Do you really want to place this gimmick?", "If you don't have another HiSpeed change after this one to reset back to 1, you'll attempt to render infinity and crash the editor.", MessageBoxType.YesNo);
+                    if (shouldPlace == ContentDialogResult.None) return;
+                }
+
+                if (!vm.DialogSuccess) return;
+
+                InsertGimmick(vm.OutGimmicks);
             });
     }
 
@@ -2601,32 +2685,13 @@ public partial class MainView : UserControl
 
         if (multiSelectNotes.Count != 0)
         {
-            EditNoteBulk(multiSelectNotes);
+            foreach (Note note in multiSelectNotes)
+                EditNote(note);
+
             return;
         }
 
         EditNote(chart.Notes[selectedNoteIndex]);
-    }
-
-    private void EditNoteBulk(List<Note> notes)
-    {
-        List<Note> newNotes = new();
-
-        foreach (Note note in notes)
-        {
-            if (note.NoteType == NoteType.EndOfChart) return;
-
-            var temp = new Note
-            {
-                BeatInfo = note.BeatInfo,
-                Position = (int)skCircleView.Cursor.Position,
-                Size = (int)skCircleView.Cursor.Size
-            };
-
-            newNotes.Add(temp);
-        }
-
-        opManager.InvokeAndPush(new EditNoteBulk(notes, newNotes));
     }
 
     private void EditNote(Note note)
@@ -2747,12 +2812,6 @@ public partial class MainView : UserControl
 
     private void DeleteNoteBulk(List<Note> notes)
     {
-        // This function shouldn't exist.
-        // Yet it does. Problem for future me.
-        // Small hint from sleep-deprived past me:
-        // Hold notes were fucking up when bulk-deleted with the RemoveHoldNote operation, then being undone again.
-        // The bulk operation shall not give a fuck about the type of note it's deleting.
-
         var deleteIndex = selectedNoteIndex;
         var noteOp = new RemoveNoteBulk(chart, multiSelectNotes, notes);
 
@@ -2797,6 +2856,112 @@ public partial class MainView : UserControl
         }
 
         UpdateNoteLabels(deleteIndex - 1);
+    }
+
+    private void AdjustSelectedNotes(KeyEventArgs e)
+    {
+        if (selectedNoteIndex == -1) return;
+
+        int xDelta = e.Key switch
+        {
+            Key.Up => 1,
+            Key.Down => -1,
+            _ => 0
+        };
+
+        int yDelta = e.Key switch
+        {
+            Key.Left => -1,
+            Key.Right => 1,
+            _ => 0
+        };
+
+        if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+        {
+            // x -> Size & y -> Position
+            if (multiSelectNotes.Count != 0)
+            {
+                foreach (Note note in multiSelectNotes)
+                    AdjustNoteShape(note, xDelta, yDelta);
+
+                return;
+            }
+
+            var selectedNote = chart.Notes[selectedNoteIndex];
+            AdjustNoteShape(selectedNote, xDelta, yDelta);
+            return;
+        }
+
+        if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        {
+            // x -> Beat & y -> Measure
+            if (multiSelectNotes.Count != 0)
+            {
+                foreach (Note note in multiSelectNotes)
+                    AdjustNoteTime(note, xDelta, yDelta);
+
+                return;
+            }
+
+            var selectedNote = chart.Notes[selectedNoteIndex];
+            AdjustNoteTime(selectedNote, xDelta, yDelta);
+            return;
+        }
+    }
+
+    private void AdjustNoteShape(Note note, int sizeDelta, int posDelta)
+    {
+        if (note.NoteType == NoteType.EndOfChart)
+            return;
+
+        int newPos = ((note.Position + posDelta) % 60 + 60) % 60;
+        int newSize = int.Clamp(note.Size + sizeDelta, GetMinNoteSize(note.NoteType), 60);
+
+        var newNote = new Note
+        {
+            BeatInfo = note.BeatInfo,
+            Position = newPos,
+            Size = newSize
+        };
+
+        opManager.InvokeAndPush(new EditNote(note, newNote));
+        UpdateNoteLabels();
+    }
+
+    private void AdjustNoteTime(Note note, int beatDelta, int measureDelta)
+    {
+        if (note.NoteType is NoteType.EndOfChart)
+            return;
+
+        float beatDeltaDecimal = 1 / (float)_vm.Beat2Numeric * beatDelta;
+        float measureDecimal = note.BeatInfo.MeasureDecimal + beatDeltaDecimal + measureDelta;
+
+        if (measureDecimal < 0)
+            measureDecimal = 0;
+
+        if (measureDecimal > endOfChartNote?.BeatInfo.MeasureDecimal)
+            measureDecimal = endOfChartNote.BeatInfo.MeasureDecimal;
+
+        if (note.IsHold)
+        {
+            if (note.NextReferencedNote?.BeatInfo.MeasureDecimal <= measureDecimal)
+                return;
+
+            if (note.PrevReferencedNote?.BeatInfo.MeasureDecimal >= measureDecimal)
+                return;
+        }
+
+        BeatInfo newBeatInfo = new(measureDecimal);
+
+        var newNote = new Note
+        {
+            BeatInfo = newBeatInfo,
+            Position = note.Position,
+            Size = note.Size
+        };
+
+        opManager.InvokeAndPush(new EditNote(note, newNote));
+        UpdateNoteLabels();
     }
 
     private void UpdateControlsFromOperation(IOperation op, OperationDirection dir)
@@ -3378,7 +3543,7 @@ public partial class MainView : UserControl
 
         try
         {
-            if (userSettings.HotkeySettings.EnableBeatChangeHotkeys && !e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+            if (userSettings.HotkeySettings.EnableBeatChangeHotkeys && !e.KeyModifiers.HasFlag(KeyModifiers.Shift) && !e.KeyModifiers.HasFlag(KeyModifiers.Control))
             {
                 var hkSettings = userSettings.HotkeySettings;
 
@@ -3387,8 +3552,7 @@ public partial class MainView : UserControl
                 {
                     // beat change
                     var delta = intKey == hkSettings.BeatIncreaseHotkey ? 1 : -1;
-                    if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
-                        delta *= hkSettings.BeatChangeHotkeyHighDelta;
+
                     if (_vm.Beat1Numeric + delta >= _vm.Beat1NumericMinimum &&
                         _vm.Beat1Numeric + delta <= _vm.Beat1NumericMaximum)
                     {
@@ -3407,9 +3571,7 @@ public partial class MainView : UserControl
                 if (intKey == hkSettings.MeasureIncreaseHotkey || intKey == hkSettings.MeasureDecreaseHotkey)
                 {
                     // measure change
-                    var delta = intKey == hkSettings.MeasureIncreaseHotkey ? hkSettings.MeasureChangeHotkeyDelta : -hkSettings.MeasureChangeHotkeyDelta;
-                    if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
-                        delta *= hkSettings.MeasureChangeHotkeyHighDelta;
+                    var delta = intKey == hkSettings.MeasureIncreaseHotkey ? 1 : -1;
                     if (_vm.MeasureNumeric + delta >= _vm.MeasureNumericMinimum &&
                         _vm.MeasureNumeric + delta <= _vm.MeasureNumericMaximum)
                         _vm.MeasureNumeric += delta;
@@ -3452,13 +3614,12 @@ public partial class MainView : UserControl
 
                 case Key.Up:
                 case Key.Down:
-                    if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
-                    {
-                        // volume change
-                        playbackVolumeChange(e.Key == Key.Up);
-                        e.Handled = true;
-                    }
+                case Key.Left:
+                case Key.Right:
+                    AdjustSelectedNotes(e);
+                    e.Handled = true;
                     return;
+
                 default:
                     var key = (int) e.Key;
                     if (key == userSettings.HotkeySettings.TouchHotkey)
@@ -3529,25 +3690,6 @@ public partial class MainView : UserControl
         {
             SwallowKeyUp = e.Handled;
         }
-    }
-
-    private void playbackVolumeChange(bool increase)
-    {
-        var val = (int) trackBarVolume.LargeChange;
-        /* Bounds check. */
-        if (increase && _vm.VolumeTrackBar + val > _vm.VolumeTrackBarMaximum)
-            val = (int) (_vm.VolumeTrackBarMaximum - _vm.VolumeTrackBar);
-        else if (!increase && _vm.VolumeTrackBar - val < trackBarVolume.Minimum)
-            val = (int) (_vm.VolumeTrackBar - trackBarVolume.Minimum);
-
-        if (!increase) val *= -1;
-
-        /*
-         * Updating the trackbar volume will call the trackBarVolume_Changed
-         * callback, which will update the current song volume.
-         */
-        _vm.VolumeTrackBar += val;
-        trackBarVolume.Focus();
     }
 
     private void Window_OnClosing(object? sender, CancelEventArgs e)

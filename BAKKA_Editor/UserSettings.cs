@@ -76,6 +76,8 @@ public class HotkeySettings
     public bool EnableBeatChangeHotkeys { get; set; } = true;
     public int BeatDecreaseHotkey { get; set; } = Convert.ToInt32(Key.Down, DefaultParsingCulture);
     public int BeatIncreaseHotkey { get; set; } = Convert.ToInt32(Key.Up, DefaultParsingCulture);
+
+    // Deprecated.
     public int MeasureChangeHotkeyDelta { get; set; } = 1;
     public int MeasureChangeHotkeyHighDelta { get; set; } = 2;
     public int BeatChangeHotkeyDelta { get; set; } = 1;

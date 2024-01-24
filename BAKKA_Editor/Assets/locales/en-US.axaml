@@ -2,6 +2,8 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:system="clr-namespace:System;assembly=System.Runtime">
     <!-- TODO: namespaces, ordering, and grouping -->
+    <system:String x:Key="L.ApplicationVersion">BAKKA Avalonia - v2.18.3 Nightly // COPYPASTE TEST BUILD v4</system:String>
+  
     <system:String x:Key="L.AddMaskRadio">Add Mask</system:String>
     <system:String x:Key="L.BakeHoldMenuOption">Bake Selected Hold</system:String>
     <system:String x:Key="L.BeatLabel">Beat:</system:String>
@@ -17,6 +19,7 @@
     <system:String x:Key="L.DeleteEntireHold">Delete Entire Hold</system:String>
     <system:String x:Key="L.DeleteGimmickButton">Delete Gimmick</system:String>
     <system:String x:Key="L.DeleteSelectedNoteButton">Delete Note</system:String>
+    <system:String x:Key="L.DeselectNotes">Deselect Notes</system:String>
     <system:String x:Key="L.DownArrowSnapNoteButton">↓ Snap</system:String>
     <system:String x:Key="L.EditMenuItem">_Edit</system:String>
     <system:String x:Key="L.EditGimmickButton">Edit Gimmick</system:String>
@@ -34,8 +37,8 @@
     <system:String x:Key="L.HoldNoteButton">Hold</system:String>
     <system:String x:Key="L.InitialChartSettingsMenuOption">Initial Chart Settings</system:String>
     <system:String x:Key="L.InsertHoldSegmentMenuOption">Insert Hold Segment</system:String>
-    <system:String x:Key="L.JumpToNearestGimmickButton">Jump To Nearest Gimmick</system:String>
-    <system:String x:Key="L.JumpToNearestNoteButton">Jump To Nearest Note</system:String>
+    <system:String x:Key="L.JumpToNearestGimmickButton">Highlight Nearest Gimmick</system:String>
+    <system:String x:Key="L.JumpToNearestNoteButton">Highlight Nearest Note</system:String>
     <system:String x:Key="L.LeftArrowSlideNoteButton">⤾ Slide</system:String>
     <system:String x:Key="L.MaskGimmickButton">Mask</system:String>
     <system:String x:Key="L.MaskSettingHeader">Mask Setting</system:String>
@@ -48,7 +51,7 @@
     <system:String x:Key="L.None">None</system:String>
     <system:String x:Key="L.NotesOnBeatHeader">Notes on Beat</system:String>
     <system:String x:Key="L.NoteTypesHeader">Note Types</system:String>
-    <system:String x:Key="L.NoteViewHeader">Note Selection</system:String>
+    <system:String x:Key="L.NoteViewHeader">Note Highlighting</system:String>
     <system:String x:Key="L.OpenMenuOption">_Open...</system:String>
     <system:String x:Key="L.PlaceNoteOnDragMenuOption">Place Note on Drag</system:String>
     <system:String x:Key="L.PlayButton">Play</system:String>
@@ -91,6 +94,10 @@
     <system:String x:Key="L.NextMeasureButton">Measure &gt;</system:String>
     <system:String x:Key="L.HiSpeedGimmickButton">Hi-Speed</system:String>
 
+    <system:String x:Key="L.Cut">Cut</system:String>
+    <system:String x:Key="L.Copy">Copy</system:String>
+    <system:String x:Key="L.Paste">Paste</system:String>
+  
     <system:String x:Key="L.MainView.Labels.CursorViewHeader">Cursor Selection</system:String>
     <system:String x:Key="L.MainView.Labels.CursorBeatDepthLabel">Depth:</system:String>
 

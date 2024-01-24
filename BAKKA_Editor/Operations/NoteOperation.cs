@@ -54,6 +54,45 @@ internal class InsertNote : NoteOperation
     }
 }
 
+internal class InsertNoteBulk : IOperation
+{
+    public InsertNoteBulk(Chart chart, List<Note> multiSelect, List<Note> notes)
+    {
+        Chart = chart;
+        MultiSelect = multiSelect;
+        Notes = notes;
+    }
+
+    public string Description => "Insert note [Bulk]";
+
+    private Chart Chart;
+    private List<Note> MultiSelect;
+    private List<Note> Notes;
+
+    public void Redo()
+    {
+        lock (Chart)
+        {
+            foreach (Note note in Notes)
+            {
+                Chart.Notes.Add(note);
+            }
+        }
+    }
+
+    public void Undo()
+    {
+        lock (Chart)
+        {
+            foreach (Note note in Notes)
+            {
+                Chart.Notes.Remove(note);
+                MultiSelect.Remove(note);
+            }
+        }
+    }
+}
+
 internal class RemoveNote : NoteOperation
 {
     public RemoveNote(Chart chart, List<Note> multiSelect, Note item) : base(chart, multiSelect, item)
@@ -146,51 +185,6 @@ internal class EditNote : IOperation
     }
 }
 
-internal class EditNoteBulk : IOperation
-{
-    // !!!! What the bingle
-    // If you undo to the point where edited notes are deleted,
-    // then redo back to the edit operation, the op loses reference
-    // to all previously deleted notes. Help.
-    public EditNoteBulk(List<Note> baseNotes, List<Note> newNotes)
-    {
-        BaseNotes = baseNotes;
-        OldNotes = new();
-        foreach (Note note in baseNotes)
-            OldNotes.Add(new(note));
-
-        NewNotes = new();
-        foreach (Note note in newNotes)
-            NewNotes.Add(new(note));
-    }
-
-    public List<Note> BaseNotes;
-    public List<Note> OldNotes;
-    public List<Note> NewNotes;
-
-    public string Description => "Edit note [Bulk]";
-
-    public void Redo()
-    {
-        for (int i = 0; i < BaseNotes.Count; i++)
-        {
-            BaseNotes[i].BeatInfo = new(NewNotes[i].BeatInfo);
-            BaseNotes[i].Position = NewNotes[i].Position;
-            BaseNotes[i].Size = NewNotes[i].Size;
-        }
-    }
-
-    public void Undo()
-    {
-        for (int i = 0; i < BaseNotes.Count; i++)
-        {
-            BaseNotes[i].BeatInfo = new(OldNotes[i].BeatInfo);
-            BaseNotes[i].Position = OldNotes[i].Position;
-            BaseNotes[i].Size = OldNotes[i].Size;
-        }
-    }
-}
-
 internal class MirrorNote : IOperation
 {
     public MirrorNote(Note baseNote, Note newNote)
@@ -222,51 +216,6 @@ internal class MirrorNote : IOperation
     }
 }
 
-internal class MirrorNoteBulk : IOperation
-{
-    // !!!! What the bingle
-    // This one is even worse. It's so broken. Help.
-    public MirrorNoteBulk(List<Note> baseNotes, List<Note> newNotes)
-    {
-        BaseNotes = baseNotes;
-        OldNotes = new();
-        foreach (Note note in baseNotes)
-            OldNotes.Add(new(note));
-
-        NewNotes = new();
-        foreach (Note note in newNotes)
-            NewNotes.Add(new(note));
-    }
-
-    public List<Note> BaseNotes;
-    public List<Note> OldNotes;
-    public List<Note> NewNotes;
-
-    public string Description => "Edit note [Bulk]";
-
-    public void Redo()
-    {
-        for (int i = 0; i < BaseNotes.Count; i++)
-        {
-            BaseNotes[i].BeatInfo = new(NewNotes[i].BeatInfo);
-            BaseNotes[i].Position = NewNotes[i].Position;
-            BaseNotes[i].Size = NewNotes[i].Size;
-            BaseNotes[i].NoteType = NewNotes[i].NoteType;
-        }
-    }
-
-    public void Undo()
-    {
-        for (int i = 0; i < BaseNotes.Count; i++)
-        {
-            BaseNotes[i].BeatInfo = new(OldNotes[i].BeatInfo);
-            BaseNotes[i].Position = OldNotes[i].Position;
-            BaseNotes[i].Size = OldNotes[i].Size;
-            BaseNotes[i].NoteType = OldNotes[i].NoteType;
-        }
-    }
-}
-
 internal class BakeHoldNote : IOperation
 {
     private List<Note> Segments;
@@ -288,12 +237,16 @@ internal class BakeHoldNote : IOperation
     public string Description => "Bake Hold note";
     public void Redo()
     {
+        bool select = MultiSelect.Contains(Start);
+
         lock (Chart)
         {
             foreach (Note note in Segments)
+            {
                 Chart.Notes.Add(note);
+                if (select) MultiSelect.Add(note);
+            }
         }
-
 
         Start.NextReferencedNote = Segments[0];
         Segments.Last().NextReferencedNote = End;
