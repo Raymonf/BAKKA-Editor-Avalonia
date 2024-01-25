@@ -105,6 +105,8 @@ internal class Note : NoteBase
         Position = baseNote.Position;
         Size = baseNote.Size;
         NoteType = baseNote.NoteType;
+        HoldChange = baseNote.HoldChange;
+        MaskFill = baseNote.MaskFill;
     }
 
     public NoteType NoteType { get; set; } = NoteType.TouchNoBonus;
