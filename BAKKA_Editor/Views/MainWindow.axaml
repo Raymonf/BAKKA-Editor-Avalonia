@@ -6,7 +6,7 @@
         mc:Ignorable="d" d:DesignWidth="1154" d:DesignHeight="800"
         x:Class="BAKKA_Editor.Views.MainWindow"
         MinWidth="1060" MinHeight="500"
-        Width="1154" Height="800"
+        Width="1154" Height="850"
         Icon="/Assets/avalonia-logo.ico"
         Title="BAKKA Avalonia"
         WindowStartupLocation="CenterScreen"
