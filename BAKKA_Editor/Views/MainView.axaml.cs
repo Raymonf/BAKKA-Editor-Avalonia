@@ -305,6 +305,9 @@ public partial class MainView : UserControl
 
     public void CutMenuItem_OnClick()
     {
+        if (TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is TextBox)
+            return;
+
         if (multiSelectNotes.Count == 0) return;
 
         CopyToClipboard(multiSelectNotes);
@@ -316,6 +319,9 @@ public partial class MainView : UserControl
 
     public void CopyMenuItem_OnClick()
     {
+        if (TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is TextBox)
+            return;
+
         if (multiSelectNotes.Count == 0) return;
 
         CopyToClipboard(multiSelectNotes);
@@ -324,6 +330,9 @@ public partial class MainView : UserControl
 
     public void PasteMenuItem_OnClick()
     {
+        if (TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() is TextBox)
+            return;
+
         if (clipboard.Count == 0) return;
 
         multiSelectNotes.Clear();
@@ -3590,6 +3599,22 @@ public partial class MainView : UserControl
                     AdjustSelectedNotes(e);
                     e.Handled = true;
                     return;
+
+                case Key.X:
+                    if (e.KeyModifiers.HasFlag(KeyModifiers.Control)) CutMenuItem_OnClick();
+                    e.Handled = true;
+                    return;
+
+                case Key.C:
+                    if (e.KeyModifiers.HasFlag(KeyModifiers.Control)) CopyMenuItem_OnClick();
+                    e.Handled = true;
+                    return;
+
+                case Key.V:
+                    if (e.KeyModifiers.HasFlag(KeyModifiers.Control)) PasteMenuItem_OnClick();
+                    e.Handled = true;
+                    return;
+
 
                 default:
                     var key = (int) e.Key;
