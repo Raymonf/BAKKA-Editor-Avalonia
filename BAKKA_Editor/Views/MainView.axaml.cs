@@ -2875,7 +2875,7 @@ public partial class MainView : UserControl
             if (multiSelectNotes.Count != 0)
             {
                 foreach (Note note in multiSelectNotes)
-                    AdjustNoteTime(note, xDelta, yDelta);
+                    AdjustNoteTime(note, xDelta, yDelta, true);
 
                 return;
             }
@@ -2905,7 +2905,7 @@ public partial class MainView : UserControl
         UpdateNoteLabels();
     }
 
-    private void AdjustNoteTime(Note note, int beatDelta, int measureDelta)
+    private void AdjustNoteTime(Note note, int beatDelta, int measureDelta, bool bulkEdit = false)
     {
         if (note.NoteType is NoteType.EndOfChart)
             return;
@@ -2919,7 +2919,7 @@ public partial class MainView : UserControl
         if (measureDecimal > endOfChartNote?.BeatInfo.MeasureDecimal)
             measureDecimal = endOfChartNote.BeatInfo.MeasureDecimal;
 
-        if (note.IsHold)
+        if (note.IsHold && !bulkEdit)
         {
             if (note.NextReferencedNote?.BeatInfo.MeasureDecimal <= measureDecimal)
                 return;
