@@ -14,4 +14,9 @@ public static class NoteTypeExtensions
                || type == NoteType.SlideOrangeBonusFlair
                || type == NoteType.SlideGreenBonusFlair;
     }
+
+    public static bool IsHoldStart(this NoteType type)
+    {
+        return type is NoteType.HoldStartNoBonus or NoteType.HoldStartBonusFlair;
+    }
 }

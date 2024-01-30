@@ -222,6 +222,7 @@ internal class RenderEngine
             userSettings.ViewSettings.NoteScaleMultiplier, multiSelectNotes);
         if (userSettings.ViewSettings.ShowSlideSnapArrows)
             DrawArrows(chart, userSettings.ViewSettings.HighlightViewedNote, selectedNoteIndex);
+        DrawNoteConnections(chart, circleView.Cursor.Depth);
         if (showCursor)
         {
             DrawCursor(chart, currentNoteType, cursorStartAngle, cursorArcAngle, circleView.Cursor.Depth);
@@ -962,6 +963,53 @@ internal class RenderEngine
                     }
                 }
             }
+        }
+    }
+
+    private static int TrueModulo(int x, int m)
+    {
+        return (x % m + m) % m;
+    }
+    
+    private void DrawNoteConnections(Chart chart, uint depth)
+    {
+        var notes = chart.Notes.Where(x => x.Measure >= CurrentMeasure && x.Measure <= CurrentMeasure + VisibleMeasures && (x.NoteType.IsTouchNote() || x.NoteType.IsSlideNote() || x.NoteType.IsHoldStart()));
+
+        Note? note0 = null;
+        foreach (var note1 in notes)
+        {
+            if (note0 == null)
+            {
+                note0 = note1;
+                continue;
+            }
+
+            if (Math.Abs(note1.Measure - note0.Measure) < 0.001)
+            {
+                // code courtesy of yasu
+                var scale = GetNoteScale(chart, note1.Measure);
+                var measureArcInfo = GetRect(chart, note1.Measure);
+
+                int position0 = TrueModulo(note0.Position + note0.Size - 1, 60);
+                int size0 = TrueModulo(note1.Position - position0, 60) + 1;
+
+                int position1 = TrueModulo(note1.Position + note1.Size - 1, 60);
+                int size1 = TrueModulo(note0.Position - position1, 60) + 1;
+
+                int finalPosition = size0 > size1 ? position1 : position0;
+                int finalSize = Math.Min(size0, size1);
+
+                if (finalSize > 30) continue;
+                
+                // draw a thing here
+                canvas.DrawArc(measureArcInfo.Rect, -finalPosition * 6.0f,
+                    -finalSize * 6.0f,
+                    false,
+                    brushes.GetLinkPen(scale)
+                );
+            }
+
+            note0 = note1;
         }
     }
 }
