@@ -71,7 +71,12 @@ internal class Hitsounds
 
     public void Play(Note note, float lastMeasure)
     {
-        if (note.NoteType is NoteType.EndOfChart or NoteType.MaskAdd or NoteType.MaskRemove or NoteType.HoldJoint) return;
+        if (note.NoteType is NoteType.EndOfChart or
+            NoteType.MaskAdd or
+            NoteType.MaskRemove or
+            NoteType.HoldJoint or 
+            NoteType.HoldEnd
+        ) return;
 
         if (note.BeatInfo.MeasureDecimal > lastMeasure)
         {
