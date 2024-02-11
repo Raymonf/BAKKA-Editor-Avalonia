@@ -74,8 +74,7 @@ internal class Hitsounds
         if (note.NoteType is NoteType.EndOfChart or
             NoteType.MaskAdd or
             NoteType.MaskRemove or
-            NoteType.HoldJoint or 
-            NoteType.HoldEnd
+            NoteType.HoldJoint
         ) return;
 
         if (note.BeatInfo.MeasureDecimal > lastMeasure)
