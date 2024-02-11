@@ -648,12 +648,15 @@ internal class RenderEngine
                 var arc2StartAngle = newStartAngle + newArcLength;
                 var arc2ArcLength = -newArcLength;
 
-                // crop arcs to the right size
+                // crop arcs
                 if (note.Size != 60)
                 {
                     arc1StartAngle += 1.5f;
-                    arc2StartAngle -= 1.5f;
                     arc1ArcLength -= 3.0f;
+                }
+                if (note.PrevReferencedNote.Size != 60)
+                {
+                    arc2StartAngle -= 1.5f;
                     arc2ArcLength += 3.0f;
                 }
 
@@ -671,7 +674,7 @@ internal class RenderEngine
                 var arc1StartAngle = currentInfo.StartAngle;
                 var arc1ArcLength = currentInfo.ArcAngle;
 
-                // crop arcs to the right size
+                // crop arcs
                 if (note.Size != 60)
                 {
                     arc1StartAngle += 1.5f;
