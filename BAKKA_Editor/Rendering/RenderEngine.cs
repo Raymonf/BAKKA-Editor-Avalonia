@@ -624,6 +624,14 @@ internal class RenderEngine
 
                 var currentStartAngle = currentInfo.StartAngle;
                 var previousStartAngle = previousInfo.StartAngle;
+                var previousArcAngle = previousInfo.ArcAngle;
+
+                // crop off-screen arc
+                if (note.PrevReferencedNote.Size != 60)
+                {
+                    previousStartAngle += 1.5f;
+                    previousArcAngle -= 3.0f;
+                }
 
                 // handle angles rolling over
                 if (Math.Abs(currentStartAngle - previousStartAngle) > 180)
@@ -636,7 +644,7 @@ internal class RenderEngine
 
                 // calculate new startAngle and arcAngle for intermediate arc
                 var currentEndAngle = currentStartAngle - currentInfo.ArcAngle;
-                var newEndAngle = scaleRatio * (previousStartAngle - previousInfo.ArcAngle - (currentEndAngle)) +
+                var newEndAngle = scaleRatio * (previousStartAngle - previousArcAngle - (currentEndAngle)) +
                                   (currentEndAngle);
 
                 var newStartAngle = scaleRatio * (previousStartAngle - currentStartAngle) + currentStartAngle;
@@ -648,16 +656,11 @@ internal class RenderEngine
                 var arc2StartAngle = newStartAngle + newArcLength;
                 var arc2ArcLength = -newArcLength;
 
-                // crop arcs
+                // crop visible arc
                 if (note.Size != 60)
                 {
                     arc1StartAngle += 1.5f;
                     arc1ArcLength -= 3.0f;
-                }
-                if (note.PrevReferencedNote.Size != 60)
-                {
-                    arc2StartAngle -= 1.5f;
-                    arc2ArcLength += 3.0f;
                 }
 
                 var path = new SKPath();
