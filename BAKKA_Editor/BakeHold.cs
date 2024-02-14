@@ -123,44 +123,49 @@ namespace BAKKA_Editor
             operationManager.Push(new BakeHoldNote(chart, multiSelectNotes, startNote, endNote, segmentList));
         }
 
-        public static void LerpRound(Chart chart, List<Note> multiSelectNotes, Note startNote, Note endNote, OperationManager operationManager)
+        public static void Interpolate(Chart chart, List<Note> multiSelectNotes, Note startNote, Note endNote, float length, OperationManager operationManager)
         {
-            decimal interval = 0.015625m;
+            int startPos0 = startNote.Position;
+            int startPos1 = startNote.Position + startNote.Size;
+            int endPos0 = endNote.Position;
+            int endPos1 = endNote.Position + endNote.Size;
 
-            int newPosition = startNote.Position;
-            int newSize = startNote.Size;
+            int distance0 = int.Abs(endPos0 - startPos0);
+            int distance1 = int.Abs(endPos1 - startPos1);
+            distance0 = distance0 > 30 ? 60 - distance0 : distance0;
+            distance1 = distance1 > 30 ? 60 - distance1 : distance1;
 
-            var startPos = startNote.Position;
-            var endPos = endNote.Position;
-            var startSize = startNote.Size;
-            var endSize = endNote.Size;
+            int maxDistance = int.Max(distance0, distance1);
+            float interval = (1 / (1 / length * maxDistance));
 
             var lastNote = startNote;
+            bool select = multiSelectNotes.Contains(startNote);
             List<Note> segmentList = new List<Note>();
 
-            bool select = multiSelectNotes.Contains(startNote);
-            bool shortPos = (int.Abs(endPos - startPos) > 30);
+            bool lerpShort = int.Abs(startNote.Position - endNote.Position) > 30;
 
             lock (chart)
             {
-                for (decimal i = (decimal) startNote.Measure + interval; i < (decimal) endNote.Measure; i += interval)
+                for (float i = startNote.Measure + interval; i < endNote.Measure; i += interval)
                 {
-                    var info0 = new BeatInfo((float) i);
+                    // avoid decimal/floating point errors that would
+                    // otherwise cause two segments on the same beat
+                    // if i is just *barely* less than endNote.Measure
+                    var info0 = new BeatInfo((float)i);
                     var info1 = new BeatInfo(endNote.Measure);
                     if (info0.Measure == info1.Measure && info0.Beat == info1.Beat) break;
 
-                    float lerpTime = ((float) i - startNote.Measure) / (endNote.Measure - startNote.Measure);
-
-                    newPosition = (int)MathF.Round(ShortLerp(shortPos, startPos, endPos, lerpTime));
-                    newSize = (int)MathF.Round(ShortLerp(false, startSize, endSize, lerpTime));
+                    float time = ((float)i - startNote.Measure) / (endNote.Measure - startNote.Measure);
+                    int newPos0 = (int)Math.Round(ShortLerp(lerpShort, startPos0, endPos0, time));
+                    int newPos1 = (int)Math.Round(ShortLerp(lerpShort, startPos1, endPos1, time));
 
                     var newNote = new Note()
                     {
-                        BeatInfo = new((float) i),
+                        BeatInfo = new((float)i),
                         NoteType = NoteType.HoldJoint,
-                        Position = (newPosition + 60) % 60,
-                        Size = (newSize + 60) % 60,
-                        HoldChange = false,
+                        Position = (newPos0 + 60) % 60,
+                        Size = (newPos1 - newPos0 + 60) % 60,
+                        HoldChange = true,
                         PrevReferencedNote = lastNote,
                         NextReferencedNote = endNote
                     };

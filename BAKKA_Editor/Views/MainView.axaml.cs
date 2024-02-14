@@ -455,8 +455,8 @@ public partial class MainView : UserControl
         }
         else
         {
-            // LerpRound
-            BakeHold.LerpRound(chart, multiSelectNotes, selectedNote, nextNote, opManager);
+            // Interpolate
+            BakeHold.Interpolate(chart, multiSelectNotes, selectedNote, nextNote, length, opManager);
         }
     }
 
