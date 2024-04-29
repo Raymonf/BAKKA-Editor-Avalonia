@@ -1,3 +1,7 @@
+If you're here, I recommend you check out [MercuryMapper](https://github.com/Yasu3D/MercuryMapper) instead. :)
+
+---
+
 # BAKKA Editor Avalonia ~~Port~~ Fork
 
 #### [Download Latest Stable Build](https://github.com/Raymonf/BAKKA-Editor-Avalonia/releases/latest) <-- click this link if you're a normal person that just wants to run this thing
